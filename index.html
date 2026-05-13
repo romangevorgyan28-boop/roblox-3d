@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🧱 Roblox 3D Mobile & PC</title>
+<style>
+/* ==========================================
+   CORE CSS (NO ABBREVIATIONS)
+   ========================================== */
+:root {
+  --bg-color: #05050a;
+  --accent: #00e5ff;
+  --text-main: #ffffff;
+  --text-dim: #8a8f98;
+  --panel: rgba(15, 15, 25, 0.95);
+  --border: rgba(255, 255, 255, 0.1);
+  --radius: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg-color);
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+  overflow: hidden; /* Prevent body scroll, handle inside containers */
+  touch-action: none; /* Disable browser zooming/scrolling gestures on body */
+}
+
+/* SCROLLABLE MENU */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+  background: radial-gradient(circle at 50% 0%, #1a2035 0%, #05050a 100%);
+}
+
+.screen.active { display: flex; }
+
+/* FIX SCROLLING FOR MENU */
+#menu-screen {
+  overflow-y: auto; /* Allow vertical scroll */
+  justify-content: flex-start; /* Start from top */
+  padding-top: 40px;
+  -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
+}
+
+#menu-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+  padding-bottom: 40px;
+}
+
+h1 { font-size: 36px; margin-bottom: 10px; text-align: center; }
+h1 span { color: var(--accent); }
+.subtitle { color: var(--text-dim); margin-bottom: 30px; font-size: 14px; text-align: center; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  width: 100%;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card:active { transform: scale(0.98); background: rgba(255,255,255,0.05); }
+.card .icon { font-size: 32px; }
+.card .info { flex: 1; }
+.card h3 { font-size: 18px; margin-bottom: 4px; }
+.card p { font-size: 12px; color: var(--text-dim); }
+.btn-play {
+  background: var(--accent);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  color: #000;
+  font-size: 12px;
+}
+
+#menu-footer {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn-sec {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* HUD */
+#game-ui {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none; /* Let touches pass through to game controls */
+}
+#game-ui.active { display: block; }
+#game-ui > * { pointer-events: auto; }
+
+#top-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 10px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+}
+
+#hp-bar {
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  width: 150px; height: 8px; background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden;
+}
+#hp-fill { width: 100%; height: 100%; background: #ff3333; transition: width 0.3s; }
+
+#crosshair {
+  position: absolute; top: 50%; left: 50%;
+  width: 10px; height: 10px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255,255,255,0.5); border-radius: 50%;
+}
+
+#exit-btn {
+  position: absolute; top: 5px; right: 10px;
+  background: rgba(255,0,0,0.5); border: none; color: white;
+  padding: 5px 10px; border-radius: 4px; font-size: 12px;
+}
+
+/* MOBILE CONTROLS */
+#mobile-controls {
+  display: none; /* Hidden on PC by default, shown via JS */
+  position: fixed; inset: 0; z-index: 60;
+  pointer-events: none;
+}
+#mobile-controls.active { display: block; }
+
+/* Joystick Zone */
+#joystick-zone {
+  position: absolute;
+  bottom: 40px; left: 40px;
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  pointer-events: auto;
+}
+#joystick-knob {
+  position: absolute; top: 50%; left: 50%;
+  width: 50px; height: 50px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Camera Zone (Invisible touch area on right) */
+#camera-zone {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 50%;
+  pointer-events: auto;
+}
+
+/* Action Buttons */
+.action-btn {
+  position: absolute;
+  width: 60px; height: 60px;
+  background: rgba(0,0,0,0.4);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  color: white; font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: auto;
+  user-select: none;
+}
+#btn-jump { bottom: 50px; right: 40px; }
+#btn-shoot { bottom: 130px; right: 120px; background: rgba(255,0,0,0.3); }
+
+/* Modals */
+.modal {
+  display: none; position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #111; border: 1px solid #333; padding: 20px;
+  border-radius: 10px; z-index: 200; width: 90%; max-width: 300px;
+  text-align: center;
+}
+.modal.open { display: block; }
+.modal h2 { margin-bottom: 15px; font-size: 18px; }
+.input-group { margin-bottom: 10px; text-align: left; }
+.input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; }
+.input-group input { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: white; border-radius: 4px; }
+.btn-full { width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+.btn-green { background: #00e5ff; color: #000; }
+.btn-gray { background: #333; color: #fff; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<!-- ===== MAIN MENU ===== -->
+<div id="menu-screen" class="screen active">
+  <div id="menu-content">
+    <h1>🧱 ROBLOX <span>3D</span></h1>
+    <p class="subtitle">Версия 4.1 • Исправлен мобильный ввод</p>
+
+    <div class="grid">
+      <div class="card" onclick="joinGame('brookhaven')">
+        <div class="icon">🏡</div>
+        <div class="info">
+          <h3>Brookhaven RP</h3>
+          <p>Город, дома, свобода</p>
+        </div>
+        <button class="btn-play">Играть</button>
+      </div>
+      
+      <div class="card" onclick="joinGame('shooter')">
+        <div class="icon">🔫</div>
+        <div class="info">
+          <h3>Team Shooter</h3>
+          <p>Командная стрельба</p>
+        </div>
+        <button class="btn-play">Играть</button>
+      </div>
+
+      <div class="card" onclick="joinGame('obby')">
+        <div class="icon">🧱</div>
+        <div class="info">
+          <h3>Mega Obby</h3>
+          <p>Паркур</p>
+        </div>
+        <button class="btn-play">Играть</button>
+      </div>
+      
+      <div class="card" onclick="joinGame('sandbox')">
+        <div class="icon">🛠️</div>
+        <div class="info">
+          <h3>Sandbox</h3>
+          <p>Строительство</p>
+        </div>
+        <button class="btn-play">Играть</button>
+      </div>
+    </div>
+
+    <div id="menu-footer">
+      <button class="btn-sec" onclick="openModal('modal-avatar')">🎨 Аватар</button>
+      <button class="btn-sec" onclick="openModal('modal-settings')">⚙️ Настройки</button>
+      <button class="btn-sec" onclick="downloadCreator()">📥 Редактор</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME UI ===== -->
+<canvas id="game-canvas"></canvas>
+<div id="game-ui">
+  <div id="top-bar">
+    <span id="hud-name" style="font-weight:bold">Player</span>
+    <span id="hud-online" style="color:#00ff88">● 1</span>
+  </div>
+  
+  <div id="hp-bar"><div id="hp-fill"></div></div>
+  <div id="crosshair"></div>
+  
+  <button id="exit-btn" onclick="leaveGame()">🏠 Выход</button>
+
+  <!-- MOBILE CONTROLS CONTAINER -->
+  <div id="mobile-controls">
+    <div id="joystick-zone">
+      <div id="joystick-knob"></div>
+    </div>
+    <div id="camera-zone"></div>
+    <div id="btn-jump" class="action-btn">⬆️</div>
+    <div id="btn-shoot" class="action-btn">🔫</div>
+  </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div id="modal-avatar" class="modal">
+  <h2>🎨 Аватар</h2>
+  <div class="input-group"><label>Цвет кожи</label><input type="color" id="av-head" value="#ffcc88"></div>
+  <div class="input-group"><label>Цвет футболки</label><input type="color" id="av-torso" value="#3366cc"></div>
+  <button class="btn-full btn-green" onclick="saveAvatar()">Сохранить</button>
+  <button class="btn-full btn-gray" onclick="closeModal('modal-avatar')">Закрыть</button>
+</div>
+
+<div id="modal-settings" class="modal">
+  <h2>⚙️ Настройки</h2>
+  <div class="input-group"><label>Ваше имя</label><input type="text" id="set-name" placeholder="Player"></div>
+  <button class="btn-full btn-green" onclick="saveSettings()">Сохранить</button>
+  <button class="btn-full btn-gray" onclick="closeModal('modal-settings')">Закрыть</button>
+</div>
+
+<!-- THREE.JS -->
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+<!-- GAME LOGIC -->
+<script>
+/**
+ * 🧱 ROBLOX 3D CLIENT
+ * Версия: 4.1.0
+ * Исправления: Мобильный скроллинг, Кнопки, Pointer Lock
+ */
+
+// ==========================================
+// 1. STATE & CONFIG
+// ==========================================
+const CFG = {
+  server: `ws://${window.location.host}`,
+  camDist: 6,
+  sensX: 0.005,
+  sensY: 0.005
+};
+
+const STATE = {
+  ws: null,
+  myId: null,
+  name: localStorage.getItem('r_name') || 'Player',
+  room: null,
+  isMobile: false,
+  players: {},
+  scene: null, camera: null, renderer: null, playerMesh: null,
+  yaw: 0, pitch: 0,
+  moveVector: { x: 0, y: 0 }, // For joystick
+  isJumping: false,
+  hp: 100
+};
+
+// ==========================================
+// 2. INITIALIZATION
+// ==========================================
+window.addEventListener('load', () => {
+  // Check Mobile
+  STATE.isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth < 800;
+  document.getElementById('hud-name').textContent = STATE.name;
+  document.getElementById('set-name').value = STATE.name;
+  
+  initNetwork();
+  setupInput();
+});
+
+// ==========================================
+// 3. NETWORK
+// ==========================================
+function initNetwork() {
+  try {
+    STATE.ws = new WebSocket(CFG.server);
+    
+    STATE.ws.onopen = () => {
+      console.log('Connected');
+      STATE.ws.send(JSON.stringify({ type: 'set_name', name: STATE.name }));
+    };
+    
+    STATE.ws.onmessage = (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        handlePacket(d);
+      } catch(err) {}
+    };
+    
+    STATE.ws.onclose = () => setTimeout(initNetwork, 3000);
+  } catch(e) { console.error(e); }
+}
+
+function send(type, data) {
+  if (STATE.ws && STATE.ws.readyState === 1) {
+    STATE.ws.send(JSON.stringify({ type, ...data }));
+  }
+}
+
+function handlePacket(d) {
+  switch(d.type) {
+    case 'joined':
+      STATE.room = d.room;
+      STATE.players = {};
+      d.players.forEach(p => { if(p.id !== STATE.myId) STATE.players[p.id] = p; });
+      startGame(d.room.id);
+      break;
+      
+    case 'p_join':
+      STATE.players[d.id] = d;
+      updateOnline();
+      break;
+      
+    case 'p_leave':
+      delete STATE.players[d.id];
+      removeRemote(d.id);
+      updateOnline();
+      break;
+      
+    case 'p_move':
+      moveRemote(d.id, d);
+      break;
+      
+    case 'p_hit':
+      STATE.hp = Math.max(0, d.hp);
+      document.getElementById('hp-fill').style.width = STATE.hp + '%';
+      if(d.dead) alert('Вы погибли!');
+      break;
+  }
+}
+
+function updateOnline() {
+  const count = Object.keys(STATE.players).length + 1;
+  document.getElementById('hud-online').textContent = `● ${count}`;
+}
+
+// ==========================================
+// 4. INPUT SYSTEM (FIXED FOR MOBILE)
+// ==========================================
+function setupInput() {
+  // KEYBOARD (PC)
+  document.addEventListener('keydown', e => {
+    if (STATE.room) {
+      if (e.code === 'KeyW') STATE.moveVector.y = -1;
+      if (e.code === 'KeyS') STATE.moveVector.y = 1;
+      if (e.code === 'KeyA') STATE.moveVector.x = -1;
+      if (e.code === 'KeyD') STATE.moveVector.x = 1;
+      if (e.code === 'Space') STATE.isJumping = true;
+    }
+  });
+
+  document.addEventListener('keyup', e => {
+    if (STATE.room) {
+      if (['KeyW','KeyS'].includes(e.code)) STATE.moveVector.y = 0;
+      if (['KeyA','KeyD'].includes(e.code)) STATE.moveVector.x = 0;
+      if (e.code === 'Space') STATE.isJumping = false;
+    }
+  });
+
+  // MOUSE (PC)
+  document.addEventListener('mousemove', e => {
+    if (STATE.room && document.pointerLockElement) {
+      STATE.yaw -= e.movementX * CFG.sensX;
+      STATE.pitch -= e.movementY * CFG.sensY;
+      STATE.pitch = Math.max(-1.5, Math.min(1.5, STATE.pitch));
+    }
+  });
+
+  document.addEventListener('click', () => {
+    // ONLY lock pointer on PC and if game is active
+    if (STATE.room && !STATE.isMobile && !document.pointerLockElement) {
+      document.body.requestPointerLock();
+    }
+  });
+
+  // TOUCH (MOBILE)
+  if (STATE.isMobile) {
+    setupMobileControls();
+  }
+}
+
+function setupMobileControls() {
+  const joyZone = document.getElementById('joystick-zone');
+  const joyKnob = document.getElementById('joystick-knob');
+  const camZone = document.getElementById('camera-zone');
+  
+  let joyStart = { x: 0, y: 0 };
+  let joyTouchId = null;
+  
+  // Joystick Logic
+  joyZone.addEventListener('touchstart', e => {
+    e.preventDefault(); // Prevent scroll inside joystick
+    const t = e.changedTouches[0];
+    joyTouchId = t.identifier;
+    joyStart = { x: t.clientX, y: t.clientY };
+  }, { passive: false });
+
+  window.addEventListener('touchmove', e => {
+    for (let t of e.changedTouches) {
+      // Move joystick
+      if (t.identifier === joyTouchId) {
+        e.preventDefault();
+        let dx = t.clientX - joyStart.x;
+        let dy = t.clientY - joyStart.y;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        let maxDist = 35;
+        
+        if (dist > maxDist) {
+          dx = (dx / dist) * maxDist;
+          dy = (dy / dist) * maxDist;
+        }
+        
+        joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        
+        // Normalize output -1 to 1
+        STATE.moveVector.x = dx / maxDist;
+        STATE.moveVector.y = dy / maxDist;
+      }
+      
+      // Rotate Camera
+      if (t.identifier === camTouchId) {
+        STATE.yaw -= (t.clientX - camPrev.x) * 0.01;
+        STATE.pitch -= (t.clientY - camPrev.y) * 0.01;
+        STATE.pitch = Math.max(-1.5, Math.min(1.5, STATE.pitch));
+        camPrev = { x: t.clientX, y: t.clientY };
+      }
+    }
+  }, { passive: false });
+
+  window.addEventListener('touchend', e => {
+    for (let t of e.changedTouches) {
+      if (t.identifier === joyTouchId) {
+        joyTouchId = null;
+        joyKnob.style.transform = `translate(-50%, -50%)`;
+        STATE.moveVector = { x: 0, y: 0 };
+      }
+      if (t.identifier === camTouchId) camTouchId = null;
+    }
+  });
+
+  // Camera Touch Logic
+  let camTouchId = null;
+  let camPrev = { x: 0, y: 0 };
+  camZone.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    camTouchId = t.identifier;
+    camPrev = { x: t.clientX, y: t.clientY };
+  }, { passive: false });
+
+  // Mobile Buttons
+  const btnJump = document.getElementById('btn-jump');
+  btnJump.addEventListener('touchstart', e => { e.preventDefault(); STATE.isJumping = true; });
+  btnJump.addEventListener('touchend', e => { e.preventDefault(); STATE.isJumping = false; });
+
+  // Mobile Shoot (Simplified for now)
+  const btnShoot = document.getElementById('btn-shoot');
+  btnShoot.addEventListener('touchstart', e => { 
+    e.preventDefault(); 
+    // Logic to shoot would go here
+  });
+}
+
+// ==========================================
+// 5. GAME LOOP & 3D
+// ==========================================
+function startGame(roomId) {
+  document.getElementById('menu-screen').classList.remove('active');
+  document.getElementById('game-ui').classList.add('active');
+  
+  if (STATE.isMobile) {
+    document.getElementById('mobile-controls').classList.add('active');
+  }
+
+  init3D(roomId);
+  loop();
+}
+
+function leaveGame() {
+  STATE.room = null;
+  document.getElementById('menu-screen').classList.add('active');
+  document.getElementById('game-ui').classList.remove('active');
+  document.getElementById('mobile-controls').classList.remove('active');
+  
+  send('leave');
+  // Cleanup ThreeJS
+  if (STATE.renderer) {
+    STATE.renderer.dispose();
+    STATE.renderer = null;
+  }
+}
+
+function init3D(roomId) {
+  const canvas = document.getElementById('game-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  STATE.scene = new THREE.Scene();
+  STATE.scene.background = new THREE.Color(0x87CEEB);
+  STATE.scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
+
+  STATE.camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 100);
+  STATE.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  STATE.renderer.setSize(window.innerWidth, window.innerHeight);
+
+  // Lights
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(10, 20, 10);
+  STATE.scene.add(light);
+  STATE.scene.add(new THREE.AmbientLight(0x404040));
+
+  // Ground
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(100, 100),
+    new THREE.MeshStandardMaterial({ color: 0x33aa33 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  STATE.scene.add(ground);
+
+  // Player
+  STATE.playerMesh = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1.5, 0.5), new THREE.MeshStandardMaterial({ color: 0x3366cc }));
+  body.position.y = 0.75;
+  STATE.playerMesh.add(body);
+  STATE.scene.add(STATE.playerMesh);
+
+  // Simple map generation
+  if (roomId === 'brookhaven') {
+    for(let i=0; i<10; i++) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(4, 6, 4), new THREE.MeshStandardMaterial({ color: 0xcc8866 }));
+      b.position.set((Math.random()-0.5)*40, 3, (Math.random()-0.5)*40);
+      STATE.scene.add(b);
+    }
+  }
+}
+
+function loop() {
+  if (!STATE.room) return;
+  requestAnimationFrame(loop);
+
+  // Movement Logic
+  const speed = 0.15;
+  const forward = new THREE.Vector3(-Math.sin(STATE.yaw), 0, -Math.cos(STATE.yaw));
+  const right = new THREE.Vector3(Math.cos(STATE.yaw), 0, -Math.sin(STATE.yaw));
+  
+  // Combine Keyboard and Joystick vectors
+  const mx = STATE.moveVector.x;
+  const my = STATE.moveVector.y;
+
+  if (Math.abs(mx) > 0.1 || Math.abs(my) > 0.1) {
+    STATE.playerMesh.position.add(forward.clone().multiplyScalar(-my * speed));
+    STATE.playerMesh.position.add(right.clone().multiplyScalar(mx * speed));
+    STATE.playerMesh.rotation.y = STATE.yaw + Math.PI;
+  }
+
+  // Camera Follow
+  const camDist = STATE.isMobile ? 5 : 6;
+  const camHeight = STATE.isMobile ? 3 : 4;
+  STATE.camera.position.x = STATE.playerMesh.position.x + Math.sin(STATE.yaw) * camDist;
+  STATE.camera.position.z = STATE.playerMesh.position.z + Math.cos(STATE.yaw) * camDist;
+  STATE.camera.position.y = STATE.playerMesh.position.y + camHeight + Math.sin(STATE.pitch) * 2;
+  STATE.camera.lookAt(STATE.playerMesh.position.x, STATE.playerMesh.position.y + 1.5, STATE.playerMesh.position.z);
+
+  // Network Sync
+  if (Math.random() < 0.1) { // Throttle sending
+    send('move', { 
+      x: STATE.playerMesh.position.x, 
+      y: STATE.playerMesh.position.y, 
+      z: STATE.playerMesh.position.z, 
+      ry: STATE.playerMesh.rotation.y 
+    });
+  }
+
+  STATE.renderer.render(STATE.scene, STATE.camera);
+}
+
+// Mock remote players
+const remoteMeshes = {};
+function moveRemote(id, data) {
+  if (!remoteMeshes[id]) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1.5, 0.5), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+    m.position.y = 0.75;
+    STATE.scene.add(m);
+    remoteMeshes[id] = m;
+  }
+  remoteMeshes[id].position.set(data.x, data.y, data.z);
+  remoteMeshes[id].rotation.y = data.ry;
+}
+function removeRemote(id) {
+  if (remoteMeshes[id]) {
+    STATE.scene.remove(remoteMeshes[id]);
+    delete remoteMeshes[id];
+  }
+}
+
+// ==========================================
+// 6. UI HELPERS
+// ==========================================
+function joinGame(room) {
+  STATE.myId = Math.random().toString(36).substr(2, 5); // Fake ID for client
+  send('join', { room: room, team: 'none' });
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function saveAvatar() {
+  closeModal('modal-avatar');
+  // Logic to update colors would go here
+}
+
+function saveSettings() {
+  const name = document.getElementById('set-name').value.trim();
+  if(name) {
+    STATE.name = name;
+    localStorage.setItem('r_name', name);
+    document.getElementById('hud-name').textContent = name;
+  }
+  closeModal('modal-settings');
+}
+
+function downloadCreator() {
+  alert('Редактор пока не доступен в демо-версии.');
+}
+</script>
+</body>
+</html>
