@@ -1,7 +1,7 @@
 {
-  "name": "roblox-3d-lite",
+  "name": "roblox-3d-full",
   "version": "1.0.0",
-  "description": "Lightweight 3D multiplayer game",
+  "description": "Full-featured 3D multiplayer game with mobile support",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
