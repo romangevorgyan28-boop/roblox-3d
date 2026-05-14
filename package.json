@@ -1,17 +1,20 @@
 {
-  "name": "roblox-server",
-  "version": "1.0.0",
-  "description": "",
+  "name": "roblox-3d-ultimate",
+  "version": "2.0.0",
+  "description": "Multi-game 3D platform with WebSocket multiplayer",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "ws": "^8.20.0"
-  }
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["game", "multiplayer", "threejs", "websocket"],
+  "author": "You",
+  "license": "MIT"
 }
