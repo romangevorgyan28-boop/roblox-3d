@@ -1,7 +1,7 @@
 /**
- * 🧱 ROBLOX 3D FULL SERVER
- * Оптимизирован под 512 МБ ОЗУ / 0.1 CPU
- * Поддержка 4 игр, мобильное управление, ники, регистрация
+ * 🧱 ROBLOX 3D ULTIMATE SERVER ENGINE v3.0
+ * Оптимизирован под 512MB RAM / 0.1 CPU
+ * Включает: Генератор лабиринтов, ИИ врагов, Физику, Систему комнат
  */
 
 const express = require('express');
@@ -13,102 +13,169 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ 
   server, 
-  maxPayload: 64 * 1024,
+  maxPayload: 128 * 1024, // Увеличен буфер для пакетов состояния
   perMessageDeflate: false 
 });
 
 const PORT = process.env.PORT || 3000;
-
-// Раздача статических файлов из корня
 app.use(express.static(__dirname));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // ==========================================
-// КОНФИГУРАЦИЯ ИГР
+// КОНФИГУРАЦИЯ МИРА
 // ==========================================
-const GAMES = {
-  brookhaven: { name: 'Brookhaven RP', mapSize: 80, spawnRange: 30 },
-  shooter:    { name: 'Team Shooter', mapSize: 70, teams: ['red', 'blue'], respawnTime: 3000 },
-  brainrot:   { name: 'Steal a Brainrot', mapSize: 60, artifactSpawn: { x: 0, z: 0 } },
-  cheese:     { name: 'Horror of Cheese', mapSize: 50, cheeseCount: 9, ratSpeed: 4.5 }
+const WORLD_CONFIG = {
+  TICK_RATE: 24, // Баланс между плавностью и нагрузкой на CPU
+  GRAVITY: 18,
+  MOVE_SPEED: 7.5,
+  JUMP_FORCE: 9.5,
+  MAP_BOUNDARY: 60
 };
 
 // ==========================================
-// СОСТОЯНИЕ СЕРВЕРА
+// ГЕНЕРАТОР ЛАБИРИНТА (Для игры Cheese)
 // ==========================================
-const players = new Map();
-const gameStates = new Map();
-let nextId = 1;
-
-// Инициализация состояний игр
-Object.keys(GAMES).forEach(gameId => {
-  const cfg = GAMES[gameId];
-  const state = {
-    id: gameId,
-    config: cfg,
-    objects: new Map(),
-    enemies: new Map(),
-    scores: { red: 0, blue: 0 },
-    time: 0
-  };
-
-  if (gameId === 'brainrot') {
-    state.objects.set('artifact', { type: 'artifact', x: cfg.artifactSpawn.x, z: cfg.artifactSpawn.z, collected: false, holderId: null });
+class MazeGenerator {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.grid = [];
+    this.generate();
   }
-  if (gameId === 'cheese') {
-    for (let i = 0; i < cfg.cheeseCount; i++) {
-      state.objects.set(`cheese_${i}`, { 
-        type: 'cheese', 
-        x: (Math.random() - 0.5) * (cfg.mapSize - 10), 
-        z: (Math.random() - 0.5) * (cfg.mapSize - 10),
-        collected: false 
-      });
+
+  generate() {
+    // Инициализация сетки (1 = стена, 0 = проход)
+    for (let y = 0; y < this.height; y++) {
+      this.grid[y] = [];
+      for (let x = 0; x < this.width; x++) {
+        this.grid[y][x] = 1;
+      }
     }
-    state.enemies.set('rat', { type: 'rat', x: 0, z: cfg.mapSize / 2 - 5, yaw: 0 });
+
+    // Алгоритм Recursive Backtracker
+    const stack = [];
+    const start = { x: 1, y: 1 };
+    this.grid[start.y][start.x] = 0;
+    stack.push(start);
+
+    const directions = [
+      { x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }
+    ];
+
+    while (stack.length > 0) {
+      const current = stack[stack.length - 1];
+      const neighbors = [];
+
+      for (let dir of directions) {
+        const nx = current.x + dir.x;
+        const ny = current.y + dir.y;
+
+        if (nx > 0 && nx < this.width - 1 && ny > 0 && ny < this.height - 1 && this.grid[ny][nx] === 1) {
+          neighbors.push({ x: nx, y: ny, dx: dir.x / 2, dy: dir.y / 2 });
+        }
+      }
+
+      if (neighbors.length > 0) {
+        const chosen = neighbors[Math.floor(Math.random() * neighbors.length)];
+        this.grid[chosen.y][chosen.x] = 0;
+        this.grid[current.y + chosen.dy][current.x + chosen.dx] = 0;
+        stack.push({ x: chosen.x, y: chosen.y });
+      } else {
+        stack.pop();
+      }
+    }
+    
+    // Гарантируем выход
+    this.grid[this.height - 2][this.width - 2] = 0;
   }
 
-  gameStates.set(gameId, state);
-});
+  getWalls() {
+    const walls = [];
+    const cellSize = 3; // Размер блока стены
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (this.grid[y][x] === 1) {
+          walls.push({
+            x: (x - this.width / 2) * cellSize,
+            z: (y - this.height / 2) * cellSize,
+            w: cellSize,
+            d: cellSize
+          });
+        }
+      }
+    }
+    return walls;
+  }
+}
 
 // ==========================================
 // КЛАСС ИГРОКА
 // ==========================================
 class Player {
-  constructor(id, ws, name, gameId) {
+  constructor(id, ws, name) {
     this.id = id;
     this.ws = ws;
     this.name = name.substring(0, 16);
-    this.gameId = gameId;
-    this.x = (Math.random() - 0.5) * 20;
-    this.y = 1;
-    this.z = (Math.random() - 0.5) * 20;
+    this.gameId = 'menu'; // menu, brookhaven, shooter, brainrot, cheese
+    
+    // Физика
+    this.x = 0; this.y = 1; this.z = 0;
+    this.vx = 0; this.vy = 0; this.vz = 0;
     this.yaw = 0;
+    this.onGround = false;
+    
+    // Состояние
+    this.input = { f: 0, r: 0, jump: false, action: false };
     this.health = 100;
     this.team = null;
-    this.input = { f: 0, r: 0, jump: false, action: false };
-    this.lastSnapshot = { x: this.x, y: this.y, z: this.z, yaw: this.yaw };
+    this.inventory = { cheese: 0, hasArtifact: false };
     
-    if (gameId === 'shooter') {
-      this.team = players.size % 2 === 0 ? 'red' : 'blue';
-      this.respawnTimer = 0;
-    }
+    // Оптимизация: отправка только при изменении
+    this.lastSentState = { x: 0, y: 0, z: 0, yaw: 0, anim: 0 };
   }
 
-  getPublicData() {
-    return {
-      id: this.id,
-      name: this.name,
-      x: this.x,
-      y: this.y,
-      z: this.z,
-      yaw: this.yaw,
-      health: this.health,
-      team: this.team,
-      gameId: this.gameId
-    };
+  reset(gameId) {
+    this.gameId = gameId;
+    this.x = (Math.random() - 0.5) * 20;
+    this.z = (Math.random() - 0.5) * 20;
+    this.y = 1;
+    this.vx = 0; this.vy = 0; this.vz = 0;
+    this.health = 100;
+    this.inventory = { cheese: 0, hasArtifact: false };
+    if (gameId === 'shooter') this.team = players.size % 2 === 0 ? 'red' : 'blue';
+  }
+}
+
+// ==========================================
+// ГЛОБАЛЬНОЕ СОСТОЯНИЕ
+// ==========================================
+const players = new Map();
+const gameInstances = {};
+let nextId = 1;
+
+// Инициализация игры "Сыр" (Лабиринт)
+const maze = new MazeGenerator(15, 15);
+gameInstances.cheese = {
+  walls: maze.getWalls(),
+  cheeses: [],
+  rat: { x: 0, z: 0, speed: 5.5, targetId: null },
+  exit: { x: (15/2 - 2) * 3, z: (15/2 - 2) * 3, open: false },
+  time: 0
+};
+
+// Спавн сыров в пустых клетках лабиринта
+let cheeseCount = 0;
+for(let y=1; y<14; y+=2) {
+  for(let x=1; x<14; x+=2) {
+    if(cheeseCount < 9 && Math.random() > 0.3) {
+      gameInstances.cheese.cheeses.push({
+        id: `c_${x}_${y}`,
+        x: (x - 15/2) * 3,
+        z: (y - 15/2) * 3,
+        collected: false
+      });
+      cheeseCount++;
+    }
   }
 }
 
@@ -117,213 +184,212 @@ class Player {
 // ==========================================
 wss.on('connection', (ws) => {
   ws.isAlive = true;
-  
-  ws.on('pong', () => { ws.isAlive = true; });
+  ws.on('pong', () => ws.isAlive = true);
 
   ws.on('message', (raw) => {
     try {
-      const data = JSON.parse(raw);
-      const player = players.get(data.playerId);
+      const d = JSON.parse(raw);
       
-      if (!player && data.type === 'register') {
-        // Регистрация нового игрока
+      // Регистрация
+      if (!d.playerId && d.type === 'register') {
         const id = nextId++;
-        const name = data.name || `Player_${id}`;
-        const newPlayer = new Player(id, ws, name, 'brookhaven');
-        players.set(id, newPlayer);
-        
+        const p = new Player(id, ws, d.name || `Guest_${id}`);
+        players.set(id, p);
         ws.send(JSON.stringify({ 
           type: 'registered', 
           id, 
-          name, 
-          players: Array.from(players.values()).filter(p => p.id !== id).map(p => p.getPublicData()) 
+          name: p.name, 
+          players: Array.from(players.values()).filter(x=>x.id!==id).map(x=>x.getPublic()) 
         }));
-        
-        // Уведомляем остальных
-        broadcast({ type: 'playerJoined', player: newPlayer.getPublicData() }, id);
-        console.log(`[+] ${name} зарегистрирован. Онлайн: ${players.size}`);
+        broadcast({ type: 'playerJoined', player: p.getPublic() }, id);
         return;
       }
 
-      if (!player) return;
+      const p = players.get(d.playerId);
+      if (!p) return;
 
-      if (data.type === 'input') {
-        player.input = {
-          f: typeof data.f === 'number' ? Math.max(-1, Math.min(1, data.f)) : 0,
-          r: typeof data.r === 'number' ? Math.max(-1, Math.min(1, data.r)) : 0,
-          jump: !!data.jump,
-          action: !!data.action
+      // Ввод
+      if (d.type === 'input') {
+        p.input = {
+          f: typeof d.f==='number' ? Math.max(-1,Math.min(1,d.f)) : 0,
+          r: typeof d.r==='number' ? Math.max(-1,Math.min(1,d.r)) : 0,
+          jump: !!d.jump, 
+          action: !!d.action
         };
-        if (typeof data.yaw === 'number') player.yaw = data.yaw;
+        if (typeof d.yaw==='number') p.yaw = d.yaw;
       }
 
-      if (data.type === 'switchGame' && GAMES[data.gameId]) {
-        player.gameId = data.gameId;
-        player.x = (Math.random() - 0.5) * 10;
-        player.z = (Math.random() - 0.5) * 10;
-        player.y = 1;
-        player.health = 100;
-        if (data.gameId === 'shooter') player.team = players.size % 2 === 0 ? 'red' : 'blue';
-        
-        ws.send(JSON.stringify({ type: 'gameSwitched', gameId: data.gameId }));
-        broadcast({ type: 'playerMoved', player: player.getPublicData() });
+      // Смена игры
+      if (d.type === 'joinGame' && ['brookhaven','shooter','brainrot','cheese'].includes(d.gameId)) {
+        p.reset(d.gameId);
+        // Отправляем карту если это сыр
+        if (d.gameId === 'cheese') {
+          ws.send(JSON.stringify({ type: 'mapData', walls: gameInstances.cheese.walls, cheeses: gameInstances.cheese.cheeses }));
+        }
+        broadcast({ type: 'playerMoved', player: p.getPublic() });
       }
 
-      if (data.type === 'chat' && data.msg) {
-        broadcast({ type: 'chat', name: player.name, msg: data.msg.substring(0, 120) });
-      }
+      if (d.type === 'chat' && d.msg) broadcast({ type: 'chat', name: p.name, msg: d.msg.substring(0, 120) });
 
-    } catch (e) {
-      // Игнорируем битые пакеты
-    }
+    } catch(e) {}
   });
 
   ws.on('close', () => {
-    for (const [id, p] of players) {
-      if (p.ws === ws) {
-        players.delete(id);
-        broadcast({ type: 'playerLeft', playerId: id });
-        console.log(`[-] ${p.name} отключился. Онлайн: ${players.size}`);
-        break;
-      }
+    for (const [id, pl] of players) {
+      if (pl.ws === ws) { players.delete(id); broadcast({ type: 'playerLeft', playerId: id }); break; }
     }
   });
 });
 
 // ==========================================
-// ИГРОВОЙ ЦИКЛ (20 ТИКОВ/СЕК)
+// ГЛАВНЫЙ ЦИКЛ (ФИЗИКА И ЛОГИКА)
 // ==========================================
 setInterval(() => {
-  const dt = 0.05;
-  const speed = 6;
-  const halfMap = 40;
+  const dt = 1 / WORLD_CONFIG.TICK_RATE;
+  
+  players.forEach(p => {
+    if (p.ws.readyState !== 1 || p.gameId === 'menu') return;
 
-  players.forEach(player => {
-    if (player.ws.readyState !== 1) return;
-
-    // Физика движения
-    const fx = -Math.sin(player.yaw);
-    const fz = -Math.cos(player.yaw);
-    const rx = Math.cos(player.yaw);
-    const rz = -Math.sin(player.yaw);
-
-    player.x += (player.input.f * fx + player.input.r * rx) * speed * dt;
-    player.z += (player.input.f * fz + player.input.r * rz) * speed * dt;
+    // 1. ДВИЖЕНИЕ
+    const speed = WORLD_CONFIG.MOVE_SPEED;
+    const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
+    const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
     
-    // Прыжок (визуальный + серверный)
-    if (player.input.jump && player.y <= 1.01) {
-      player.y = 2.5;
-      player.input.jump = false;
+    p.vx = (p.input.f * fx + p.input.r * rx) * speed;
+    p.vz = (p.input.f * fz + p.input.r * rz) * speed;
+
+    // 2. ПРЫЖОК И ГРАВИТАЦИЯ
+    if (p.input.jump && p.onGround) {
+      p.vy = WORLD_CONFIG.JUMP_FORCE;
+      p.onGround = false;
     }
-    if (player.y > 1) player.y -= 12 * dt;
-    if (player.y < 1) player.y = 1;
+    p.vy -= WORLD_CONFIG.GRAVITY * dt;
 
-    // Границы
-    player.x = Math.max(-halfMap, Math.min(halfMap, player.x));
-    player.z = Math.max(-halfMap, Math.min(halfMap, player.z));
+    // 3. КОЛЛИЗИЯ (ПРОСТАЯ)
+    let nextX = p.x + p.vx * dt;
+    let nextZ = p.z + p.vz * dt;
+    let nextY = p.y + p.vy * dt;
 
-    // Логика игр
-    const state = gameStates.get(player.gameId);
-    if (state) {
-      if (player.gameId === 'brainrot') {
-        const art = state.objects.get('artifact');
-        if (art && !art.collected && player.input.action) {
-          const dist = Math.hypot(player.x - art.x, player.z - art.z);
-          if (dist < 3) {
-            art.collected = true;
-            art.holderId = player.id;
-            broadcast({ type: 'artifactStolen', playerId: player.id, name: player.name });
-          }
-        }
-      }
-
-      if (player.gameId === 'cheese') {
-        state.objects.forEach((cheese, key) => {
-          if (!cheese.collected && player.input.action) {
-            const dist = Math.hypot(player.x - cheese.x, player.z - cheese.z);
-            if (dist < 2) {
-              cheese.collected = true;
-              player.ws.send(JSON.stringify({ type: 'cheeseCollected', total: Array.from(state.objects.values()).filter(c => c.collected).length }));
-            }
-          }
-        });
-
-        // Крыса ИИ
-        const rat = state.enemies.get('rat');
-        if (rat) {
-          let target = null;
-          let minDist = 999;
-          players.forEach(p => {
-            if (p.gameId === 'cheese') {
-              const d = Math.hypot(p.x - rat.x, p.z - rat.z);
-              if (d < minDist) { minDist = d; target = p; }
-            }
-          });
-          if (target && minDist > 1.5) {
-            const dx = target.x - rat.x;
-            const dz = target.z - rat.z;
-            rat.x += (dx / minDist) * GAMES.cheese.ratSpeed * dt;
-            rat.z += (dz / minDist) * GAMES.cheese.ratSpeed * dt;
-            rat.yaw = Math.atan2(dx, dz);
-          }
-          if (minDist < 1.5) {
-            player.health -= 10 * dt;
-            if (player.health <= 0) {
-              player.health = 100;
-              player.x = 0; player.z = -20;
-              player.ws.send(JSON.stringify({ type: 'caughtByRat' }));
-            }
-          }
+    // Пол
+    if (nextY <= 1) { nextY = 1; p.vy = 0; p.onGround = true; }
+    
+    // Стены (только для сыра)
+    if (p.gameId === 'cheese') {
+      const cellSize = 3;
+      const gridX = Math.floor((nextX / cellSize) + 15/2);
+      const gridZ = Math.floor((nextZ / cellSize) + 15/2);
+      
+      if (gridX >= 0 && gridX < 15 && gridZ >= 0 && gridZ < 15) {
+        if (maze.grid[gridZ][gridX] === 1) {
+          nextX = p.x; // Отмена движения по X
+          nextZ = p.z; // Отмена движения по Z
         }
       }
     }
 
-    // Дельта-отправка (только если изменилось)
-    const snap = player.getPublicData();
-    const changed = Math.abs(snap.x - player.lastSnapshot.x) > 0.1 || 
-                    Math.abs(snap.z - player.lastSnapshot.z) > 0.1 || 
-                    Math.abs(snap.yaw - player.lastSnapshot.yaw) > 0.1;
-    
-    if (changed) {
+    p.x = nextX; p.z = nextZ; p.y = nextY;
+    p.x = Math.max(-WORLD_CONFIG.MAP_BOUNDARY, Math.min(WORLD_CONFIG.MAP_BOUNDARY, p.x));
+    p.z = Math.max(-WORLD_CONFIG.MAP_BOUNDARY, Math.min(WORLD_CONFIG.MAP_BOUNDARY, p.z));
+
+    // 4. ЛОГИКА ИГР
+    if (p.gameId === 'brainrot') {
+      // Логика артефакта (упрощена для сервера, клиент показывает)
+    }
+
+    if (p.gameId === 'cheese') {
+      // Крыса
+      const rat = gameInstances.cheese.rat;
+      if (p.health > 0) {
+        const dx = p.x - rat.x;
+        const dz = p.z - rat.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist < rat.speed * dt * 2 + 1.5) { // Радиус атаки
+           p.health -= 5;
+           if (p.health <= 0) {
+             p.health = 100; p.x = 0; p.z = -20;
+             p.ws.send(JSON.stringify({ type: 'died', reason: 'rat' }));
+           }
+        }
+      }
+      // ИИ Крысы (преследование ближайшего)
+      let target = null, minD = 999;
+      players.forEach(other => {
+        if (other.gameId === 'cheese' && other.health > 0) {
+          const d = Math.hypot(other.x - rat.x, other.z - rat.z);
+          if (d < minD) { minD = d; target = other; }
+        }
+      });
+      if (target) {
+        const tx = target.x - rat.x, tz = target.z - rat.z;
+        const tDist = Math.hypot(tx, tz);
+        if (tDist > 1) {
+          rat.x += (tx/tDist) * rat.speed * dt;
+          rat.z += (tz/tDist) * rat.speed * dt;
+          rat.yaw = Math.atan2(tx, tz);
+        }
+      }
+
+      // Сбор сыра
+      gameInstances.cheese.cheeses.forEach(c => {
+        if (!c.collected && p.input.action && Math.hypot(p.x-c.x, p.z-c.z) < 2.5) {
+          c.collected = true;
+          p.inventory.cheese++;
+          p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
+          if (p.inventory.cheese >= 9) gameInstances.cheese.exit.open = true;
+        }
+      });
+      
+      // Выход
+      if (gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 3) {
+        p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) }));
+        p.health = 0;
+      }
+    }
+
+    // 5. ОТПРАВКА ДАННЫХ (Дельта)
+    const currentAnim = Math.abs(p.input.f) > 0.1 || Math.abs(p.input.r) > 0.1 ? 1 : 0;
+    if (Math.abs(p.x - p.lastSentState.x) > 0.1 || 
+        Math.abs(p.y - p.lastSentState.y) > 0.1 || 
+        Math.abs(p.z - p.lastSentState.z) > 0.1 ||
+        Math.abs(p.yaw - p.lastSentState.yaw) > 0.1 ||
+        currentAnim !== p.lastSentState.anim) {
+      
       try {
-        player.ws.send(JSON.stringify({ type: 'snapshot', players: getVisiblePlayers(player) }));
-        player.lastSnapshot = { x: snap.x, y: snap.y, z: snap.z, yaw: snap.yaw };
-      } catch(e) {}
+        p.ws.send(JSON.stringify({ 
+          type: 'snapshot', 
+          players: Array.from(players.values())
+            .filter(o => o.id !== p.id && o.gameId === p.gameId)
+            .map(o => o.getPublic()),
+          rat: p.gameId === 'cheese' ? gameInstances.cheese.rat : null,
+          exit: p.gameId === 'cheese' ? gameInstances.cheese.exit : null
+        }));
+        p.lastSentState = { x: p.x, y: p.y, z: p.z, yaw: p.yaw, anim: currentAnim };
+      } catch(e){}
     }
   });
-}, 1000 / 20);
+  
+  // Таймер сыра
+  if (gameInstances.cheese) gameInstances.cheese.time += dt;
 
-function getVisiblePlayers(self) {
-  const visible = [];
-  players.forEach(p => {
-    if (p.id === self.id) return;
-    const dist = Math.hypot(self.x - p.x, self.z - p.z);
-    if (dist < 50) visible.push(p.getPublicData());
-  });
-  return visible;
-}
+}, 1000 / WORLD_CONFIG.TICK_RATE);
 
-function broadcast(data, excludeId = null) {
+Player.prototype.getPublic = function() {
+  return {
+    id: this.id, name: this.name, x: this.x, y: this.y, z: this.z, 
+    yaw: this.yaw, health: this.health, team: this.team, 
+    gameId: this.gameId, inv: this.inventory, anim: Math.abs(this.input.f)>0.1 || Math.abs(this.input.r)>0.1 ? 1 : 0
+  };
+};
+
+function broadcast(data, exclude=null) {
   const msg = JSON.stringify(data);
-  players.forEach(p => {
-    if (p.id !== excludeId && p.ws.readyState === 1) {
-      try { p.ws.send(msg); } catch(e) {}
-    }
-  });
+  players.forEach(p => { if (p.id !== exclude && p.ws.readyState===1) try{ p.ws.send(msg); }catch(e){} });
 }
 
-// Heartbeat для стабильности
+// Heartbeat
 setInterval(() => {
-  wss.clients.forEach(ws => {
-    if (ws.isAlive === false) return ws.terminate();
-    ws.isAlive = false;
-    ws.ping();
-  });
-}, 30000);
+  wss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); });
+}, 15000);
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ FULL SERVER RUNNING on port ${PORT}`);
-  console.log(`💾 Optimized for 512MB RAM / 0.1 CPU`);
-});
-
-process.on('SIGINT', () => { console.log('\n🛑 Stop'); process.exit(0); });
+server.listen(PORT, '0.0.0.0', () => console.log(`🚀 ULTIMATE ENGINE RUNNING :${PORT}`));
+process.on('SIGINT', () => { console.log('\n🛑'); process.exit(0); });
