@@ -3,645 +3,487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🧱 Roblox 3D Lite</title>
+<title>🧱 Roblox 3D Full</title>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+:root {
+  --bg: #0a0a12;
+  --panel: rgba(15, 18, 25, 0.95);
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #00e5ff;
+  --text: #ffffff;
+  --dim: #8a8f98;
+  --red: #ff2a2a;
+  --blue: #2a8aff;
+  --green: #00ff88;
 }
+* { margin: 0; padding: 0; box-sizing: border-box; outline: none; touch-action: none; }
+body { overflow: hidden; background: var(--bg); font-family: system-ui, sans-serif; color: var(--text); }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  color: white;
-  overflow: hidden;
-  height: 100vh;
+/* ===== РЕГИСТРАЦИЯ ===== */
+#reg-modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
 }
+.reg-box {
+  background: var(--panel); border: 1px solid var(--border); padding: 24px;
+  border-radius: 12px; text-align: center; max-width: 320px; width: 90%;
+}
+.reg-box h2 { margin-bottom: 12px; color: var(--accent); }
+.reg-input {
+  width: 100%; padding: 10px; background: #000; border: 1px solid var(--border);
+  color: #fff; border-radius: 6px; margin-bottom: 12px; font-size: 14px;
+}
+.btn {
+  padding: 10px 20px; border: none; border-radius: 6px; font-weight: bold;
+  cursor: pointer; width: 100%; font-size: 14px;
+}
+.btn-primary { background: var(--accent); color: #000; }
 
 /* ===== ГЛАВНОЕ МЕНЮ ===== */
 #main-menu {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  z-index: 100;
+  position: fixed; inset: 0; display: none; flex-direction: column;
+  align-items: center; padding: 20px; background: radial-gradient(circle at 50% 20%, #111827, #000);
+  overflow-y: auto; z-index: 100;
+}
+#main-menu.active { display: flex; }
+.menu-header { text-align: center; margin-bottom: 24px; }
+.menu-header h1 { font-size: 36px; background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; max-width: 900px; width: 100%; }
+.game-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 8px;
+}
+.game-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+.game-card h3 { font-size: 18px; }
+.game-card p { font-size: 12px; color: var(--dim); }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 10px; padding: 2px 6px; background: rgba(255,255,255,0.1); border-radius: 4px; color: var(--dim); }
+.play-btn { margin-top: auto; padding: 8px; background: var(--accent); border: none; border-radius: 6px; color: #000; font-weight: bold; cursor: pointer; }
+
+/* ===== ИГРОВОЙ ИНТЕРФЕЙС ===== */
+#game-ui { display: none; position: fixed; inset: 0; }
+#game-ui.active { display: block; }
+#hud-top {
+  position: fixed; top: 0; left: 0; width: 100%; height: 40px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
+  display: flex; align-items: center; justify-content: space-between; padding: 0 12px; z-index: 20;
+}
+#hud-name { font-weight: bold; }
+#hud-online { color: var(--green); }
+#exit-btn { position: fixed; top: 6px; right: 10px; background: var(--red); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; z-index: 30; }
+#crosshair { position: fixed; top: 50%; left: 50%; width: 8px; height: 8px; background: #fff; border-radius: 50%; transform: translate(-50%,-50%); pointer-events: none; z-index: 15; }
+#chat-box {
+  position: fixed; bottom: 80px; left: 10px; width: 220px; max-height: 100px;
+  overflow-y: auto; padding: 6px; background: rgba(0,0,0,0.7); border-radius: 8px 8px 0 0;
+  border: 1px solid var(--border); border-bottom: none; font-size: 11px; z-index: 25;
+}
+#chat-input {
+  width: 100%; padding: 6px; background: rgba(0,0,0,0.8); border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px; color: #fff; font-size: 11px; z-index: 25;
+}
+.msg { margin: 2px 0; } .msg .n { font-weight: bold; color: #8b5cf6; } .msg.sys { color: var(--green); font-style: italic; }
+
+/* ===== НИКИ НАД ИГРОКАМИ ===== */
+#name-tags { position: fixed; inset: 0; pointer-events: none; z-index: 10; overflow: hidden; }
+.name-tag {
+  position: absolute; transform: translate(-50%, -100%);
+  background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;
+  font-size: 10px; font-weight: bold; white-space: nowrap; pointer-events: none;
+  text-shadow: 0 1px 2px #000;
 }
 
-.menu-container {
-  text-align: center;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
-  width: 90%;
+/* ===== МОБИЛЬНОЕ УПРАВЛЕНИЕ ===== */
+#mobile-controls { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 30; }
+#mobile-controls.active { display: block; }
+#joy-zone { position: absolute; left: 20px; bottom: 20px; width: 100px; height: 100px; pointer-events: all; }
+#joy-base { width: 100%; height: 100%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; position: relative; }
+#joy-stick { width: 40px; height: 40px; background: var(--accent); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
+#look-zone { position: absolute; right: 0; top: 0; width: 50%; height: 70%; pointer-events: all; }
+.mob-btn {
+  position: absolute; right: 20px; width: 56px; height: 56px;
+  background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; pointer-events: all; user-select: none;
 }
+#btn-jump { bottom: 20px; }
+#btn-action { bottom: 90px; right: 90px; background: rgba(168,85,247,0.3); border-color: #a855f7; }
 
-h1 {
-  font-size: 48px;
-  margin-bottom: 10px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.subtitle {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 40px;
-}
-
-.play-btn {
-  padding: 18px 60px;
-  font-size: 20px;
-  font-weight: bold;
-  background: linear-gradient(135deg, #00e5ff 0%, #00b4d8 100%);
-  color: #000;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
-}
-
-.play-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 229, 255, 0.6);
-}
-
-.play-btn:active {
-  transform: translateY(0);
-}
-
-.status {
-  margin-top: 20px;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* ===== ИГРА ===== */
-#game-container {
-  display: none;
-  position: fixed;
-  inset: 0;
-}
-
-#game-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-#hud {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  pointer-events: none;
-  z-index: 10;
-}
-
-#crosshair {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  background: white;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 10;
-}
-
-#exit-btn {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  padding: 8px 16px;
-  background: rgba(255, 50, 50, 0.8);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  z-index: 10;
-  transition: background 0.2s;
-}
-
-#exit-btn:hover {
-  background: rgba(255, 50, 50, 1);
-}
-
-/* ===== ЗАГРУЗКА ===== */
-#loading {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #00e5ff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-#loading-text {
-  color: white;
-  font-size: 16px;
-}
-
-/* ===== ОШИБКА ===== */
-#error-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.9);
-  z-index: 300;
-  align-items: center;
-  justify-content: center;
-}
-
-.error-box {
-  background: #1a1a2e;
-  border: 2px solid #ff3333;
-  padding: 30px;
-  border-radius: 12px;
-  text-align: center;
-  max-width: 400px;
-  width: 90%;
-}
-
-.error-box h2 {
-  color: #ff3333;
-  margin-bottom: 12px;
-}
-
-.error-box p {
-  color: #888;
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-
-.retry-btn {
-  padding: 10px 30px;
-  background: #00e5ff;
-  color: #000;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.retry-btn:hover {
-  background: #00c4d8;
-}
+canvas { display: block; width: 100%; height: 100%; position: fixed; top: 0; left: 0; z-index: 1; }
 </style>
 </head>
 <body>
 
+<!-- РЕГИСТРАЦИЯ -->
+<div id="reg-modal">
+  <div class="reg-box">
+    <h2>👋 Добро пожаловать!</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:12px">Введите никнейм для начала игры</p>
+    <input type="text" id="reg-input" class="reg-input" placeholder="Ваш никнейм" maxlength="16">
+    <button class="btn btn-primary" id="reg-btn">Начать игру</button>
+  </div>
+</div>
+
 <!-- ГЛАВНОЕ МЕНЮ -->
 <div id="main-menu">
-  <div class="menu-container">
-    <h1>🧱 Roblox 3D</h1>
-    <p class="subtitle">Легковесный мультиплеер • Оптимизировано</p>
-    <button class="play-btn" onclick="startGame()">▶️ ИГРАТЬ</button>
-    <p class="status" id="menu-status">Готов к подключению</p>
+  <div class="menu-header">
+    <h1>🧱 ROBLOX 3D FULL</h1>
+    <p style="color:var(--dim);font-size:13px">Мультиплеер • Мобильное управление • 4 режима</p>
+  </div>
+  <div class="game-grid">
+    <div class="game-card" data-game="brookhaven">
+      <h3>🏡 Brookhaven RP</h3>
+      <p>Свободный город, общение, исследование</p>
+      <div class="tags"><span class="tag">RP</span><span class="tag">Открытый мир</span></div>
+      <button class="play-btn">Играть</button>
+    </div>
+    <div class="game-card" data-game="shooter">
+      <h3>🔫 Team Shooter</h3>
+      <p>Командный бой, респавн, счёт</p>
+      <div class="tags"><span class="tag">PvP</span><span class="tag">Команды</span></div>
+      <button class="play-btn">Играть</button>
+    </div>
+    <div class="game-card" data-game="brainrot">
+      <h3>🧠 Steal a Brainrot</h3>
+      <p>Укради артефакт и унеси ноги!</p>
+      <div class="tags"><span class="tag">Стелс</span><span class="tag">Погоня</span></div>
+      <button class="play-btn">Играть</button>
+    </div>
+    <div class="game-card" data-game="cheese">
+      <h3>🧀 Horror of Cheese</h3>
+      <p>Найди 9 сыров, избегай крысы</p>
+      <div class="tags"><span class="tag">Хоррор</span><span class="tag">Лабиринт</span><span class="tag">ИИ</span></div>
+      <button class="play-btn">Играть</button>
+    </div>
   </div>
 </div>
 
-<!-- ЗАГРУЗКА -->
-<div id="loading">
-  <div class="spinner"></div>
-  <div id="loading-text">Подключение к серверу...</div>
-</div>
-
-<!-- ИГРА -->
-<div id="game-container">
-  <canvas id="game-canvas"></canvas>
-  <div id="hud">Игроков: <span id="player-count">0</span></div>
+<!-- ИГРОВОЙ ИНТЕРФЕЙС -->
+<div id="game-ui">
+  <canvas id="c"></canvas>
+  <div id="hud-top">
+    <span id="hud-name">Player</span>
+    <span id="hud-online">● 1</span>
+  </div>
+  <div id="chat-box"></div>
+  <input type="text" id="chat-input" placeholder="Чат (Enter)...">
   <div id="crosshair"></div>
-  <button id="exit-btn" onclick="leaveGame()">🏠 В меню</button>
-</div>
-
-<!-- ОШИБКА -->
-<div id="error-modal">
-  <div class="error-box">
-    <h2>⚠️ Ошибка подключения</h2>
-    <p id="error-message">Не удалось подключиться к серверу. Проверьте интернет и попробуйте снова.</p>
-    <button class="retry-btn" onclick="retryConnection()">🔄 Повторить</button>
+  <button id="exit-btn">🏠 Меню</button>
+  <div id="name-tags"></div>
+  
+  <div id="mobile-controls">
+    <div id="joy-zone"><div id="joy-base"><div id="joy-stick"></div></div></div>
+    <div id="look-zone"></div>
+    <div id="btn-jump" class="mob-btn">⬆️</div>
+    <div id="btn-action" class="mob-btn">🎯</div>
   </div>
 </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-  }
-}
-</script>
-
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
 
-// ===== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ =====
-let ws = null;
-let scene, camera, renderer;
-let playerMesh;
-let otherPlayers = new Map();
-let myId = null;
-let yaw = 0;
-let pitch = 0;
-let keys = {};
-let isConnected = false;
+// ===== ОПРЕДЕЛЕНИЕ УСТРОЙСТВА =====
+const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth < 768;
+console.log(`[DEVICE] ${isMobile ? 'Mobile' : 'PC'} detected`);
 
-// ===== ФУНКЦИИ МЕНЮ =====
-window.startGame = function() {
-  document.getElementById('main-menu').style.display = 'none';
-  document.getElementById('loading').style.display = 'flex';
-  connectToServer();
+// ===== ГЛОБАЛЬНОЕ СОСТОЯНИЕ =====
+const S = {
+  ws: null, id: null, name: localStorage.getItem('roblox_name') || '',
+  gameId: 'brookhaven', players: new Map(), scene: null, cam: null, ren: null,
+  mesh: null, yaw: 0, pitch: 0, inp: { f:0, r:0, jump:false, action:false },
+  isMobile, joyId: null, lookId: null, joyStart: {x:0,y:0}, lookPrev: {x:0,y:0}
 };
 
-window.leaveGame = function() {
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
-  isConnected = false;
-  document.getElementById('game-container').style.display = 'none';
-  document.getElementById('main-menu').style.display = 'flex';
-  document.getElementById('menu-status').textContent = 'Готов к подключению';
-  
-  // Очистка сцены
-  if (renderer) {
-    renderer.dispose();
-    renderer = null;
-  }
-  scene = null;
-  camera = null;
-  playerMesh = null;
-  otherPlayers.clear();
-};
+// ===== РЕГИСТРАЦИЯ =====
+const regModal = document.getElementById('reg-modal');
+const regInput = document.getElementById('reg-input');
+const regBtn = document.getElementById('reg-btn');
 
-window.retryConnection = function() {
-  document.getElementById('error-modal').style.display = 'none';
-  document.getElementById('loading').style.display = 'flex';
-  connectToServer();
-};
-
-function showError(message) {
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('error-message').textContent = message;
-  document.getElementById('error-modal').style.display = 'flex';
+if (S.name) {
+  regModal.style.display = 'none';
+  showMenu();
+} else {
+  regModal.style.display = 'flex';
+  regBtn.onclick = () => {
+    const name = regInput.value.trim();
+    if (name.length < 2) return alert('Минимум 2 символа');
+    S.name = name;
+    localStorage.setItem('roblox_name', name);
+    regModal.style.display = 'none';
+    showMenu();
+  };
 }
 
-// ===== ПОДКЛЮЧЕНИЕ К СЕРВЕРУ =====
-function connectToServer() {
-  try {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
-    
-    ws = new WebSocket(wsUrl);
-    
-    ws.onopen = function() {
-      console.log('[INFO] Connected to server');
-      document.getElementById('menu-status').textContent = 'Подключено!';
-    };
-    
-    ws.onmessage = function(event) {
-      try {
-        const data = JSON.parse(event.data);
-        handleServerMessage(data);
-      } catch (e) {
-        console.warn('[WARN] Invalid JSON:', e);
+function showMenu() {
+  document.getElementById('main-menu').classList.add('active');
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.querySelector('.play-btn').onclick = () => startGame(card.dataset.game);
+  });
+}
+
+// ===== ИГРОВАЯ СЕССИЯ =====
+function startGame(gameId) {
+  S.gameId = gameId;
+  document.getElementById('main-menu').classList.remove('active');
+  document.getElementById('game-ui').classList.add('active');
+  if (isMobile) document.getElementById('mobile-controls').classList.add('active');
+  
+  document.getElementById('hud-name').textContent = S.name;
+  init3D();
+  setupInput();
+  connect();
+}
+
+function leaveGame() {
+  document.getElementById('game-ui').classList.remove('active');
+  document.getElementById('main-menu').classList.add('active');
+  if (S.ws) S.ws.close();
+  S.players.clear();
+  if (S.ren) { S.ren.dispose(); S.ren = null; }
+}
+
+document.getElementById('exit-btn').onclick = leaveGame;
+
+// ===== СЕТЬ =====
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  S.ws = new WebSocket(`${proto}//${location.host}`);
+  
+  S.ws.onopen = () => {
+    S.ws.send(JSON.stringify({ type: 'register', name: S.name }));
+  };
+  
+  S.ws.onmessage = (e) => {
+    try {
+      const d = JSON.parse(e.data);
+      if (d.type === 'registered') {
+        S.id = d.id;
+        d.players.forEach(p => spawnRemote(p));
+        S.ws.send(JSON.stringify({ type: 'switchGame', gameId: S.gameId }));
+        startLoop();
       }
-    };
-    
-    ws.onclose = function() {
-      console.log('[INFO] Disconnected from server');
-      isConnected = false;
-      
-      if (document.getElementById('game-container').style.display === 'block') {
-        showError('Соединение потеряно. Переподключение...');
-        setTimeout(() => {
-          if (!isConnected) {
-            document.getElementById('error-modal').style.display = 'none';
-            document.getElementById('loading').style.display = 'flex';
-            connectToServer();
+      if (d.type === 'playerJoined') spawnRemote(d.player);
+      if (d.type === 'playerLeft') removeRemote(d.playerId);
+      if (d.type === 'playerMoved') {
+        const p = S.players.get(d.player.id);
+        if (p) { p.mesh.position.set(d.player.x, d.player.y, d.player.z); p.mesh.rotation.y = -d.player.yaw; }
+      }
+      if (d.type === 'snapshot') {
+        d.players.forEach(p => {
+          if (!S.players.has(p.id)) spawnRemote(p);
+          else {
+            S.players.get(p.id).mesh.position.set(p.x, p.y, p.z);
+            S.players.get(p.id).mesh.rotation.y = -p.yaw;
           }
-        }, 3000);
+        });
+        document.getElementById('hud-online').textContent = `● ${d.players.length + 1}`;
       }
-    };
-    
-    ws.onerror = function(error) {
-      console.error('[ERROR] WebSocket error:', error);
-      showError('Ошибка сети. Проверьте подключение.');
-    };
-    
-  } catch (e) {
-    console.error('[ERROR] Failed to connect:', e);
-    showError('Не удалось подключиться к серверу.');
-  }
-}
-
-// ===== ОБРАБОТКА СООБЩЕНИЙ =====
-function handleServerMessage(data) {
-  if (data.type === 'init') {
-    myId = data.playerId;
-    isConnected = true;
-    
-    // Инициализация 3D
-    init3D();
-    setupInput();
-    
-    // Скрываем загрузку, показываем игру
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('game-container').style.display = 'block';
-    
-    // Запускаем цикл
-    animate();
-    
-    // Спавним других игроков
-    data.players.forEach(player => {
-      spawnOtherPlayer(player);
-    });
-    
-    updatePlayerCount();
-  }
+      if (d.type === 'chat') addChat(d.name, d.msg);
+      if (d.type === 'artifactStolen') addChat('sys', `🧠 ${d.name} украл артефакт!`);
+      if (d.type === 'cheeseCollected') addChat('sys', `🧀 Сыр найден! (${d.total}/9)`);
+      if (d.type === 'caughtByRat') addChat('sys', '🐀 Крыса поймала вас! Респавн...');
+    } catch(err) {}
+  };
   
-  if (data.type === 'playerJoined') {
-    spawnOtherPlayer(data.player);
-    updatePlayerCount();
-  }
-  
-  if (data.type === 'playerLeft') {
-    if (otherPlayers.has(data.playerId)) {
-      scene.remove(otherPlayers.get(data.playerId));
-      otherPlayers.delete(data.playerId);
-      updatePlayerCount();
-    }
-  }
-  
-  if (data.type === 'snapshot') {
-    // Обновляем позиции других игроков
-    data.players.forEach(player => {
-      if (player.id === myId) return;
-      
-      if (!otherPlayers.has(player.id)) {
-        spawnOtherPlayer(player);
-      } else {
-        const mesh = otherPlayers.get(player.id);
-        mesh.position.set(player.x, player.y, player.z);
-        mesh.rotation.y = -player.yaw;
-      }
-    });
-    
-    updatePlayerCount();
-  }
+  S.ws.onclose = () => setTimeout(connect, 3000);
 }
 
 // ===== 3D ГРАФИКА =====
 function init3D() {
-  const canvas = document.getElementById('game-canvas');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const cv = document.getElementById('c');
+  cv.width = innerWidth; cv.height = innerHeight;
+  S.scene = new THREE.Scene();
+  S.scene.background = new THREE.Color(0x87CEEB);
+  S.scene.fog = new THREE.Fog(0x87CEEB, 20, 70);
   
-  // Сцена
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x87CEEB);
-  scene.fog = new THREE.Fog(0x87CEEB, 20, 80);
+  S.cam = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.1, 100);
+  S.ren = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  S.ren.setSize(innerWidth, innerHeight);
+  S.ren.setPixelRatio(Math.min(devicePixelRatio, 2));
   
-  // Камера
-  camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
+  S.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+  sun.position.set(10,20,10); sun.castShadow = true;
+  S.scene.add(sun);
   
-  // Рендерер
-  renderer = new THREE.WebGLRenderer({ 
-    canvas: canvas, 
-    antialias: true,
-    powerPreference: 'high-performance'
-  });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  
-  // Освещение
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-  scene.add(ambientLight);
-  
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight.position.set(10, 20, 10);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.width = 1024;
-  dirLight.shadow.mapSize.height = 1024;
-  scene.add(dirLight);
-  
-  // Земля
-  const groundGeometry = new THREE.PlaneGeometry(200, 200);
-  const groundMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0x33aa33,
-    roughness: 0.8
-  });
-  const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
+  const g = new THREE.Mesh(new THREE.PlaneGeometry(100,100), new THREE.MeshStandardMaterial({color:0x33aa33}));
+  g.rotation.x = -Math.PI/2; g.receiveShadow = true; S.scene.add(g);
   
   // Игрок
-  const playerGeometry = new THREE.BoxGeometry(1, 2, 1);
-  const playerMaterial = new THREE.MeshStandardMaterial({ color: 0xff3333 });
-  playerMesh = new THREE.Mesh(playerGeometry, playerMaterial);
-  playerMesh.position.y = 1;
-  playerMesh.castShadow = true;
-  scene.add(playerMesh);
+  S.mesh = new THREE.Mesh(new THREE.BoxGeometry(1,2,1), new THREE.MeshStandardMaterial({color:0xff3333}));
+  S.mesh.position.y = 1; S.mesh.castShadow = true;
+  S.scene.add(S.mesh);
   
-  // Декорации (простые деревья)
-  for (let i = 0; i < 10; i++) {
-    createTree(
-      (Math.random() - 0.5) * 100,
-      (Math.random() - 0.5) * 100
-    );
+  // Стены для лабиринта
+  if (S.gameId === 'cheese') {
+    S.scene.background = new THREE.Color(0x111118);
+    S.scene.fog = new THREE.Fog(0x111118, 5, 30);
+    const mat = new THREE.MeshStandardMaterial({color:0x444455});
+    [[0,-24,48,1],[0,24,48,1],[-24,0,1,48],[24,0,1,48]].forEach(w=>{
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w[2],3,w[3]), mat);
+      m.position.set(w[0],1.5,w[1]); m.castShadow=true; S.scene.add(m);
+    });
   }
 }
 
-function createTree(x, z) {
-  const group = new THREE.Group();
+function spawnRemote(data) {
+  if (data.id === S.id) return;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(1,2,1), new THREE.MeshStandardMaterial({color:0x3333ff}));
+  m.position.set(data.x, data.y, data.z); m.rotation.y = -data.yaw; m.castShadow = true;
+  S.scene.add(m);
+  S.players.set(data.id, { mesh: m, name: data.name });
   
-  // Ствол
-  const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 2, 8);
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-  trunk.position.y = 1;
-  trunk.castShadow = true;
-  group.add(trunk);
-  
-  // Листва
-  const leavesGeo = new THREE.SphereGeometry(1.5, 8, 8);
-  const leavesMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-  const leaves = new THREE.Mesh(leavesGeo, leavesMat);
-  leaves.position.y = 3;
-  leaves.castShadow = true;
-  group.add(leaves);
-  
-  group.position.set(x, 0, z);
-  scene.add(group);
+  // Никнейм
+  const tag = document.createElement('div');
+  tag.className = 'name-tag';
+  tag.textContent = data.name;
+  document.getElementById('name-tags').appendChild(tag);
+  S.players.get(data.id).tag = tag;
 }
 
-function spawnOtherPlayer(data) {
-  if (data.id === myId) return;
-  
-  const geometry = new THREE.BoxGeometry(1, 2, 1);
-  const material = new THREE.MeshStandardMaterial({ color: 0x3333ff });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(data.x, data.y, data.z);
-  mesh.rotation.y = -data.yaw;
-  mesh.castShadow = true;
-  
-  scene.add(mesh);
-  otherPlayers.set(data.id, mesh);
+function removeRemote(id) {
+  const p = S.players.get(id);
+  if (p) { S.scene.remove(p.mesh); p.tag.remove(); S.players.delete(id); }
 }
 
 // ===== УПРАВЛЕНИЕ =====
 function setupInput() {
-  // Клавиатура
-  document.addEventListener('keydown', (e) => {
-    keys[e.code] = true;
-  });
+  if (!isMobile) {
+    document.addEventListener('keydown', e => {
+      if(e.code==='KeyW') S.inp.f=-1; if(e.code==='KeyS') S.inp.f=1;
+      if(e.code==='KeyA') S.inp.r=-1; if(e.code==='KeyD') S.inp.r=1;
+      if(e.code==='Space') S.inp.jump=true; if(e.code==='KeyE') S.inp.action=true;
+    });
+    document.addEventListener('keyup', e => {
+      if(['KeyW','KeyS'].includes(e.code)) S.inp.f=0;
+      if(['KeyA','KeyD'].includes(e.code)) S.inp.r=0;
+      if(e.code==='Space') S.inp.jump=false; if(e.code==='KeyE') S.inp.action=false;
+    });
+    document.addEventListener('mousemove', e => {
+      if(document.pointerLockElement) {
+        S.yaw -= e.movementX * 0.002;
+        S.pitch = Math.max(-1.2, Math.min(1.2, S.pitch - e.movementY * 0.002));
+      }
+    });
+    document.addEventListener('click', () => { if(!document.pointerLockElement) S.ren.domElement.requestPointerLock(); });
+  } else {
+    const joy = document.getElementById('joy-zone');
+    const stick = document.getElementById('joy-stick');
+    const look = document.getElementById('look-zone');
+    
+    joy.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      S.joyId = t.identifier;
+      S.joyStart = { x: t.clientX, y: t.clientY };
+    }, {passive:false});
+    
+    look.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      S.lookId = t.identifier;
+      S.lookPrev = { x: t.clientX, y: t.clientY };
+    }, {passive:false});
+    
+    window.addEventListener('touchmove', e => {
+      e.preventDefault();
+      for(const t of e.changedTouches) {
+        if(t.identifier === S.joyId) {
+          const dx = t.clientX - S.joyStart.x;
+          const dy = t.clientY - S.joyStart.y;
+          const dist = Math.min(35, Math.hypot(dx,dy));
+          const ang = Math.atan2(dy,dx);
+          stick.style.transform = `translate(calc(-50% + ${Math.cos(ang)*dist}px), calc(-50% + ${Math.sin(ang)*dist}px))`;
+          S.inp.r = Math.cos(ang) * (dist/35);
+          S.inp.f = Math.sin(ang) * (dist/35);
+        }
+        if(t.identifier === S.lookId) {
+          S.yaw -= (t.clientX - S.lookPrev.x) * 0.008;
+          S.pitch = Math.max(-1.2, Math.min(1.2, S.pitch - (t.clientY - S.lookPrev.y) * 0.008));
+          S.lookPrev = { x: t.clientX, y: t.clientY };
+        }
+      }
+    }, {passive:false});
+    
+    window.addEventListener('touchend', e => {
+      for(const t of e.changedTouches) {
+        if(t.identifier === S.joyId) { S.joyId=null; S.inp.f=0; S.inp.r=0; stick.style.transform='translate(-50%,-50%)'; }
+        if(t.identifier === S.lookId) S.lookId=null;
+      }
+    });
+    
+    document.getElementById('btn-jump').addEventListener('touchstart', e=>{e.preventDefault();S.inp.jump=true;});
+    document.getElementById('btn-jump').addEventListener('touchend', ()=>S.inp.jump=false);
+    document.getElementById('btn-action').addEventListener('touchstart', e=>{e.preventDefault();S.inp.action=true;});
+    document.getElementById('btn-action').addEventListener('touchend', ()=>S.inp.action=false);
+  }
   
-  document.addEventListener('keyup', (e) => {
-    keys[e.code] = false;
-  });
-  
-  // Мышь (поворот камеры)
-  document.addEventListener('mousemove', (e) => {
-    if (document.pointerLockElement === renderer.domElement) {
-      yaw -= e.movementX * 0.002;
-      pitch -= e.movementY * 0.002;
-      pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+  document.getElementById('chat-input').addEventListener('keypress', e => {
+    if(e.key==='Enter' && e.target.value.trim() && S.ws?.readyState===1) {
+      S.ws.send(JSON.stringify({type:'chat',msg:e.target.value.trim()}));
+      addChat(S.name, e.target.value.trim(), true);
+      e.target.value='';
     }
   });
-  
-  // Клик для захвата мыши
-  renderer.domElement.addEventListener('click', () => {
-    if (!document.pointerLockElement) {
-      renderer.domElement.requestPointerLock();
-    }
-  });
-}
-
-// ===== ОТПРАВКА ДВИЖЕНИЯ =====
-function sendMovement() {
-  if (!ws || ws.readyState !== WebSocket.OPEN || !playerMesh) return;
-  
-  const speed = 0.15;
-  const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-  const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
-  
-  let moveX = 0;
-  let moveZ = 0;
-  
-  if (keys['KeyW']) {
-    moveX += forward.x * speed;
-    moveZ += forward.z * speed;
-  }
-  if (keys['KeyS']) {
-    moveX -= forward.x * speed;
-    moveZ -= forward.z * speed;
-  }
-  if (keys['KeyA']) {
-    moveX -= right.x * speed;
-    moveZ -= right.z * speed;
-  }
-  if (keys['KeyD']) {
-    moveX += right.x * speed;
-    moveZ += right.z * speed;
-  }
-  
-  playerMesh.position.x += moveX;
-  playerMesh.position.z += moveZ;
-  playerMesh.rotation.y = yaw + Math.PI;
-  
-  // Границы
-  playerMesh.position.x = Math.max(-50, Math.min(50, playerMesh.position.x));
-  playerMesh.position.z = Math.max(-50, Math.min(50, playerMesh.position.z));
-  
-  // Отправляем на сервер
-  ws.send(JSON.stringify({
-    type: 'move',
-    x: playerMesh.position.x,
-    y: playerMesh.position.y,
-    z: playerMesh.position.z,
-    yaw: yaw
-  }));
-}
-
-// ===== КАМЕРА =====
-function updateCamera() {
-  if (!playerMesh || !camera) return;
-  
-  const distance = 6;
-  const height = 3;
-  
-  camera.position.x = playerMesh.position.x + Math.sin(yaw) * distance;
-  camera.position.z = playerMesh.position.z + Math.cos(yaw) * distance;
-  camera.position.y = playerMesh.position.y + height;
-  
-  camera.lookAt(playerMesh.position.x, playerMesh.position.y + 1, playerMesh.position.z);
-}
-
-// ===== СЧЕТЧИК ИГРОКОВ =====
-function updatePlayerCount() {
-  const count = otherPlayers.size + 1;
-  document.getElementById('player-count').textContent = count;
 }
 
 // ===== ИГРОВОЙ ЦИКЛ =====
-function animate() {
-  requestAnimationFrame(animate);
+let lt = 0;
+function startLoop() { requestAnimationFrame(loop); }
+
+function loop(t) {
+  if(!S.ws || S.ws.readyState!==1) return;
+  requestAnimationFrame(loop);
+  const dt = Math.min((t-lt)/1000, 0.1); lt=t;
   
-  if (!scene || !camera || !renderer) return;
-  
-  sendMovement();
-  updateCamera();
-  
-  renderer.render(scene, camera);
+  if(S.mesh) {
+    const sp = 0.12;
+    const fwd = new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));
+    const rgt = new THREE.Vector3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
+    let mv = new THREE.Vector3();
+    if(S.inp.f<0) mv.add(fwd); if(S.inp.f>0) mv.sub(fwd);
+    if(S.inp.r<0) mv.sub(rgt); if(S.inp.r>0) mv.add(rgt);
+    if(mv.length()>0) { mv.normalize(); S.mesh.position.add(mv.multiplyScalar(sp)); S.mesh.rotation.y = S.yaw + Math.PI; }
+    
+    if(S.inp.jump && S.mesh.position.y<=1.01) { S.mesh.position.y=2.5; S.inp.jump=false; }
+    if(S.mesh.position.y>1) S.mesh.position.y -= 0.15;
+    if(S.mesh.position.y<1) S.mesh.position.y=1;
+    
+    // Отправка ввода
+    S.ws.send(JSON.stringify({ playerId: S.id, type: 'input', f: S.inp.f, r: S.inp.r, jump: S.inp.jump, action: S.inp.action, yaw: S.yaw }));
+    S.inp.action = false;
+    
+    // Камера
+    const cd = isMobile ? 4 : 5.5, ch = isMobile ? 2.5 : 3.5;
+    S.cam.position.set(S.mesh.position.x + Math.sin(S.yaw)*cd, S.mesh.position.y + ch + Math.sin(S.pitch)*1.5, S.mesh.position.z + Math.cos(S.yaw)*cd);
+    S.cam.lookAt(S.mesh.position.x, S.mesh.position.y+1, S.mesh.position.z);
+    
+    // Обновление ников
+    S.players.forEach(p => {
+      if(p.tag) {
+        const pos = p.mesh.position.clone(); pos.y += 2.5;
+        pos.project(S.cam);
+        if(pos.z < 1) {
+          p.tag.style.display = 'block';
+          p.tag.style.left = (pos.x * 0.5 + 0.5) * innerWidth + 'px';
+          p.tag.style.top = (-pos.y * 0.5 + 0.5) * innerHeight + 'px';
+        } else { p.tag.style.display = 'none'; }
+      }
+    });
+  }
+  S.ren.render(S.scene, S.cam);
 }
 
-// ===== РЕСАЙЗ ОКНА =====
+function addChat(n, m, self=false) {
+  const b = document.getElementById('chat-box');
+  const d = document.createElement('div'); d.className = 'msg ' + (self?'':'sys');
+  d.innerHTML = self ? `<span class="n">${n}:</span> ${m}` : m;
+  b.appendChild(d); b.scrollTop = b.scrollHeight;
+}
+
 window.addEventListener('resize', () => {
-  if (camera && renderer) {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  }
+  if(S.cam && S.ren) { S.cam.aspect = innerWidth/innerHeight; S.cam.updateProjectionMatrix(); S.ren.setSize(innerWidth, innerHeight); }
 });
-
-console.log('[INFO] Roblox 3D Lite initialized');
 </script>
-
 </body>
 </html>
