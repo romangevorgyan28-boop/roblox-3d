@@ -1,7 +1,7 @@
 {
-  "name": "roblox-3d-full",
-  "version": "1.0.0",
-  "description": "Full-featured 3D multiplayer game with mobile support",
+  "name": "roblox-3d-ultimate-engine",
+  "version": "3.0.0",
+  "description": "High-performance 3D multiplayer engine for low-end servers",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
