@@ -14,8 +14,8 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 const WORLD_CONFIG = { 
     TICK_RATE: 24, 
     GRAVITY: 18, 
-    MOVE_SPEED: 7.0, 
-    JUMP_FORCE: 9.0 
+    MOVE_SPEED: 8.0, 
+    JUMP_FORCE: 9.5 
 };
 
 // 0=пол, 1=стена, 2=спавн, 3=сыр, 4=выход
@@ -41,13 +41,13 @@ const MAZE_MAP = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
-// Предвычисляем пустые клетки для крысы
+// Патрульные точки крысы (под новый масштаб)
 const PATROL_SPOTS = [];
 for(let y=0; y<MAZE_MAP.length; y++) {
   for(let x=0; x<MAZE_MAP[0].length; x++) {
     if(MAZE_MAP[y][x] === 0 || MAZE_MAP[y][x] === 2 || MAZE_MAP[y][x] === 3 || MAZE_MAP[y][x] === 4) {
       PATROL_SPOTS.push({ 
-        x: (x - 6.5) * 6.0,         z: (y - 9.5) * 6.0 
+        x: (x - 6.5) * 9.0,         z: (y - 9.5) * 9.0 
       });
     }
   }
@@ -58,8 +58,9 @@ class MazeGenerator {
     this.map = map;
     this.rows = map.length;
     this.cols = map[0].length;
-    this.cellSize = 6.0; // ЕЩЁ ШИРЕ!
-    this.wallHeight = 5.5;
+    this.cellSize = 9.0;   // ШИРОКАЯ СЕТКА
+    this.wallSize = 2.5;   // ТОНКИЕ СТЕНЫ = ШИРОКИЕ КОРИДОРЫ
+    this.wallHeight = 6.0;
   }
   
   getWalls() {
@@ -76,11 +77,10 @@ class MazeGenerator {
         const worldZ = (y - this.rows / 2) * this.cellSize;
         
         if (cell === 1) {
-          walls.push({ x: worldX, z: worldZ, w: this.cellSize, d: this.cellSize, h: this.wallHeight });
+          walls.push({ x: worldX, z: worldZ, w: this.wallSize, d: this.wallSize, h: this.wallHeight });
         }
         if (cell === 2) { 
           greenZones.push({ x: worldX, z: worldZ }); 
-          // Спавн в центре клетки, не на краю
           if (spawnPos.x === 0) spawnPos = { x: worldX, z: worldZ }; 
         }
         if (cell === 3) cheeseSpots.push({ x: worldX, z: worldZ });
@@ -102,7 +102,7 @@ gameInstances.cheese = {
   cheeses: mapData.cheeseSpots.map((c, i) => ({ id: `c_${i}`, x: c.x, z: c.z, collected: false })),
   greenZones: mapData.greenZones,
   rat: { 
-    x: 0, z: 0, speed: 3.5, yaw: 0,
+    x: 0, z: 0, speed: 4.0, yaw: 0,
     targetX: 0, targetZ: 0,
     targetTimer: 0 
   },
@@ -200,7 +200,7 @@ setInterval(() => {
     if (ny <= 1) { ny = 1; p.vy = 0; p.onGround = true; }
     
     if (p.gameId === 'cheese') {
-      const cs = 6.0, halfX = 6.5, halfZ = 9.5;
+      const cs = 9.0, halfX = 6.5, halfZ = 9.5;
       const gx = Math.floor((nx / cs) + halfX), gz = Math.floor((nz / cs) + halfZ);
       if (gx >= 0 && gx < 13 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { nx = p.x; nz = p.z; }
     }
@@ -210,7 +210,7 @@ setInterval(() => {
       const rat = gameInstances.cheese.rat;
       const greenZones = gameInstances.cheese.greenZones;
       
-      // НАЙТИ БЛИЖАЙШЕГО ИГРОКА
+      // КРЫСА ВСЕГДА ИДЁТ ЗА БЛИЖАЙШИМ ИГРОКОМ
       let nearestPlayer = null;
       let minDist = 999;
       players.forEach(o => { 
@@ -220,12 +220,10 @@ setInterval(() => {
         }
       });
 
-      // КРЫСА ВСЕГДА ИДЁТ ЗА БЛИЖАЙШИМ ИГРОКОМ
       if (nearestPlayer) {
         rat.targetX = nearestPlayer.x;
         rat.targetZ = nearestPlayer.z;
       } else {
-        // Если нет игроков, патрулирует
         rat.targetTimer -= dt;
         if (rat.targetTimer <= 0) {
           const spot = PATROL_SPOTS[Math.floor(Math.random() * PATROL_SPOTS.length)];
@@ -235,19 +233,17 @@ setInterval(() => {
         }
       }
 
-      // ПЛАВНОЕ ДВИЖЕНИЕ КРЫСЫ
+      // ПЛАВНОЕ ДВИЖЕНИЕ
       const dx = rat.targetX - rat.x;
       const dz = rat.targetZ - rat.z;
       const dist = Math.hypot(dx, dz);
       
       if (dist > 0.3) {
-        const moveX = (dx / dist) * rat.speed * dt;
-        const moveZ = (dz / dist) * rat.speed * dt;
-        rat.x += moveX;        rat.z += moveZ;
+        rat.x += (dx / dist) * rat.speed * dt;
+        rat.z += (dz / dist) * rat.speed * dt;
         rat.yaw = Math.atan2(dx, dz);
       }
-
-      // УРОН ОТ КРЫСЫ
+      // УРОН
       let ratInGreen = false;
       for (const gz of greenZones) { if (Math.hypot(rat.x - gz.x, rat.z - gz.z) < 5) { ratInGreen = true; break; } }
       
@@ -261,9 +257,9 @@ setInterval(() => {
         }
       }
 
-      // СБОР СЫРА
+      // СЫР
       gameInstances.cheese.cheeses.forEach(c => {
-        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 3.5) {
+        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 4.0) {
           c.collected = true; p.inventory.cheese++;
           p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
           if(p.inventory.cheese >= 9) gameInstances.cheese.exit.open = true;
@@ -271,7 +267,7 @@ setInterval(() => {
       });
 
       // ВЫХОД
-      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 4.0) {
+      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 4.5) {
         p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) })); 
         p.health = 0;
       }
@@ -293,10 +289,10 @@ setInterval(() => {
   
   if(gameInstances.cheese) gameInstances.cheese.time += dt;
 }, 1000 / WORLD_CONFIG.TICK_RATE);
+
 function broadcast(data, excludeId = null) {
   const msg = JSON.stringify(data);
-  players.forEach(p => { if(p.id !== excludeId && p.ws.readyState === 1) try{ p.ws.send(msg); }catch(e){} });
-}
+  players.forEach(p => { if(p.id !== excludeId && p.ws.readyState === 1) try{ p.ws.send(msg); }catch(e){} });}
 
 setInterval(() => { wss.clients.forEach(ws => { if(!ws.isAlive) return ws.terminate(); ws.isAlive=false; ws.ping(); }); }, 15000);
 server.listen(PORT, '0.0.0.0', () => console.log(`✅ SERVER RUNNING :${PORT}`));
