@@ -63,7 +63,7 @@ canvas { display: block; width: 100%; height: 100%; position: fixed; top: 0; lef
 <div id="main-menu">
   <div class="menu-header">
     <h1>🧱 ROBLOX 3D</h1>
-    <p style="color:#8a8f98;font-size:13px">Финальная версия • Широкий лабиринт • Умная крыса</p>
+    <p style="color:#8a8f98;font-size:13px">Широкий лабиринт • Плавная крыса • Фикс спавна</p>
   </div>
   <div class="game-grid">
     <div class="game-card" data-game="brookhaven"><h3>🏡 Brookhaven RP</h3><p>Открытый мир</p><div class="tags"><span class="tag">RP</span></div><button class="play-btn">Войти</button></div>
@@ -161,12 +161,12 @@ function connect(){
 function spawnMap(d){
   const wallMaterial = S.cheeseTex ? new THREE.MeshStandardMaterial({map:S.cheeseTex,color:0xffffff,roughness:0.5}) : new THREE.MeshStandardMaterial({color:0xddaa00});
   d.walls.forEach(w=>{
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w.w,w.h||5.0,w.d),wallMaterial);
-    m.position.set(w.x,(w.h||5.0)/2,w.z);m.castShadow=true;m.receiveShadow=true;
-    S.scene.add(m);S.walls.push({mesh:m,x:w.x,z:w.z,w:w.w,d:w.d,h:w.h||5.0});
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w.w,w.h||5.5,w.d),wallMaterial);
+    m.position.set(w.x,(w.h||5.5)/2,w.z);m.castShadow=true;m.receiveShadow=true;
+    S.scene.add(m);S.walls.push({mesh:m,x:w.x,z:w.z,w:w.w,d:w.d,h:w.h||5.5});
   });
   if(d.greenZones) d.greenZones.forEach(gz=>{
-    const zone=new THREE.Mesh(new THREE.PlaneGeometry(4.5,4.5),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:0.3,side:THREE.DoubleSide}));
+    const zone=new THREE.Mesh(new THREE.PlaneGeometry(6.0,6.0),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:0.3,side:THREE.DoubleSide}));
     zone.rotation.x=-Math.PI/2;zone.position.set(gz.x,0.05,gz.z);S.scene.add(zone);
   });
   d.cheeses.forEach(c=>{if(!c.collected) spawnCheese(c);});
@@ -228,17 +228,17 @@ function init3D(){
   const cv=document.getElementById('c');cv.width=window.innerWidth;cv.height=window.innerHeight;
   S.scene=new THREE.Scene();
   S.scene.background=new THREE.Color(S.gameId==='cheese'?0x2a2a35:0x87CEEB);
-  S.scene.fog=new THREE.Fog(S.gameId==='cheese'?0x2a2a35:0x87CEEB, 20, 45);
-  S.cam=new THREE.PerspectiveCamera(70,cv.width/cv.height,0.1,60);
+  S.scene.fog=new THREE.Fog(S.gameId==='cheese'?0x2a2a35:0x87CEEB, 25, 55);
+  S.cam=new THREE.PerspectiveCamera(70,cv.width/cv.height,0.1,80);
   S.ren=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
   S.ren.setSize(cv.width,cv.height);S.ren.setPixelRatio(Math.min(window.devicePixelRatio,2));
   S.ren.shadowMap.enabled=true;S.ren.shadowMap.type=THREE.PCFSoftShadowMap;S.ren.outputColorSpace=THREE.SRGBColorSpace;
   S.scene.add(new THREE.AmbientLight(0xffffff,S.gameId==='cheese'?0.95:0.6));
   const sun=new THREE.DirectionalLight(0xffffff,S.gameId==='cheese'?1.4:0.9);sun.position.set(12,25,12);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);S.scene.add(sun);
-  const g=new THREE.Mesh(new THREE.PlaneGeometry(70,90),new THREE.MeshStandardMaterial({color:S.gameId==='cheese'?0x22222a:0x33aa33}));g.rotation.x=-Math.PI/2;g.receiveShadow=true;S.scene.add(g);
+  const g=new THREE.Mesh(new THREE.PlaneGeometry(90,120),new THREE.MeshStandardMaterial({color:S.gameId==='cheese'?0x22222a:0x33aa33}));g.rotation.x=-Math.PI/2;g.receiveShadow=true;S.scene.add(g);
   S.localPlayer=createRig(0xff3333);S.localPlayer.group.position.y=1;S.scene.add(S.localPlayer.group);
   if(S.gameId==='brookhaven'){for(let i=0;i<15;i++){const t=new THREE.Group();t.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.4,2),new THREE.MeshStandardMaterial({color:0x8B4513})),{position:new THREE.Vector3(0,1,0),castShadow:true}));const l=new THREE.Mesh(new THREE.SphereGeometry(1.6),new THREE.MeshStandardMaterial({color:0x228B22}));l.position.y=2.8;l.castShadow=true;t.add(l);t.position.set((Math.random()-0.5)*100,0,(Math.random()-0.5)*100);S.scene.add(t);}}
-  if(S.gameId==='cheese'){loadAssets();const ex=new THREE.Mesh(new THREE.TorusGeometry(2,0.25,8,20),new THREE.MeshStandardMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.8}));ex.rotation.x=Math.PI/2;ex.position.y=2;ex.visible=false;S.scene.add(ex);S.exitMesh=ex;const safe=new THREE.Mesh(new THREE.RingGeometry(3.5,4,32),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:0.25,side:THREE.DoubleSide}));safe.rotation.x=-Math.PI/2;safe.position.y=0.05;S.scene.add(safe);}else{document.getElementById('loading').classList.remove('active');}
+  if(S.gameId==='cheese'){loadAssets();const ex=new THREE.Mesh(new THREE.TorusGeometry(2,0.25,8,20),new THREE.MeshStandardMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.8}));ex.rotation.x=Math.PI/2;ex.position.y=2;ex.visible=false;S.scene.add(ex);S.exitMesh=ex;const safe=new THREE.Mesh(new THREE.RingGeometry(4.0,4.5,32),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:0.25,side:THREE.DoubleSide}));safe.rotation.x=-Math.PI/2;safe.position.y=0.05;S.scene.add(safe);}else{document.getElementById('loading').classList.remove('active');}
 }
 
 function setupInput(){
@@ -251,15 +251,15 @@ function loop(t){
   if(!S.ws||S.ws.readyState!==1)return;requestAnimationFrame(loop);
   const dt=Math.min((t-lt)/1000,0.1);lt=t;
   if(S.localPlayer){
-    const sp=0.13;const fwd=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const rgt=new THREE.Vector3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
+    const sp=0.14;const fwd=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const rgt=new THREE.Vector3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
     let mv=new THREE.Vector3();if(S.inp.f<0)mv.add(fwd);if(S.inp.f>0)mv.sub(fwd);if(S.inp.r<0)mv.sub(rgt);if(S.inp.r>0)mv.add(rgt);
-    if(mv.length()>0){mv.normalize();const nx=S.localPlayer.group.position.x+mv.x*sp,nz=S.localPlayer.group.position.z+mv.z*sp;let col=false;const pr=0.6;for(const w of S.walls){if(nx>w.x-w.w/2-pr&&nx<w.x+w.w/2+pr&&nz>w.z-w.d/2-pr&&nz<w.z+w.d/2+pr){col=true;break;}}if(!col){S.localPlayer.group.position.x=nx;S.localPlayer.group.position.z=nz;}S.localPlayer.group.rotation.y=S.yaw+Math.PI;}
-    if(S.inp.jump&&S.localPlayer.group.position.y<=1.01){S.localPlayer.group.position.y=3.0;S.inp.jump=false;}
+    if(mv.length()>0){mv.normalize();const nx=S.localPlayer.group.position.x+mv.x*sp,nz=S.localPlayer.group.position.z+mv.z*sp;let col=false;const pr=0.7;for(const w of S.walls){if(nx>w.x-w.w/2-pr&&nx<w.x+w.w/2+pr&&nz>w.z-w.d/2-pr&&nz<w.z+w.d/2+pr){col=true;break;}}if(!col){S.localPlayer.group.position.x=nx;S.localPlayer.group.position.z=nz;}S.localPlayer.group.rotation.y=S.yaw+Math.PI;}
+    if(S.inp.jump&&S.localPlayer.group.position.y<=1.01){S.localPlayer.group.position.y=3.2;S.inp.jump=false;}
     if(S.localPlayer.group.position.y>1)S.localPlayer.group.position.y-=0.22;if(S.localPlayer.group.position.y<1)S.localPlayer.group.position.y=1;
     const mvng=Math.abs(S.inp.f)>0.1||Math.abs(S.inp.r)>0.1;const spd=mvng?12:0;const amp=mvng?0.7:0;const tm=t*0.012;
     S.localPlayer.lL.rotation.x=Math.sin(tm*spd)*amp;S.localPlayer.rL.rotation.x=-Math.sin(tm*spd)*amp;S.localPlayer.lA.rotation.x=-Math.sin(tm*spd)*amp;S.localPlayer.rA.rotation.x=Math.sin(tm*spd)*amp;
     S.ws.send(JSON.stringify({playerId:S.id,type:'input',f:S.inp.f,r:S.inp.r,jump:S.inp.jump,action:S.inp.action,yaw:S.yaw}));S.inp.action=false;
-    const cd=isMobile?4.0:6.0,ch=isMobile?2.8:4.0;
+    const cd=isMobile?4.5:7.0,ch=isMobile?3.0:4.5;
     S.cam.position.set(S.localPlayer.group.position.x+Math.sin(S.yaw)*cd,S.localPlayer.group.position.y+ch+Math.sin(S.pitch)*1.5,S.localPlayer.group.position.z+Math.cos(S.yaw)*cd);
     S.cam.lookAt(S.localPlayer.group.position.x,S.localPlayer.group.position.y+1.5,S.localPlayer.group.position.z);
     S.players.forEach(p=>{if(p.tag){const pos=p.mesh.group.position.clone();pos.y+=3.5;pos.project(S.cam);if(pos.z<1){p.tag.style.display='block';p.tag.style.left=(pos.x*0.5+0.5)*innerWidth+'px';p.tag.style.top=(-pos.y*0.5+0.5)*innerHeight+'px';}else p.tag.style.display='none';}const om=p.animState===1;const os=om?12:0;const oa=om?0.7:0;p.mesh.lL.rotation.x=Math.sin(t*0.012*os)*oa;p.mesh.rL.rotation.x=-Math.sin(t*0.012*os)*oa;p.mesh.lA.rotation.x=-Math.sin(t*0.012*os)*oa;p.mesh.rA.rotation.x=Math.sin(t*0.012*os)*oa;});
@@ -272,4 +272,4 @@ function addChat(n,m,self=false){const b=document.getElementById('chat-box'),d=d
 window.addEventListener('resize',()=>{if(S.cam&&S.ren){const cv=document.getElementById('c');cv.width=innerWidth;cv.height=innerHeight;S.cam.aspect=innerWidth/innerHeight;S.cam.updateProjectionMatrix();S.ren.setSize(innerWidth,innerHeight);}});
 </script>
 </body>
-  </html>
+</html>
