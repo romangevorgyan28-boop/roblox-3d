@@ -1,6 +1,6 @@
 /**
- * 🧱 ROBLOX 3D ULTIMATE SERVER v3.5
- * Исправлено: ширина лабиринта (x3), убраны тупики, оптимизация
+ * 🧱 ROBLOX 3D ULTIMATE SERVER v3.7
+ * Карта как на фото: жёлтые стены, зелёные зоны спавна, узкие проходы
  */
 const express = require('express');
 const http = require('http');
@@ -15,75 +15,69 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-const WORLD_CONFIG = { TICK_RATE: 24, GRAVITY: 18, MOVE_SPEED: 8.0, JUMP_FORCE: 10.0 };
+const WORLD_CONFIG = { TICK_RATE: 24, GRAVITY: 18, MOVE_SPEED: 7.0, JUMP_FORCE: 9.5 };
+
+// ===== КАРТА ПО ТВОЕМУ ФОТО =====
+// 0=пол, 1=жёлтая стена, 2=зелёная зона спавна, 3=место сыра, 4=выход
+const MAZE_MAP = [
+  [2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [2,2,2,1,3,3,3,3,3,3,3,1,3,3,3,3,3,1,1],
+  [2,2,2,1,3,1,1,1,1,1,3,1,3,1,1,1,3,1,1],
+  [2,2,2,1,3,1,3,3,3,1,3,1,3,1,3,3,3,1,1],
+  [1,1,1,1,3,1,3,1,3,1,3,1,3,1,3,1,1,1,1],
+  [1,3,3,3,3,1,3,1,3,1,3,1,3,1,3,1,3,3,1],
+  [1,3,1,1,1,1,3,1,3,1,3,1,3,1,3,1,3,1,1],
+  [1,3,1,3,3,3,3,1,3,1,3,1,3,1,3,1,3,1,1],
+  [1,3,1,3,1,1,1,1,3,1,3,1,3,1,3,1,3,1,1],
+  [1,3,1,3,1,3,3,3,3,1,3,1,3,1,3,3,3,1,1],
+  [1,3,1,3,1,3,1,1,1,1,3,1,3,1,1,1,1,1,1],
+  [1,3,1,3,1,3,1,3,3,1,3,1,3,3,3,3,3,3,1],
+  [1,3,1,3,1,3,1,3,1,1,3,1,1,1,1,1,1,3,1],
+  [1,3,1,3,1,3,1,3,1,3,3,3,3,3,3,3,1,3,1],
+  [1,3,1,3,1,3,1,3,1,1,1,1,1,1,1,3,1,3,1],
+  [1,3,1,3,1,3,1,3,3,3,3,3,3,3,1,3,1,3,1],
+  [1,3,1,3,1,3,1,1,1,1,1,1,1,3,1,3,1,3,1],
+  [1,3,1,3,1,3,3,3,3,3,3,3,1,3,1,3,1,3,4],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
 
 class MazeGenerator {
-  constructor(size) {
-    this.size = size;
-    this.grid = [];
-    this.cellSize = 12.0; // ШИРОКИЕ ПРОХОДЫ (было 4.0)
-    this.wallHeight = 6.5;
-    this.generate();
-    this.removeDeadEnds(); // Убираем тупики
-  }
-
-  generate() {
-    for (let y = 0; y < this.size; y++) {
-      this.grid[y] = [];
-      for (let x = 0; x < this.size; x++) this.grid[y][x] = 1;
-    }
-    const stack = [{ x: 1, y: 1 }];
-    this.grid[1][1] = 0;
-    const dirs = [{ x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }];
-
-    while (stack.length) {
-      const curr = stack[stack.length - 1];
-      const neighbors = [];
-      for (const d of dirs) {
-        const nx = curr.x + d.x, ny = curr.y + d.y;
-        if (nx > 0 && nx < this.size - 1 && ny > 0 && ny < this.size - 1 && this.grid[ny][nx] === 1) {
-          neighbors.push({ x: nx, y: ny, dx: d.x / 2, dy: d.y / 2 });
-        }
-      }
-      if (neighbors.length) {
-        const ch = neighbors[Math.floor(Math.random() * neighbors.length)];
-        this.grid[ch.y][ch.x] = 0;        this.grid[curr.y + ch.dy][curr.x + ch.dx] = 0;
-        stack.push({ x: ch.x, y: ch.y });
-      } else stack.pop();
-    }
-  }
-
-  removeDeadEnds() {
-    // Прорубаем ~35% внутренних стен, создавая петли и открытые зоны
-    for (let y = 1; y < this.size - 1; y++) {
-      for (let x = 1; x < this.size - 1; x++) {
-        if (this.grid[y][x] === 1 && Math.random() < 0.35) {
-          this.grid[y][x] = 0;
-        }
-      }
-    }
-    // Гарантируем безопасную зону спавна и выхода
-    this.grid[1][1] = 0; this.grid[1][2] = 0; this.grid[2][1] = 0;
-    this.grid[this.size-2][this.size-2] = 0;
-  }
+  constructor(map) {
+    this.map = map;
+    this.rows = map.length;
+    this.cols = map[0].length;
+    this.cellSize = 3.5; // Компактный лабиринт как на фото
+    this.wallHeight = 4.5;  }
 
   getWalls() {
     const walls = [];
-    const half = this.size / 2;
-    for (let y = 0; y < this.size; y++) {
-      for (let x = 0; x < this.size; x++) {
-        if (this.grid[y][x] === 1) {
-          walls.push({
-            x: (x - half) * this.cellSize,
-            z: (y - half) * this.cellSize,
-            w: this.cellSize,
-            d: this.cellSize,
-            h: this.wallHeight
-          });
+    const cheeseSpots = [];
+    const greenZones = [];
+    let exitPos = null;
+    let spawnPos = { x: 0, z: 0 };
+
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        const cell = this.map[y][x];
+        const wx = (x - this.cols/2) * this.cellSize;
+        const wz = (y - this.rows/2) * this.cellSize;
+
+        if (cell === 1) {
+          walls.push({ x: wx, z: wz, w: this.cellSize, d: this.cellSize, h: this.wallHeight });
+        }
+        if (cell === 2) {
+          greenZones.push({ x: wx, z: wz });
+          if (spawnPos.x === 0 && spawnPos.z === 0) spawnPos = { x: wx, z: wz };
+        }
+        if (cell === 3) {
+          cheeseSpots.push({ x: wx, z: wz });
+        }
+        if (cell === 4) {
+          exitPos = { x: wx, z: wz };
         }
       }
     }
-    return { walls, spawn: { x: (1 - half) * this.cellSize, z: (1 - half) * this.cellSize } };
+    return { walls, spawn: spawnPos, greenZones, cheeseSpots, exit: exitPos };
   }
 }
 
@@ -91,29 +85,18 @@ const players = new Map();
 const gameInstances = {};
 let nextId = 1;
 
-const maze = new MazeGenerator(19); // 19x19 клеток, но очень широкие
+const maze = new MazeGenerator(MAZE_MAP);
+const mapData = maze.getWalls();
+
 gameInstances.cheese = {
-  ...maze.getWalls(),
-  cheeses: [],
-  rat: { x: 0, z: 0, speed: 5.5, yaw: 0 },
-  exit: { x: (19/2 - 2) * 12, z: (19/2 - 2) * 12, open: false },  time: 0
+  walls: mapData.walls,
+  cheeses: mapData.cheeseSpots.map((c, i) => ({ id: `c_${i}`, x: c.x, z: c.z, collected: false })),
+  greenZones: mapData.greenZones,
+  rat: { x: 0, z: 0, speed: 4.5, yaw: 0 },
+  exit: { x: mapData.exit?.x || 0, z: mapData.exit?.z || 0, open: false },
+  spawn: mapData.spawn,
+  time: 0
 };
-
-let cheeseCount = 0;
-for(let y=1; y<18; y+=2) {
-  for(let x=1; x<18; x+=2) {
-    if(cheeseCount < 9 && Math.random() > 0.2) {
-      gameInstances.cheese.cheeses.push({
-        id: `c_${x}_${y}`,
-        x: (x - 9.5) * 12,
-        z: (y - 9.5) * 12,
-        collected: false
-      });
-      cheeseCount++;
-    }
-  }
-}
-
 class Player {
   constructor(id, ws, name) {
     this.id = id; this.ws = ws; this.name = name.substring(0, 16);
@@ -145,7 +128,8 @@ wss.on('connection', (ws) => {
       if (!d.playerId && d.type === 'register') {
         const id = nextId++;
         const p = new Player(id, ws, d.name || `Player_${id}`);
-        players.set(id, p);        ws.send(JSON.stringify({ type: 'registered', id, name: p.name, players: Array.from(players.values()).filter(x=>x.id!==id).map(x=>x.getPublic()) }));
+        players.set(id, p);
+        ws.send(JSON.stringify({ type: 'registered', id, name: p.name, players: Array.from(players.values()).filter(x=>x.id!==id).map(x=>x.getPublic()) }));
         broadcast({ type: 'playerJoined', player: p.getPublic() }, id);
         return;
       }
@@ -157,12 +141,11 @@ wss.on('connection', (ws) => {
       if (d.type === 'joinGame' && ['brookhaven','shooter','brainrot','cheese'].includes(d.gameId)) {
         p.reset(d.gameId);
         if (d.gameId === 'cheese') {
-          ws.send(JSON.stringify({ type: 'mapData', walls: gameInstances.cheese.walls, cheeses: gameInstances.cheese.cheeses, spawn: gameInstances.cheese.spawn }));
+          ws.send(JSON.stringify({ type: 'mapData', walls: gameInstances.cheese.walls, cheeses: gameInstances.cheese.cheeses, spawn: gameInstances.cheese.spawn, greenZones: gameInstances.cheese.greenZones, exit: gameInstances.cheese.exit }));
         }
         broadcast({ type: 'playerMoved', player: p.getPublic() });
       }
-      if (d.type === 'chat' && d.msg) broadcast({ type: 'chat', name: p.name, msg: d.msg.substring(0, 120) });
-    } catch(e) {}
+      if (d.type === 'chat' && d.msg) broadcast({ type: 'chat', name: p.name, msg: d.msg.substring(0, 120) });    } catch(e) {}
   });
   ws.on('close', () => {
     for (const [id, pl] of players) { if (pl.ws === ws) { players.delete(id); broadcast({ type: 'playerLeft', playerId: id }); break; } }
@@ -184,9 +167,9 @@ setInterval(() => {
     if (ny <= 1) { ny = 1; p.vy = 0; p.onGround = true; }
     
     if (p.gameId === 'cheese') {
-      const cs = 12.0, half = 9.5;
-      const gx = Math.floor((nx / cs) + half), gz = Math.floor((nz / cs) + half);
-      if (gx >= 0 && gx < 19 && gz >= 0 && gz < 19 && maze.grid[gz][gx] === 1) {
+      const cs = 3.5, halfX = 9.5, halfZ = 9.5;
+      const gx = Math.floor((nx / cs) + halfX), gz = Math.floor((nz / cs) + halfZ);
+      if (gx >= 0 && gx < 19 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) {
         nx = p.x; nz = p.z;
       }
     }
@@ -194,18 +177,29 @@ setInterval(() => {
 
     if (p.gameId === 'cheese') {
       const rat = gameInstances.cheese.rat;
-      if (p.health > 0) {        const dx = p.x - rat.x, dz = p.z - rat.z;
-        if (Math.hypot(dx, dz) < 2.5) {
+      const greenZones = gameInstances.cheese.greenZones;
+      
+      // Крыса не заходит в зелёные зоны спавна
+      let ratInGreen = false;
+      for (const gz of greenZones) {
+        if (Math.hypot(rat.x - gz.x, rat.z - gz.z) < 5) { ratInGreen = true; break; }
+      }
+      
+      if (p.health > 0 && !ratInGreen) {
+        const dx = p.x - rat.x, dz = p.z - rat.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist < 2.5) {
           p.health -= 8;
           if (p.health <= 0) { p.health = 100; p.x = gameInstances.cheese.spawn.x; p.z = gameInstances.cheese.spawn.z; p.ws.send(JSON.stringify({ type: 'died' })); }
         }
       }
-      let target = null, minD = 999;
-      players.forEach(o => { if(o.gameId==='cheese' && o.health>0) { const d=Math.hypot(o.x-rat.x, o.z-rat.z); if(d<minD){minD=d; target=o;} }});
+      
+      let target = null, minD = 999;      players.forEach(o => { if(o.gameId==='cheese' && o.health>0) { const d=Math.hypot(o.x-rat.x, o.z-rat.z); if(d<minD){minD=d; target=o;} }});
       if(target) {
         const tx=target.x-rat.x, tz=target.z-rat.z;
         rat.x += (tx/minD)*rat.speed*dt; rat.z += (tz/minD)*rat.speed*dt; rat.yaw = Math.atan2(tx,tz);
       }
+      
       gameInstances.cheese.cheeses.forEach(c => {
         if(!c.collected && p.input.action && Math.hypot(p.x-c.x, p.z-c.z) < 3) {
           c.collected = true; p.inventory.cheese++;
@@ -235,5 +229,5 @@ function broadcast(data, ex=null) {
 }
 
 setInterval(() => { wss.clients.forEach(ws => { if(!ws.isAlive) return ws.terminate(); ws.isAlive=false; ws.ping(); }); }, 15000);
-server.listen(PORT, '0.0.0.0', () => console.log(`🚀 v3.5 RUNNING :${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`🚀 v3.7 RUNNING :${PORT}`));
 process.on('SIGINT', () => process.exit(0));
