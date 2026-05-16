@@ -1,7 +1,3 @@
-/**
- * 🧱 ROBLOX 3D ULTIMATE SERVER v3.8
- * Карта по фото • Одна текстура сыра на стенах и на сырах • Ярко • Без тумана
- */
 const express = require('express');
 const http = require('http');
 const { WebSocketServer } = require('ws');
@@ -9,7 +5,7 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, maxPayload: 128 * 1024, perMessageDeflate: false });
+const wss = new WebSocketServer({ server, maxPayload: 128 * 1024 });
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static(__dirname));
@@ -17,7 +13,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const WORLD_CONFIG = { TICK_RATE: 24, GRAVITY: 18, MOVE_SPEED: 7.0, JUMP_FORCE: 9.5 };
 
-// КАРТА ПО ТВОЕМУ ФОТО: 0=пол, 1=стена, 2=зелёная зона спавна, 3=место сыра, 4=выход
+// КАРТА: 0=пол, 1=стена, 2=спавн, 3=сыр, 4=выход
 const MAZE_MAP = [
   [2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [2,2,2,1,3,3,3,3,3,3,3,1,3,3,3,3,3,1,1],
@@ -47,14 +43,11 @@ class MazeGenerator {
     this.cols = map[0].length;
     this.cellSize = 3.5;
     this.wallHeight = 4.5;
-  }  getWalls() {
-    const walls = [];
-    const cheeseSpots = [];
-    const greenZones = [];
-    let exitPos = null;
-    let spawnPos = { x: 0, z: 0 };
-    for (let y = 0; y < this.rows; y++) {
-      for (let x = 0; x < this.cols; x++) {
+  }
+  getWalls() {
+    const walls = [], cheeseSpots = [], greenZones = [];
+    let exitPos = null, spawnPos = { x: 0, z: 0 };
+    for (let y = 0; y < this.rows; y++) {      for (let x = 0; x < this.cols; x++) {
         const cell = this.map[y][x];
         const wx = (x - this.cols/2) * this.cellSize;
         const wz = (y - this.rows/2) * this.cellSize;
@@ -91,20 +84,19 @@ class Player {
     this.gameId = 'menu'; this.x = 0; this.y = 1; this.z = 0;
     this.vx = 0; this.vy = 0; this.vz = 0; this.yaw = 0; this.onGround = false;
     this.input = { f: 0, r: 0, jump: false, action: false };
-    this.health = 100; this.team = null; this.inventory = { cheese: 0 };
+    this.health = 100; this.inventory = { cheese: 0 };
     this.lastSent = { x: 0, y: 0, z: 0, yaw: 0, anim: 0 };
   }
   reset(gid) {
     this.gameId = gid;
-    const spawn = gameInstances.cheese?.spawn || { x: 0, z: 0 };    this.x = spawn.x; this.z = spawn.z; this.y = 1;
+    const spawn = gameInstances.cheese?.spawn || { x: 0, z: 0 };
+    this.x = spawn.x; this.z = spawn.z; this.y = 1;
     this.vx = 0; this.vy = 0; this.vz = 0; this.health = 100;
     this.inventory.cheese = 0;
-    if (gid === 'shooter') this.team = players.size % 2 === 0 ? 'red' : 'blue';
   }
   getPublic() {
-    return { id:this.id, name:this.name, x:this.x, y:this.y, z:this.z, yaw:this.yaw, health:this.health, team:this.team, gameId:this.gameId, anim: Math.abs(this.input.f)>0.1||Math.abs(this.input.r)>0.1?1:0 };
-  }
-}
+    return { id:this.id, name:this.name, x:this.x, y:this.y, z:this.z, yaw:this.yaw, health:this.health, gameId:this.gameId, anim: Math.abs(this.input.f)>0.1||Math.abs(this.input.r)>0.1?1:0 };
+  }}
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
@@ -145,15 +137,15 @@ setInterval(() => {
   players.forEach(p => {
     if (p.ws.readyState !== 1 || p.gameId === 'menu') return;
     const speed = WORLD_CONFIG.MOVE_SPEED;
-    const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);    const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
+    const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
+    const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
     p.vx = (p.input.f * fx + p.input.r * rx) * speed;
     p.vz = (p.input.f * fz + p.input.r * rz) * speed;
     if (p.input.jump && p.onGround) { p.vy = WORLD_CONFIG.JUMP_FORCE; p.onGround = false; }
     p.vy -= WORLD_CONFIG.GRAVITY * dt;
     let nx = p.x + p.vx * dt, nz = p.z + p.vz * dt, ny = p.y + p.vy * dt;
     if (ny <= 1) { ny = 1; p.vy = 0; p.onGround = true; }
-    if (p.gameId === 'cheese') {
-      const cs = 3.5, halfX = 9.5, halfZ = 9.5;
+    if (p.gameId === 'cheese') {      const cs = 3.5, halfX = 9.5, halfZ = 9.5;
       const gx = Math.floor((nx / cs) + halfX), gz = Math.floor((nz / cs) + halfZ);
       if (gx >= 0 && gx < 19 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { nx = p.x; nz = p.z; }
     }
@@ -195,11 +187,11 @@ setInterval(() => {
   });
   if(gameInstances.cheese) gameInstances.cheese.time += dt;
 }, 1000 / WORLD_CONFIG.TICK_RATE);
+
 function broadcast(data, ex=null) {
   const msg = JSON.stringify(data);
   players.forEach(p => { if(p.id!==ex && p.ws.readyState===1) try{p.ws.send(msg);}catch(e){} });
 }
 
 setInterval(() => { wss.clients.forEach(ws => { if(!ws.isAlive) return ws.terminate(); ws.isAlive=false; ws.ping(); }); }, 15000);
-server.listen(PORT, '0.0.0.0', () => console.log(`🚀 v3.8 RUNNING :${PORT}`));
-process.on('SIGINT', () => process.exit(0));
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ SERVER RUNNING :${PORT}`));process.on('SIGINT', () => process.exit(0));
