@@ -14,7 +14,7 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 const WORLD_CONFIG = { 
     TICK_RATE: 24, 
     GRAVITY: 18, 
-    MOVE_SPEED: 6.5, 
+    MOVE_SPEED: 7.0, 
     JUMP_FORCE: 9.0 
 };
 
@@ -41,13 +41,13 @@ const MAZE_MAP = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
-// Предвычисляем пустые клетки для патруля крысы
+// Предвычисляем пустые клетки для крысы
 const PATROL_SPOTS = [];
 for(let y=0; y<MAZE_MAP.length; y++) {
   for(let x=0; x<MAZE_MAP[0].length; x++) {
     if(MAZE_MAP[y][x] === 0 || MAZE_MAP[y][x] === 2 || MAZE_MAP[y][x] === 3 || MAZE_MAP[y][x] === 4) {
       PATROL_SPOTS.push({ 
-        x: (x - 6.5) * 4.5,         z: (y - 9.5) * 4.5 
+        x: (x - 6.5) * 6.0,         z: (y - 9.5) * 6.0 
       });
     }
   }
@@ -58,8 +58,8 @@ class MazeGenerator {
     this.map = map;
     this.rows = map.length;
     this.cols = map[0].length;
-    this.cellSize = 4.5; // 1.5x шире
-    this.wallHeight = 5.0;
+    this.cellSize = 6.0; // ЕЩЁ ШИРЕ!
+    this.wallHeight = 5.5;
   }
   
   getWalls() {
@@ -80,6 +80,7 @@ class MazeGenerator {
         }
         if (cell === 2) { 
           greenZones.push({ x: worldX, z: worldZ }); 
+          // Спавн в центре клетки, не на краю
           if (spawnPos.x === 0) spawnPos = { x: worldX, z: worldZ }; 
         }
         if (cell === 3) cheeseSpots.push({ x: worldX, z: worldZ });
@@ -101,9 +102,8 @@ gameInstances.cheese = {
   cheeses: mapData.cheeseSpots.map((c, i) => ({ id: `c_${i}`, x: c.x, z: c.z, collected: false })),
   greenZones: mapData.greenZones,
   rat: { 
-    x: 0, z: 0, speed: 4.0, yaw: 0, 
-    state: 'patrol', 
-    target: { x: 0, z: 0 }, 
+    x: 0, z: 0, speed: 3.5, yaw: 0,
+    targetX: 0, targetZ: 0,
     targetTimer: 0 
   },
   exit: { x: mapData.exit?.x || 0, z: mapData.exit?.z || 0, open: false },
@@ -200,7 +200,7 @@ setInterval(() => {
     if (ny <= 1) { ny = 1; p.vy = 0; p.onGround = true; }
     
     if (p.gameId === 'cheese') {
-      const cs = 4.5, halfX = 6.5, halfZ = 9.5;
+      const cs = 6.0, halfX = 6.5, halfZ = 9.5;
       const gx = Math.floor((nx / cs) + halfX), gz = Math.floor((nz / cs) + halfZ);
       if (gx >= 0 && gx < 13 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { nx = p.x; nz = p.z; }
     }
@@ -210,7 +210,7 @@ setInterval(() => {
       const rat = gameInstances.cheese.rat;
       const greenZones = gameInstances.cheese.greenZones;
       
-      // Поиск ближайшего игрока
+      // НАЙТИ БЛИЖАЙШЕГО ИГРОКА
       let nearestPlayer = null;
       let minDist = 999;
       players.forEach(o => { 
@@ -220,38 +220,39 @@ setInterval(() => {
         }
       });
 
-      // Логика переключения состояний крысы
-      if (nearestPlayer && minDist < 5.5) {
-        rat.state = 'chase';
-        rat.target = { x: nearestPlayer.x, z: nearestPlayer.z };
-      } else if (rat.state === 'chase' && minDist > 7.0) {
-        rat.state = 'patrol';
-      }
-
-      // Патрулирование
-      if (rat.state === 'patrol') {
+      // КРЫСА ВСЕГДА ИДЁТ ЗА БЛИЖАЙШИМ ИГРОКОМ
+      if (nearestPlayer) {
+        rat.targetX = nearestPlayer.x;
+        rat.targetZ = nearestPlayer.z;
+      } else {
+        // Если нет игроков, патрулирует
         rat.targetTimer -= dt;
         if (rat.targetTimer <= 0) {
-          rat.target = PATROL_SPOTS[Math.floor(Math.random() * PATROL_SPOTS.length)];
-          rat.targetTimer = 2.5 + Math.random() * 2.0;
+          const spot = PATROL_SPOTS[Math.floor(Math.random() * PATROL_SPOTS.length)];
+          rat.targetX = spot.x;
+          rat.targetZ = spot.z;
+          rat.targetTimer = 3.0 + Math.random() * 2.0;
         }
       }
 
-      // Движение крысы
-      const dx = rat.target.x - rat.x;
-      const dz = rat.target.z - rat.z;
+      // ПЛАВНОЕ ДВИЖЕНИЕ КРЫСЫ
+      const dx = rat.targetX - rat.x;
+      const dz = rat.targetZ - rat.z;
       const dist = Math.hypot(dx, dz);
-      if (dist > 0.5) {
-        rat.x += (dx / dist) * rat.speed * dt;
-        rat.z += (dz / dist) * rat.speed * dt;        rat.yaw = Math.atan2(dx, dz);
+      
+      if (dist > 0.3) {
+        const moveX = (dx / dist) * rat.speed * dt;
+        const moveZ = (dz / dist) * rat.speed * dt;
+        rat.x += moveX;        rat.z += moveZ;
+        rat.yaw = Math.atan2(dx, dz);
       }
 
-      // Урон от крысы
+      // УРОН ОТ КРЫСЫ
       let ratInGreen = false;
       for (const gz of greenZones) { if (Math.hypot(rat.x - gz.x, rat.z - gz.z) < 5) { ratInGreen = true; break; } }
       
       if (p.health > 0 && !ratInGreen) {
-        if (minDist < 2.2) {
+        if (minDist < 2.5) {
           p.health -= 10;
           if (p.health <= 0) { 
             p.health = 100; p.x = gameInstances.cheese.spawn.x; p.z = gameInstances.cheese.spawn.z; 
@@ -260,17 +261,17 @@ setInterval(() => {
         }
       }
 
-      // Сбор сыра
+      // СБОР СЫРА
       gameInstances.cheese.cheeses.forEach(c => {
-        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 3.0) {
+        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 3.5) {
           c.collected = true; p.inventory.cheese++;
           p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
           if(p.inventory.cheese >= 9) gameInstances.cheese.exit.open = true;
         }
       });
 
-      // Выход
-      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 3.5) {
+      // ВЫХОД
+      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 4.0) {
         p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) })); 
         p.health = 0;
       }
