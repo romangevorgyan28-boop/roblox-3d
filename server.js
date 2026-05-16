@@ -14,32 +14,32 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 const WORLD_CONFIG = { 
     TICK_RATE: 24, 
     GRAVITY: 18, 
-    MOVE_SPEED: 7.0, 
-    JUMP_FORCE: 9.5 
+    MOVE_SPEED: 6.0, 
+    JUMP_FORCE: 8.5 
 };
 
-// 3D ЛАБИРИНТ С КОРИДОРАМИ И КОМНАТАМИ
+// КОМПАКТНЫЙ 3D ЛАБИРИНТ ПО ФОРМЕ КАК НА КАРТИНКЕ
 // 0 = пол (проход), 1 = стена, 2 = спавн, 3 = сыр, 4 = выход
 const MAZE_MAP = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,2,2,2,1,0,0,0,1,3,3,3,1,0,0,0,1,3,3,3,1],
-  [1,2,1,2,1,0,1,0,1,3,1,3,1,0,1,0,1,3,1,3,1],
-  [1,2,1,2,1,0,1,0,1,3,1,3,1,0,1,0,1,3,1,3,1],
-  [1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1],
-  [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-  [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
-  [1,0,1,3,3,3,1,0,1,3,3,3,1,0,1,0,1,3,3,0,1],
-  [1,0,1,3,1,3,1,0,1,3,1,3,1,0,1,0,1,3,1,0,1],
-  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
-  [1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1],
-  [1,3,3,0,1,0,1,3,3,0,1,0,1,3,3,3,1,0,1,0,1],
-  [1,3,1,0,1,0,1,3,1,0,1,0,1,3,1,3,1,0,1,0,1],
-  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
-  [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1],
-  [1,0,1,3,3,3,1,0,1,3,3,3,1,0,1,0,1,3,3,3,1],
-  [1,0,1,3,1,3,1,0,1,3,1,3,1,0,1,0,1,3,1,3,1],
-  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,0,0,1,0,0,0,1,3,0,4,1],
+  [1,0,1,0,1,0,1,0,1,0,1,0,1],
+  [1,0,1,0,0,0,1,0,0,0,1,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,0,0,1,3,0,0,1],
+  [1,1,1,0,1,1,1,1,1,0,1,1,1],
+  [1,3,0,0,1,3,0,0,0,0,1,3,1],
+  [1,0,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,1,3,0,0,0,0,1,0,0,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,1,0,0,0,1,0,1],
+  [1,1,1,1,1,0,1,1,1,0,1,0,1],
+  [1,3,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,1,1,1,1,0,1],
+  [1,0,1,3,0,0,0,0,0,0,1,0,1],
+  [1,0,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,1,0,1,3,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
 class MazeGenerator {
@@ -47,7 +47,7 @@ class MazeGenerator {
     this.map = map;
     this.rows = map.length;
     this.cols = map[0].length;
-    this.cellSize = 4.0;    this.wallHeight = 5.0;
+    this.cellSize = 3.0;    this.wallHeight = 4.0;
   }
   
   getWalls() {
@@ -103,7 +103,7 @@ gameInstances.cheese = {
     collected: false 
   })),
   greenZones: mapData.greenZones,
-  rat: { x: 0, z: 0, speed: 4.5, yaw: 0 },
+  rat: { x: 0, z: 0, speed: 3.5, yaw: 0 },
   exit: { x: mapData.exit?.x || 0, z: mapData.exit?.z || 0, open: false },
   spawn: mapData.spawn,
   time: 0
@@ -251,9 +251,9 @@ setInterval(() => {
     }
     
     if (p.gameId === 'cheese') {
-      const cs = 4.0, halfX = 10.5, halfZ = 9.5;
+      const cs = 3.0, halfX = 6.5, halfZ = 9.5;
       const gx = Math.floor((nx / cs) + halfX), gz = Math.floor((nz / cs) + halfZ);
-      if (gx >= 0 && gx < 21 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { 
+      if (gx >= 0 && gx < 13 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { 
         nx = p.x; 
         nz = p.z; 
       }
@@ -277,7 +277,7 @@ setInterval(() => {
       
       if (p.health > 0 && !ratInGreen) {
         const dx = p.x - rat.x, dz = p.z - rat.z;
-        if (Math.hypot(dx, dz) < 2.5) {
+        if (Math.hypot(dx, dz) < 2.0) {
           p.health -= 8;
           if (p.health <= 0) { 
             p.health = 100; 
@@ -306,7 +306,7 @@ setInterval(() => {
       }
       
       gameInstances.cheese.cheeses.forEach(c => {
-        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 3) {
+        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 2.5) {
           c.collected = true; 
           p.inventory.cheese++;
           p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
@@ -314,7 +314,7 @@ setInterval(() => {
         }
       });
       
-      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 3.5) {
+      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 3.0) {
         p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) })); 
         p.health = 0;
       }
