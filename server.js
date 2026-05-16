@@ -18,27 +18,28 @@ const WORLD_CONFIG = {
     JUMP_FORCE: 9.5 
 };
 
-// КАРТА: 0=пол, 1=стена, 2=спавн, 3=сыр, 4=выход
+// 3D ЛАБИРИНТ С КОРИДОРАМИ И КОМНАТАМИ
+// 0 = пол (проход), 1 = стена, 2 = спавн, 3 = сыр, 4 = выход
 const MAZE_MAP = [
-  [2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [2,2,2,1,3,3,3,3,3,3,3,1,3,3,3,3,3,1,1],
-  [2,2,2,1,3,1,1,1,1,1,3,1,3,1,1,1,3,1,1],
-  [2,2,2,1,3,1,3,3,3,1,3,1,3,1,3,3,3,1,1],
-  [1,1,1,1,3,1,3,1,3,1,3,1,3,1,3,1,1,1,1],
-  [1,3,3,3,3,1,3,1,3,1,3,1,3,1,3,1,3,3,1],
-  [1,3,1,1,1,1,3,1,3,1,3,1,3,1,3,1,3,1,1],
-  [1,3,1,3,3,3,3,1,3,1,3,1,3,1,3,1,3,1,1],
-  [1,3,1,3,1,1,1,1,3,1,3,1,3,1,3,1,3,1,1],
-  [1,3,1,3,1,3,3,3,3,1,3,1,3,1,3,3,3,1,1],
-  [1,3,1,3,1,3,1,1,1,1,3,1,3,1,1,1,1,1,1],
-  [1,3,1,3,1,3,1,3,3,1,3,1,3,3,3,3,3,3,1],
-  [1,3,1,3,1,3,1,3,1,1,3,1,1,1,1,1,1,3,1],
-  [1,3,1,3,1,3,1,3,1,3,3,3,3,3,3,3,1,3,1],
-  [1,3,1,3,1,3,1,3,1,1,1,1,1,1,1,3,1,3,1],
-  [1,3,1,3,1,3,1,3,3,3,3,3,3,3,1,3,1,3,1],
-  [1,3,1,3,1,3,1,1,1,1,1,1,1,3,1,3,1,3,1],
-  [1,3,1,3,1,3,3,3,3,3,3,3,1,3,1,3,1,3,4],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,2,2,1,0,0,0,1,3,3,3,1,0,0,0,1,3,3,3,1],
+  [1,2,1,2,1,0,1,0,1,3,1,3,1,0,1,0,1,3,1,3,1],
+  [1,2,1,2,1,0,1,0,1,3,1,3,1,0,1,0,1,3,1,3,1],
+  [1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1],
+  [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+  [1,0,1,3,3,3,1,0,1,3,3,3,1,0,1,0,1,3,3,0,1],
+  [1,0,1,3,1,3,1,0,1,3,1,3,1,0,1,0,1,3,1,0,1],
+  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+  [1,1,1,0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1],
+  [1,3,3,0,1,0,1,3,3,0,1,0,1,3,3,3,1,0,1,0,1],
+  [1,3,1,0,1,0,1,3,1,0,1,0,1,3,1,3,1,0,1,0,1],
+  [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1],
+  [1,0,1,3,3,3,1,0,1,3,3,3,1,0,1,0,1,3,3,3,1],
+  [1,0,1,3,1,3,1,0,1,3,1,3,1,0,1,0,1,3,1,3,1],
+  [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,1],
 ];
 
 class MazeGenerator {
@@ -46,8 +47,8 @@ class MazeGenerator {
     this.map = map;
     this.rows = map.length;
     this.cols = map[0].length;
-    this.cellSize = 3.5;
-    this.wallHeight = 4.5;  }
+    this.cellSize = 4.0;    this.wallHeight = 5.0;
+  }
   
   getWalls() {
     const walls = [];
@@ -95,8 +96,8 @@ const maze = new MazeGenerator(MAZE_MAP);
 const mapData = maze.getWalls();
 
 gameInstances.cheese = {
-  walls: mapData.walls,
-  cheeses: mapData.cheeseSpots.map((c, i) => ({     id: `c_${i}`, 
+  walls: mapData.walls,  cheeses: mapData.cheeseSpots.map((c, i) => ({ 
+    id: `c_${i}`, 
     x: c.x, 
     z: c.z, 
     collected: false 
@@ -144,8 +145,8 @@ class Player {
   getPublic() {
     return { 
       id: this.id, 
-      name: this.name, 
-      x: this.x,       y: this.y, 
+      name: this.name,       x: this.x, 
+      y: this.y, 
       z: this.z, 
       yaw: this.yaw, 
       health: this.health, 
@@ -193,8 +194,8 @@ wss.on('connection', (ws) => {
       if (d.type === 'joinGame' && ['brookhaven','shooter','brainrot','cheese'].includes(d.gameId)) {
         p.reset(d.gameId);
         if (d.gameId === 'cheese') {
-          ws.send(JSON.stringify({ 
-            type: 'mapData',             walls: gameInstances.cheese.walls, 
+          ws.send(JSON.stringify({             type: 'mapData', 
+            walls: gameInstances.cheese.walls, 
             cheeses: gameInstances.cheese.cheeses, 
             spawn: gameInstances.cheese.spawn, 
             greenZones: gameInstances.cheese.greenZones, 
@@ -242,17 +243,17 @@ setInterval(() => {
     }
     p.vy -= WORLD_CONFIG.GRAVITY * dt;
     
-    let nx = p.x + p.vx * dt, nz = p.z + p.vz * dt, ny = p.y + p.vy * dt;
-        if (ny <= 1) { 
+    let nx = p.x + p.vx * dt, nz = p.z + p.vz * dt, ny = p.y + p.vy * dt;    
+    if (ny <= 1) { 
       ny = 1; 
       p.vy = 0; 
       p.onGround = true; 
     }
     
     if (p.gameId === 'cheese') {
-      const cs = 3.5, halfX = 9.5, halfZ = 9.5;
+      const cs = 4.0, halfX = 10.5, halfZ = 9.5;
       const gx = Math.floor((nx / cs) + halfX), gz = Math.floor((nz / cs) + halfZ);
-      if (gx >= 0 && gx < 19 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { 
+      if (gx >= 0 && gx < 21 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { 
         nx = p.x; 
         nz = p.z; 
       }
@@ -291,8 +292,8 @@ setInterval(() => {
       players.forEach(o => { 
         if(o.gameId === 'cheese' && o.health > 0) { 
           const d = Math.hypot(o.x - rat.x, o.z - rat.z); 
-          if(d < minD){
-            minD = d;             target = o;
+          if(d < minD){            minD = d; 
+            target = o;
           }
         }
       });
@@ -340,8 +341,8 @@ setInterval(() => {
 }, 1000 / WORLD_CONFIG.TICK_RATE);
 
 function broadcast(data, excludeId = null) {
-  const msg = JSON.stringify(data);
-  players.forEach(p => {     if(p.id !== excludeId && p.ws.readyState === 1) {
+  const msg = JSON.stringify(data);  players.forEach(p => { 
+    if(p.id !== excludeId && p.ws.readyState === 1) {
       try {
         p.ws.send(msg);
       } catch(e) {}
