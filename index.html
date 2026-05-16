@@ -369,7 +369,7 @@ canvas {
 <div id="main-menu">
   <div class="menu-header">
     <h1>🧱 ROBLOX 3D</h1>
-    <p style="color:#8a8f98;font-size:13px">Финальная версия • Текстуры работают</p>
+    <p style="color:#8a8f98;font-size:13px">Финальная версия • Компактный лабиринт</p>
   </div>
   <div class="game-grid">
     <div class="game-card" data-game="brookhaven">
@@ -652,20 +652,20 @@ function spawnMap(d) {
   
   d.walls.forEach(w => {
     const m = new THREE.Mesh(
-      new THREE.BoxGeometry(w.w, w.h || 4.5, w.d),
+      new THREE.BoxGeometry(w.w, w.h || 4.0, w.d),
       wallMaterial
     );
-    m.position.set(w.x, (w.h || 4.5) / 2, w.z);
+    m.position.set(w.x, (w.h || 4.0) / 2, w.z);
     m.castShadow = true;
     m.receiveShadow = true;
     S.scene.add(m);
-    S.walls.push({ mesh: m, x: w.x, z: w.z, w: w.w, d: w.d, h: w.h || 4.5 });
+    S.walls.push({ mesh: m, x: w.x, z: w.z, w: w.w, d: w.d, h: w.h || 4.0 });
   });
   
   if (d.greenZones) {
     d.greenZones.forEach(gz => {
       const zone = new THREE.Mesh(
-        new THREE.PlaneGeometry(4.5, 4.5),
+        new THREE.PlaneGeometry(4.0, 4.0),
         new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.3, side: THREE.DoubleSide })
       );
       zone.rotation.x = -Math.PI / 2;
@@ -838,9 +838,9 @@ function init3D() {
   
   S.scene = new THREE.Scene();
   S.scene.background = new THREE.Color(S.gameId === 'cheese' ? 0x2a2a35 : 0x87CEEB);
-  S.scene.fog = new THREE.Fog(S.gameId === 'cheese' ? 0x2a2a35 : 0x87CEEB, 0.1, 0.1);
+  S.scene.fog = new THREE.Fog(S.gameId === 'cheese' ? 0x2a2a35 : 0x87CEEB, 15, 35);
   
-  S.cam = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 120);
+  S.cam = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 50);
   S.ren = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
   S.ren.setSize(cv.width, cv.height);
   S.ren.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -856,7 +856,7 @@ function init3D() {
   S.scene.add(sun);
   
   const g = new THREE.Mesh(
-    new THREE.PlaneGeometry(250, 250),
+    new THREE.PlaneGeometry(60, 60),
     new THREE.MeshStandardMaterial({ color: S.gameId === 'cheese' ? 0x22222a : 0x33aa33 })
   );
   g.rotation.x = -Math.PI / 2;
@@ -1027,7 +1027,7 @@ function loop(t) {
   lt = t;
   
   if (S.localPlayer) {
-    const sp = 0.15;    const fwd = new THREE.Vector3(-Math.sin(S.yaw), 0, -Math.cos(S.yaw));
+    const sp = 0.12;    const fwd = new THREE.Vector3(-Math.sin(S.yaw), 0, -Math.cos(S.yaw));
     const rgt = new THREE.Vector3(Math.cos(S.yaw), 0, -Math.sin(S.yaw));
     
     let mv = new THREE.Vector3();
@@ -1042,7 +1042,7 @@ function loop(t) {
       const nz = S.localPlayer.group.position.z + mv.z * sp;
       
       let col = false;
-      const pr = 0.6;
+      const pr = 0.5;
       
       for (const w of S.walls) {
         if (nx > w.x - w.w / 2 - pr && nx < w.x + w.w / 2 + pr && 
@@ -1061,12 +1061,12 @@ function loop(t) {
     }
     
     if (S.inp.jump && S.localPlayer.group.position.y <= 1.01) {
-      S.localPlayer.group.position.y = 3.2;
+      S.localPlayer.group.position.y = 2.8;
       S.inp.jump = false;
     }
     
     if (S.localPlayer.group.position.y > 1) {
-      S.localPlayer.group.position.y -= 0.22;
+      S.localPlayer.group.position.y -= 0.2;
     }
     if (S.localPlayer.group.position.y < 1) {
       S.localPlayer.group.position.y = 1;
@@ -1093,18 +1093,18 @@ function loop(t) {
     
     S.inp.action = false;
     
-    const cd = isMobile ? 4.5 : 6.5;
-    const ch = isMobile ? 3 : 4.5;
+    const cd = isMobile ? 3.5 : 5.0;
+    const ch = isMobile ? 2.5 : 3.5;
     
     S.cam.position.set(
       S.localPlayer.group.position.x + Math.sin(S.yaw) * cd,
-      S.localPlayer.group.position.y + ch + Math.sin(S.pitch) * 2,
+      S.localPlayer.group.position.y + ch + Math.sin(S.pitch) * 1.5,
       S.localPlayer.group.position.z + Math.cos(S.yaw) * cd
     );
     
     S.cam.lookAt(
       S.localPlayer.group.position.x,
-      S.localPlayer.group.position.y + 1.8,
+      S.localPlayer.group.position.y + 1.5,
       S.localPlayer.group.position.z
     );
     
