@@ -12,15 +12,15 @@ app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const WORLD_CONFIG = { TICK_RATE: 24, GRAVITY: 18, MOVE_SPEED: 8.0, JUMP_FORCE: 9.5 };
+const CELL_SIZE = 5.0;
 
-// Генерация нормального лабиринта (алгоритм Recursive Backtracker)
+// Генерация лабиринта
 function generateMaze() {
-  const size = 21; // Нечётное число для лабиринта
+  const size = 21;
   const maze = Array(size).fill().map(() => Array(size).fill(1));
   const stack = [];
-  const startX = 1, startY = 1;
-  maze[startY][startX] = 0;
-  stack.push({ x: startX, y: startY });
+  maze[1][1] = 0;
+  stack.push({ x: 1, y: 1 });
 
   const directions = [
     { x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }
@@ -47,36 +47,35 @@ function generateMaze() {
       stack.pop();
     }
   }
-  // Добавляем проходы для связности
-  for (let i = 0; i < 15; i++) {
+  // Добавляем проходы
+  for (let i = 0; i < 20; i++) {
     const x = Math.floor(Math.random() * (size - 2)) + 1;
     const y = Math.floor(Math.random() * (size - 2)) + 1;
     if (maze[y][x] === 1) maze[y][x] = 0;
   }
 
-  // Размещаем сыр в случайных пустых клетках
+  // Размещаем сыр
   const cheeses = [];
   for (let i = 0; i < 9; i++) {
     let placed = false;
-    while (!placed) {
+    let attempts = 0;
+    while (!placed && attempts < 100) {
       const x = Math.floor(Math.random() * (size - 2)) + 1;
       const y = Math.floor(Math.random() * (size - 2)) + 1;
       if (maze[y][x] === 0 && !cheeses.find(c => c.x === x && c.y === y)) {
         cheeses.push({ x, y });
         placed = true;
       }
+      attempts++;
     }
   }
 
-  // Выход в противоположном углу
+  // Выход
   let exitX = size - 2, exitY = size - 2;
-  while (maze[exitY][exitX] === 1) {
-    exitX--;
-    if (exitX < size - 10) { exitX = size - 2; exitY--; }
-  }
+  while (maze[exitY][exitX] === 1 && exitY > 5) exitY--;
   maze[exitY][exitX] = 4;
 
-  // Спавн в начале
+  // Спавн (гарантированно пустая клетка)
   maze[1][1] = 2;
   cheeses.forEach(c => { if (maze[c.y][c.x] !== 4) maze[c.y][c.x] = 3; });
 
@@ -85,18 +84,21 @@ function generateMaze() {
 
 const { maze: MAZE_MAP, cheeses: CHEESE_POSITIONS, exit: EXIT_POS } = generateMaze();
 const MAZE_SIZE = MAZE_MAP.length;
-const CELL_SIZE = 5.0;
 
+// Патрульные точки (только пустые клетки)
 const PATROL_SPOTS = [];
 for(let y=0; y<MAZE_SIZE; y++) {
   for(let x=0; x<MAZE_SIZE; x++) {
     if(MAZE_MAP[y][x] === 0) {
-      PATROL_SPOTS.push({ x: (x - MAZE_SIZE/2) * CELL_SIZE, z: (y - MAZE_SIZE/2) * CELL_SIZE });
+      PATROL_SPOTS.push({ 
+        x: (x - MAZE_SIZE/2) * CELL_SIZE, 
+        z: (y - MAZE_SIZE/2) * CELL_SIZE 
+      });
     }
   }
 }
-
-class MazeGenerator {  constructor(map) {
+class MazeGenerator {
+  constructor(map) {
     this.map = map;
     this.rows = map.length;
     this.cols = map[0].length;
@@ -107,21 +109,43 @@ class MazeGenerator {  constructor(map) {
   
   getWalls() {
     const walls = [], cheeseSpots = [], greenZones = [];
-    let exitPos = null, spawnPos = { x: 0, z: 0 };
+    let exitPos = null, spawnPos = null;
     
+    // Ищем гарантированно пустую клетку для спавна
     for (let y = 0; y < this.rows; y++) {
       for (let x = 0; x < this.cols; x++) {
         const cell = this.map[y][x];
         const worldX = (x - this.cols / 2) * this.cellSize;
         const worldZ = (y - this.rows / 2) * this.cellSize;
         
-        if (cell === 1) walls.push({ x: worldX, z: worldZ, w: this.wallSize, d: this.wallSize, h: this.wallHeight });
-        if (cell === 2) { greenZones.push({ x: worldX, z: worldZ }); if (spawnPos.x === 0) spawnPos = { x: worldX, z: worldZ }; }
+        if (cell === 1) {
+          walls.push({ x: worldX, z: worldZ, w: this.wallSize, d: this.wallSize, h: this.wallHeight });
+        }
+        if (cell === 2) { 
+          greenZones.push({ x: worldX, z: worldZ }); 
+          if (!spawnPos) spawnPos = { x: worldX, z: worldZ }; 
+        }
         if (cell === 3) cheeseSpots.push({ x: worldX, z: worldZ });
         if (cell === 4) exitPos = { x: worldX, z: worldZ };
       }
     }
-    return { walls, spawn: spawnPos, greenZones, cheeseSpots, exit: exitPos };
+    
+    // Если спавн не найден, берём первую пустую клетку
+    if (!spawnPos) {
+      for (let y = 1; y < this.rows - 1; y++) {
+        for (let x = 1; x < this.cols - 1; x++) {
+          if (this.map[y][x] === 0) {
+            spawnPos = { 
+              x: (x - this.cols / 2) * this.cellSize, 
+              z: (y - this.rows / 2) * this.cellSize 
+            };
+            break;
+          }
+        }
+        if (spawnPos) break;
+      }
+    }
+        return { walls, spawn: spawnPos, greenZones, cheeseSpots, exit: exitPos };
   }
 }
 
@@ -136,7 +160,7 @@ gameInstances.cheese = {
   walls: mapData.walls,
   cheeses: mapData.cheeseSpots.map((c, i) => ({ id: `c_${i}`, x: c.x, z: c.z, collected: false })),
   greenZones: mapData.greenZones,
-  rat: { x: 0, z: 0, speed: 3.5, yaw: 0, targetX: 0, targetZ: 0, targetTimer: 0 },
+  rat: { x: 0, z: 0, speed: 4.0, yaw: 0, targetX: 0, targetZ: 0, moveTimer: 0 },
   exit: { x: mapData.exit?.x || 0, z: mapData.exit?.z || 0, open: false },
   spawn: mapData.spawn,
   time: 0
@@ -145,7 +169,8 @@ gameInstances.cheese = {
 class Player {
   constructor(id, ws, name) {
     this.id = id; this.ws = ws; this.name = name.substring(0, 16);
-    this.gameId = 'menu'; this.x = 0; this.y = 1; this.z = 0;    this.vx = 0; this.vy = 0; this.vz = 0; this.yaw = 0; this.onGround = false;
+    this.gameId = 'menu'; this.x = 0; this.y = 1; this.z = 0;
+    this.vx = 0; this.vy = 0; this.vz = 0; this.yaw = 0; this.onGround = false;
     this.input = { f: 0, r: 0, jump: false, action: false };
     this.health = 100; this.inventory = { cheese: 0 };
     this.lastSent = { x: 0, y: 0, z: 0, yaw: 0, anim: 0 };
@@ -154,8 +179,9 @@ class Player {
   reset(gameId) {
     this.gameId = gameId;
     const spawn = gameInstances.cheese?.spawn || { x: 0, z: 0 };
-    this.x = spawn.x + (Math.random() - 0.5) * 2.0;
-    this.z = spawn.z + (Math.random() - 0.5) * 2.0;
+    // Спавн с микро-смещением
+    this.x = spawn.x + (Math.random() - 0.5) * 1.5;
+    this.z = spawn.z + (Math.random() - 0.5) * 1.5;
     this.y = 1; this.vx = 0; this.vy = 0; this.vz = 0; this.health = 100;
     this.inventory.cheese = 0;
   }
@@ -168,8 +194,7 @@ class Player {
 wss.on('connection', (ws) => {
   ws.isAlive = true;
   ws.on('pong', () => ws.isAlive = true);
-  ws.on('message', (raw) => {
-    try {
+  ws.on('message', (raw) => {    try {
       const d = JSON.parse(raw);
       if (!d.playerId && d.type === 'register') {
         const id = nextId++;
@@ -195,13 +220,14 @@ wss.on('connection', (ws) => {
   });
   ws.on('close', () => { for (const [id, pl] of players) { if (pl.ws === ws) { players.delete(id); broadcast({ type: 'playerLeft', playerId: id, gameId: pl.gameId }, null, pl.gameId); break; } } });
 });
+
 function broadcast(data, excludeId = null, targetGameId = null) {
   const msg = JSON.stringify(data);
   players.forEach(p => { if(p.id !== excludeId && p.ws.readyState === 1 && (!targetGameId || p.gameId === targetGameId)) try{ p.ws.send(msg); }catch(e){} });
 }
 
-// Проверка коллизии со стенами для крысы
-function canRatMove(x, z) {
+// Проверка: можно ли крысе быть в этой точке
+function canRatBeThere(x, z) {
   const gridX = Math.floor((x / CELL_SIZE) + MAZE_SIZE/2);
   const gridZ = Math.floor((z / CELL_SIZE) + MAZE_SIZE/2);
   if (gridX < 0 || gridX >= MAZE_SIZE || gridZ < 0 || gridZ >= MAZE_SIZE) return false;
@@ -210,19 +236,23 @@ function canRatMove(x, z) {
 
 setInterval(() => {
   const dt = 1 / WORLD_CONFIG.TICK_RATE;
+  
   players.forEach(p => {
     if (p.ws.readyState !== 1 || p.gameId === 'menu') return;
+    
     const speed = WORLD_CONFIG.MOVE_SPEED;
     const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
     const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
-    p.vx = (p.input.f * fx + p.input.r * rx) * speed;
+        p.vx = (p.input.f * fx + p.input.r * rx) * speed;
     p.vz = (p.input.f * fz + p.input.r * rz) * speed;
+    
     if (p.input.jump && p.onGround) { p.vy = WORLD_CONFIG.JUMP_FORCE; p.onGround = false; }
     p.vy -= WORLD_CONFIG.GRAVITY * dt;
+    
     let nx = p.x + p.vx * dt, nz = p.z + p.vz * dt, ny = p.y + p.vy * dt;
     if (ny <= 1) { ny = 1; p.vy = 0; p.onGround = true; }
     
-    // Коллизия игрока
+    // Коллизия игрока со стенами
     if (p.gameId === 'cheese') {
       const gridX = Math.floor((nx / CELL_SIZE) + MAZE_SIZE/2);
       const gridZ = Math.floor((nz / CELL_SIZE) + MAZE_SIZE/2);
@@ -236,48 +266,72 @@ setInterval(() => {
       const rat = gameInstances.cheese.rat;
       const greenZones = gameInstances.cheese.greenZones;
       
-      // Крыса всегда идёт за ближайшим игроком
+      // Крыса ВСЕГДА идёт за ближайшим живым игроком
       let nearestPlayer = null, minDist = 999;
-      players.forEach(o => { if(o.gameId === 'cheese' && o.health > 0) { const d = Math.hypot(o.x - rat.x, o.z - rat.z); if(d < minDist) { minDist = d; nearestPlayer = o; } }});
+      players.forEach(o => { 
+        if(o.gameId === 'cheese' && o.health > 0) { 
+          const d = Math.hypot(o.x - rat.x, o.z - rat.z); 
+          if(d < minDist) { minDist = d; nearestPlayer = o; } 
+        }
+      });
       
       if (nearestPlayer) {
+        // Целевая точка - игрок
         rat.targetX = nearestPlayer.x;
         rat.targetZ = nearestPlayer.z;
-      } else {        rat.targetTimer -= dt;
-        if (rat.targetTimer <= 0) {
+      } else {
+        // Патрулирование
+        rat.moveTimer -= dt;
+        if (rat.moveTimer <= 0) {
           const spot = PATROL_SPOTS[Math.floor(Math.random() * PATROL_SPOTS.length)];
           rat.targetX = spot.x;
           rat.targetZ = spot.z;
-          rat.targetTimer = 3.0 + Math.random() * 2.0;
+          rat.moveTimer = 3.0 + Math.random() * 2.0;
         }
       }
       
-      // Плавное движение крысы с проверкой коллизий
+      // Движение крысы
       const dx = rat.targetX - rat.x;
-      const dz = rat.targetZ - rat.z;
-      const dist = Math.hypot(dx, dz);
-      if (dist > 0.5) {
-        const newX = rat.x + (dx / dist) * rat.speed * dt;
-        const newZ = rat.z + (dz / dist) * rat.speed * dt;
-        if (canRatMove(newX, newZ)) {
+      const dz = rat.targetZ - rat.z;      const dist = Math.hypot(dx, dz);
+      
+      if (dist > 0.3) {
+        const moveX = (dx / dist) * rat.speed * dt;
+        const moveZ = (dz / dist) * rat.speed * dt;
+        const newX = rat.x + moveX;
+        const newZ = rat.z + moveZ;
+        
+        // Проверка коллизии крысы
+        if (canRatBeThere(newX, newZ)) {
           rat.x = newX;
           rat.z = newZ;
           rat.yaw = Math.atan2(dx, dz);
+        } else {
+          // Если не может пройти, выбираем новую цель
+          rat.moveTimer = 0;
         }
       }
 
       // Урон от крысы
       let ratInGreen = false;
-      for (const gz of greenZones) { if (Math.hypot(rat.x - gz.x, rat.z - gz.z) < 5) { ratInGreen = true; break; } }
+      for (const gz of greenZones) { 
+        if (Math.hypot(rat.x - gz.x, rat.z - gz.z) < 5) { ratInGreen = true; break; } 
+      }
+      
       if (p.health > 0 && !ratInGreen && minDist < 2.5) {
         p.health -= 10;
-        if (p.health <= 0) { p.health = 100; p.x = gameInstances.cheese.spawn.x; p.z = gameInstances.cheese.spawn.z; p.ws.send(JSON.stringify({ type: 'died' })); }
+        if (p.health <= 0) { 
+          p.health = 100; 
+          p.x = gameInstances.cheese.spawn.x; 
+          p.z = gameInstances.cheese.spawn.z; 
+          p.ws.send(JSON.stringify({ type: 'died' })); 
+        }
       }
 
       // Сбор сыра
       gameInstances.cheese.cheeses.forEach(c => {
         if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 5.0) {
-          c.collected = true; p.inventory.cheese++;
+          c.collected = true; 
+          p.inventory.cheese++;
           p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
           if(p.inventory.cheese >= 9) gameInstances.cheese.exit.open = true;
         }
@@ -285,16 +339,30 @@ setInterval(() => {
 
       // Выход
       if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 5.0) {
-        p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) })); p.health=0;
-      }
-    }
+        p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) })); 
+        p.health = 0;
+      }    }
     
     const curAnim = Math.abs(p.input.f) > 0.1 || Math.abs(p.input.r) > 0.1 ? 1 : 0;
-    p.ws.send(JSON.stringify({ type: 'snapshot', players: Array.from(players.values()).filter(o => o.id !== p.id && o.gameId === p.gameId).map(o => o.getPublic()), rat: p.gameId === 'cheese' ? gameInstances.cheese.rat : null, exit: p.gameId === 'cheese' ? gameInstances.cheese.exit : null }));
+    p.ws.send(JSON.stringify({ 
+      type: 'snapshot', 
+      players: Array.from(players.values()).filter(o => o.id !== p.id && o.gameId === p.gameId).map(o => o.getPublic()), 
+      rat: p.gameId === 'cheese' ? gameInstances.cheese.rat : null, 
+      exit: p.gameId === 'cheese' ? gameInstances.cheese.exit : null 
+    }));
     p.lastSent = { x: p.x, y: p.y, z: p.z, yaw: p.yaw, anim: curAnim };
-  });  if(gameInstances.cheese) gameInstances.cheese.time += dt;
+  });
+  
+  if(gameInstances.cheese) gameInstances.cheese.time += dt;
 }, 1000 / WORLD_CONFIG.TICK_RATE);
 
-setInterval(() => { wss.clients.forEach(ws => { if(!ws.isAlive) return ws.terminate(); ws.isAlive=false; ws.ping(); }); }, 15000);
+setInterval(() => { 
+  wss.clients.forEach(ws => { 
+    if(!ws.isAlive) return ws.terminate(); 
+    ws.isAlive=false; 
+    ws.ping(); 
+  }); 
+}, 15000);
+
 server.listen(PORT, '0.0.0.0', () => console.log(`✅ SERVER RUNNING :${PORT}`));
 process.on('SIGINT', () => process.exit(0));
