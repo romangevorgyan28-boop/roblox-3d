@@ -1,131 +1,258 @@
-// ... (начало файла index.html без изменений) ...
+const express = require('express');
+const http = require('http');
+const { WebSocketServer } = require('ws');
+const path = require('path');
 
-// Добавь эти переменные в объект S
-S.deadPlayers = []; // Массив для хранения развалившихся игроков
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server, maxPayload: 128 * 1024 });
+const PORT = process.env.PORT || 3000;
 
-// ... (код функции connect без изменений) ...
+app.use(express.static(__dirname));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// В функции spawnRemote добавь проверку на смерть
-function spawnRemote(d){
-  if(d.id===S.id)return;
-  if(d.isDead) {
-    // Если игрок умер - создаем обломки
-    createDeathEffect(d.x, d.y, d.z);
-    return;
-  }
-  const r=createRig(d.gameId==='shooter'?(d.team==='red'?0xff2a2a:0x2a8aff):0x3366cc);
-  r.group.position.set(d.x,d.y,d.z);r.group.rotation.y=-d.yaw;
-  S.scene.add(r.group);S.players.set(d.id,{mesh:r,tx:d.x,ty:d.y,tz:d.z,tryaw:d.yaw,name:d.name,animState:0, isDead: false});
-  const tag=document.createElement('div');tag.className='name-tag';tag.textContent=d.name;
-  document.getElementById('name-tags').appendChild(tag);S.players.get(d.id).tag=tag;
-}
+const WORLD_CONFIG = { TICK_RATE: 24, GRAVITY: 18, MOVE_SPEED: 8.0, JUMP_FORCE: 9.5 };
+const CELL_SIZE = 5.0;
+const GRID_SIZE = 19;
 
-// Функция создания эффекта смерти (разлет на кубики)
-function createDeathEffect(x, y, z) {
-  const colors = [0xff3333, 0x3366cc, 0xffcc88, 0x333366];
-  const debris = [];
-  const count = 15;
+// Генерация лабиринта с гарантированной безопасной зоной
+function generateMaze() {
+  const maze = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(1));
+  const stack = [];
   
-  for(let i=0; i<count; i++) {
-    const size = 0.2 + Math.random() * 0.3;
-    const geo = new THREE.BoxGeometry(size, size, size);
-    const mat = new THREE.MeshStandardMaterial({ color: colors[Math.floor(Math.random()*colors.length)] });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(x + (Math.random()-0.5)*1.5, y + Math.random()*2, z + (Math.random()-0.5)*1.5);
-    mesh.castShadow = true;
-    
-    // Скорость разлета
-    const vel = new THREE.Vector3(
-      (Math.random()-0.5) * 5,
-      Math.random() * 5 + 2,
-      (Math.random()-0.5) * 5
-    );
-    
-    S.scene.add(mesh);
-    debris.push({ mesh, vel, rotVel: new THREE.Vector3(Math.random()*10, Math.random()*10, Math.random()*10) });
-  }
+  // Безопасная зона спавна 3x3
+  for(let y=0; y<3; y++) for(let x=0; x<3; x++) maze[y][x] = 0;
+  maze[1][1] = 2; // Точка спавна
   
-  S.deadPlayers.push({ debris, timer: 5.0 });
-}
-// Обновляем функцию loop
-function loop(t){
-  if(!S.ws||S.ws.readyState!==1)return;requestAnimationFrame(loop);
-  const dt=Math.min((t-lt)/1000,0.1);lt=t;
-  
-  // Обновление мертвых игроков (физика обломков)
-  for(let i = S.deadPlayers.length - 1; i >= 0; i--) {
-    const dead = S.deadPlayers[i];
-    dead.timer -= dt;
-    dead.debris.forEach(d => {
-      d.vel.y -= 15 * dt; // Гравитация для обломков
-      d.mesh.position.add(d.vel.clone().multiplyScalar(dt));
-      d.mesh.rotation.x += d.rotVel.x * dt;
-      d.mesh.rotation.y += d.rotVel.y * dt;
-      d.mesh.rotation.z += d.rotVel.z * dt;
-      
-      if(d.mesh.position.y < -2) { // Упало слишком низко
-        S.scene.remove(d.mesh);
-        dead.debris = dead.debris.filter(x => x !== d);
+  stack.push({ x: 3, y: 3 }); // Начинаем генерацию дальше от спавна
+  maze[3][3] = 0;
+
+  const directions = [
+    { x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }
+  ];
+
+  while (stack.length > 0) {
+    const current = stack[stack.length - 1];
+    const neighbors = [];
+    for (const dir of directions) {
+      const nx = current.x + dir.x, ny = current.y + dir.y;
+      if (nx > 2 && nx < GRID_SIZE - 1 && ny > 2 && ny < GRID_SIZE - 1 && maze[ny][nx] === 1) {
+        neighbors.push({ x: nx, y: ny, dx: dir.x / 2, dy: dir.y / 2 });
       }
-    });
-    if(dead.timer <= 0 || dead.debris.length === 0) {
-      dead.debris.forEach(d => S.scene.remove(d.mesh));
-      S.deadPlayers.splice(i, 1);
+    }
+    if (neighbors.length > 0) {
+      const chosen = neighbors[Math.floor(Math.random() * neighbors.length)];
+      maze[chosen.y][chosen.x] = 0;
+      maze[current.y + chosen.dy][current.x + chosen.dx] = 0;
+      stack.push({ x: chosen.x, y: chosen.y });
+    } else stack.pop();
+  }
+  // Прорываем стены для связности
+  for (let i = 0; i < 15; i++) {
+    const x = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+    const y = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+    if (maze[y][x] === 1) maze[y][x] = 0;
+  }
+
+  // Выход
+  maze[GRID_SIZE-2][GRID_SIZE-2] = 4;
+  if(maze[GRID_SIZE-2][GRID_SIZE-3] === 1) maze[GRID_SIZE-2][GRID_SIZE-3] = 0;
+
+  // Сыр
+  let placed = 0;
+  while(placed < 9) {
+    const x = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+    const y = Math.floor(Math.random() * (GRID_SIZE - 4)) + 2;
+    if (maze[y][x] === 0) { maze[y][x] = 3; placed++; }
+  }
+  return maze;
+}
+
+const MAZE_MAP = generateMaze();
+
+// Патрульные точки (только пустые клетки)
+const EMPTY_SPOTS = [];
+for(let y=0; y<GRID_SIZE; y++) {
+  for(let x=0; x<GRID_SIZE; x++) {
+    if(MAZE_MAP[y][x] === 0 && !(x<3 && y<3)) { // Исключаем зону спавна
+      EMPTY_SPOTS.push({ x: (x - GRID_SIZE/2) * CELL_SIZE, z: (y - GRID_SIZE/2) * CELL_SIZE });
     }
   }
-
-  if(S.localPlayer && !S.localPlayer.userData.isDead){
-    const sp=0.18;const fwd=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const rgt=new THREE.Vector3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
-    let mv=new THREE.Vector3();if(S.inp.f<0)mv.add(fwd);if(S.inp.f>0)mv.sub(fwd);if(S.inp.r<0)mv.sub(rgt);if(S.inp.r>0)mv.add(rgt);
-    if(mv.length()>0){mv.normalize();const nx=S.localPlayer.group.position.x+mv.x*sp,nz=S.localPlayer.group.position.z+mv.z*sp;let col=false;const pr=0.35;for(const w of S.walls){if(nx>w.x-w.w/2-pr&&nx<w.x+w.w/2+pr&&nz>w.z-w.d/2-pr&&nz<w.z+w.d/2+pr){col=true;break;}}if(!col){S.localPlayer.group.position.x=nx;S.localPlayer.group.position.z=nz;}S.localPlayer.group.rotation.y=S.yaw+Math.PI;}
-    if(S.inp.jump&&S.localPlayer.group.position.y<=1.01){S.localPlayer.group.position.y=3.5;S.inp.jump=false;}
-    if(S.localPlayer.group.position.y>1)S.localPlayer.group.position.y-=0.22;if(S.localPlayer.group.position.y<1)S.localPlayer.group.position.y=1;
-    const mvng=Math.abs(S.inp.f)>0.1||Math.abs(S.inp.r)>0.1;const spd=mvng?4.5:0;const amp=mvng?0.7:0;const tm=t*0.012;
-    S.localPlayer.lL.rotation.x=Math.sin(tm*spd)*amp;S.localPlayer.rL.rotation.x=-Math.sin(tm*spd)*amp;S.localPlayer.lA.rotation.x=-Math.sin(tm*spd)*amp;S.localPlayer.rA.rotation.x=Math.sin(tm*spd)*amp;
-    S.ws.send(JSON.stringify({playerId:S.id,type:'input',f:S.inp.f,r:S.inp.r,jump:S.inp.jump,action:S.inp.action,yaw:S.yaw}));S.inp.action=false;
-    const cd=isMobile?5.5:9.0,ch=isMobile?3.5:5.5;
-    S.cam.position.set(S.localPlayer.group.position.x+Math.sin(S.yaw)*cd,S.localPlayer.group.position.y+ch+Math.sin(S.pitch)*1.5,S.localPlayer.group.position.z+Math.cos(S.yaw)*cd);
-    S.cam.lookAt(S.localPlayer.group.position.x,S.localPlayer.group.position.y+1.5,S.localPlayer.group.position.z);
-    S.players.forEach(p=>{
-      if(p.tag){const pos=p.mesh.group.position.clone();pos.y+=3.5;pos.project(S.cam);if(pos.z<1){p.tag.style.display='block';p.tag.style.left=(pos.x*0.5+0.5)*innerWidth+'px';p.tag.style.top=(-pos.y*0.5+0.5)*innerHeight+'px';}else p.tag.style.display='none';}
-      const om=p.animState===1;const os=om?4.5:0;const oa=om?0.7:0;p.mesh.lL.rotation.x=Math.sin(t*0.012*os)*oa;p.mesh.rL.rotation.x=-Math.sin(t*0.012*os)*oa;p.mesh.lA.rotation.x=-Math.sin(t*0.012*os)*oa;p.mesh.rA.rotation.x=Math.sin(t*0.012*os)*oa;
-    });
-    S.cheeses.forEach(c=>{c.rotation.y+=0.015;c.position.y=Math.sin(Date.now()*0.002)*0.05;});
-  }
-  S.ren.render(S.scene,S.cam);
 }
 
-// В функции connect добавь обработку смерти
-// ... внутри S.ws.onmessage ...      if(d.type==='playerDied'){
-        addChat('sys', `💀 ${d.name} погиб!`);
-        if(d.playerId === S.id) {
-          S.localPlayer.userData.isDead = true;
-          S.scene.remove(S.localPlayer.group); // Скрываем модель
-          // Показываем кнопку "Возродиться"
-          if(!document.getElementById('respawn-btn')) {
-            const btn = document.createElement('button');
-            btn.id = 'respawn-btn';
-            btn.textContent = '💀 Вы погибли! Возродиться';
-            btn.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:15px 30px;font-size:20px;background:#ff2a2a;color:#fff;border:none;border-radius:10px;cursor:pointer;z-index:100;';
-            btn.onclick = () => {
-              S.ws.send(JSON.stringify({ playerId: S.id, type: 'respawn' }));
-              S.localPlayer.userData.isDead = false;
-              btn.remove();
-              // Снова показываем модель
-              S.localPlayer.group.position.set(0,1,0); // Временно
-              S.scene.add(S.localPlayer.group);
-            };
-            document.body.appendChild(btn);
-          }
-        } else {
-          // Если умер другой - создаем обломки
-          if(S.players.has(d.playerId)) {
-             const p = S.players.get(d.playerId);
-             createDeathEffect(d.x, d.y, d.z);
-             S.scene.remove(p.mesh.group);
-             if(p.tag) p.tag.remove();
-             S.players.delete(d.playerId);
-          }
+class MazeGenerator {
+  constructor() {
+    this.cellSize = CELL_SIZE;
+    this.wallHeight = 6.0;
+  }
+  getWalls() {
+    const walls = [], cheeseSpots = [], greenZones = [];
+    let exitPos = null;
+    // Спавн строго в центре безопасной зоны
+    const spawnPos = { x: (1.0 - GRID_SIZE/2) * CELL_SIZE, z: (1.0 - GRID_SIZE/2) * CELL_SIZE };
+    
+    for (let y = 0; y < GRID_SIZE; y++) {
+      for (let x = 0; x < GRID_SIZE; x++) {
+        const cell = MAZE_MAP[y][x];
+        const wx = (x - GRID_SIZE / 2) * this.cellSize;
+        const wz = (y - GRID_SIZE / 2) * this.cellSize;
+                if (cell === 1) walls.push({ x: wx, z: wz, w: this.cellSize, d: this.cellSize, h: this.wallHeight });
+        if (cell === 2) greenZones.push({ x: wx, z: wz });
+        if (cell === 3) cheeseSpots.push({ x: wx, z: wz });
+        if (cell === 4) exitPos = { x: wx, z: wz };
+      }
+    }
+    return { walls, spawn: spawnPos, greenZones, cheeseSpots, exit: exitPos };
+  }
+}
+
+const players = new Map();
+const gameInstances = {};
+let nextId = 1;
+const maze = new MazeGenerator();
+const mapData = maze.getWalls();
+
+gameInstances.cheese = {
+  walls: mapData.walls,
+  cheeses: mapData.cheeseSpots.map((c, i) => ({ id: `c_${i}`, x: c.x, z: c.z, collected: false })),
+  greenZones: mapData.greenZones,
+  rat: { x: 0, z: 0, speed: 5.0, yaw: 0, targetX: 0, targetZ: 0, active: true },
+  exit: { x: mapData.exit?.x || 0, z: mapData.exit?.z || 0, open: false },
+  spawn: mapData.spawn,
+  time: 0
+};
+
+class Player {
+  constructor(id, ws, name) {
+    this.id = id; this.ws = ws; this.name = name.substring(0, 16);
+    this.gameId = 'menu'; this.x = 0; this.y = 1; this.z = 0;
+    this.vx = 0; this.vy = 0; this.vz = 0; this.yaw = 0; this.onGround = false;
+    this.input = { f: 0, r: 0, jump: false, action: false };
+    this.health = 100; this.inventory = { cheese: 0 };
+    this.isDead = false;
+  }
+  reset(gameId) {
+    this.gameId = gameId;
+    const spawn = gameInstances.cheese?.spawn || { x: 0, z: 0 };
+    this.x = spawn.x; this.z = spawn.z; this.y = 1;
+    this.vx = 0; this.vy = 0; this.vz = 0; this.health = 100;
+    this.inventory.cheese = 0; this.isDead = false;
+    
+    // Крыса спавнится далеко
+    if(EMPTY_SPOTS.length > 0) {
+      const spot = EMPTY_SPOTS[Math.floor(Math.random() * EMPTY_SPOTS.length)];
+      gameInstances.cheese.rat.x = spot.x; gameInstances.cheese.rat.z = spot.z;
+    }
+    gameInstances.cheese.rat.active = true;
+  }
+  getPublic() {    return { id: this.id, name: this.name, x: this.x, y: this.y, z: this.z, yaw: this.yaw, health: this.health, gameId: this.gameId, anim: Math.abs(this.input.f) > 0.1 || Math.abs(this.input.r) > 0.1 ? 1 : 0, isDead: this.isDead };
+  }
+}
+
+wss.on('connection', (ws) => {
+  ws.isAlive = true;
+  ws.on('pong', () => ws.isAlive = true);
+  ws.on('message', (raw) => {
+    try {
+      const d = JSON.parse(raw);
+      if (!d.playerId && d.type === 'register') {
+        const id = nextId++;
+        const p = new Player(id, ws, d.name || `Player_${id}`);
+        players.set(id, p);
+        ws.send(JSON.stringify({ type: 'registered', id, name: p.name }));
+        return;
+      }
+      const p = players.get(d.playerId); if (!p) return;
+      if (d.type === 'input') {
+        p.input = { f: typeof d.f==='number'?Math.max(-1,Math.min(1,d.f)):0, r: typeof d.r==='number'?Math.max(-1,Math.min(1,d.r)):0, jump: !!d.jump, action: !!d.action };
+        if (typeof d.yaw==='number') p.yaw = d.yaw;
+      }
+      if (d.type === 'joinGame' && ['brookhaven','shooter','brainrot','cheese'].includes(d.gameId)) {
+        p.reset(d.gameId);
+        const existing = Array.from(players.values()).filter(o => o.id !== p.id && o.gameId === d.gameId).map(o => o.getPublic());
+        ws.send(JSON.stringify({ type: 'existingPlayers', players: existing }));
+        if (d.gameId === 'cheese') ws.send(JSON.stringify({ type: 'mapData', walls: gameInstances.cheese.walls, cheeses: gameInstances.cheese.cheeses, spawn: gameInstances.cheese.spawn, greenZones: gameInstances.cheese.greenZones, exit: gameInstances.cheese.exit }));
+        broadcast({ type: 'playerJoined', player: p.getPublic() }, p.id, d.gameId);
+      }
+      if (d.type === 'respawn') { p.reset('cheese'); broadcast({ type: 'playerJoined', player: p.getPublic() }, null, 'cheese'); }
+      if (d.type === 'chat' && d.msg) broadcast({ type: 'chat', name: p.name, msg: d.msg.substring(0, 120) }, null, p.gameId);
+    } catch(e) {}
+  });
+  ws.on('close', () => { for (const [id, pl] of players) { if (pl.ws === ws) { players.delete(id); broadcast({ type: 'playerLeft', playerId: id, gameId: pl.gameId }, null, pl.gameId); break; } } });
+});
+
+function broadcast(data, excludeId = null, targetGameId = null) {
+  const msg = JSON.stringify(data);
+  players.forEach(p => { if(p.id !== excludeId && p.ws.readyState === 1 && (!targetGameId || p.gameId === targetGameId)) try{ p.ws.send(msg); }catch(e){} });
+}
+
+function canMove(x, z) {
+  const gx = Math.floor((x / CELL_SIZE) + GRID_SIZE/2);
+  const gz = Math.floor((z / CELL_SIZE) + GRID_SIZE/2);
+  if (gx < 0 || gx >= GRID_SIZE || gz < 0 || gz >= GRID_SIZE) return false;
+  return MAZE_MAP[gz][gx] !== 1;
+}
+
+setInterval(() => {
+  const dt = 1 / WORLD_CONFIG.TICK_RATE;  players.forEach(p => {
+    if (p.ws.readyState !== 1 || p.gameId === 'menu' || p.isDead) return;
+    
+    const speed = WORLD_CONFIG.MOVE_SPEED;
+    const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
+    const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
+    
+    p.vx = (p.input.f * fx + p.input.r * rx) * speed;
+    p.vz = (p.input.f * fz + p.input.r * rz) * speed;
+    
+    if (p.input.jump && p.onGround) { p.vy = WORLD_CONFIG.JUMP_FORCE; p.onGround = false; }
+    p.vy -= WORLD_CONFIG.GRAVITY * dt;
+    
+    let nx = p.x + p.vx * dt, nz = p.z + p.vz * dt, ny = p.y + p.vy * dt;
+    if (ny <= 1) { ny = 1; p.vy = 0; p.onGround = true; }
+    
+    if (p.gameId === 'cheese') {
+      if (!canMove(nx, p.z)) nx = p.x;
+      if (!canMove(p.x, nz)) nz = p.z;
+      
+      const rat = gameInstances.cheese.rat;
+      let nearest = null, minD = 999;
+      players.forEach(o => { if(o.gameId==='cheese' && !o.isDead) { const d=Math.hypot(o.x-rat.x, o.z-rat.z); if(d<minD){minD=d; nearest=o;} }});
+      
+      if(nearest) { rat.targetX = nearest.x; rat.targetZ = nearest.z; }
+      
+      const dx = rat.targetX - rat.x, dz = rat.targetZ - rat.z, dist = Math.hypot(dx,dz);
+      if(dist > 0.5) {
+        const nxR = rat.x + (dx/dist)*rat.speed*dt;
+        const nzR = rat.z + (dz/dist)*rat.speed*dt;
+        if(canMove(nxR, nzR)) { rat.x = nxR; rat.z = nzR; rat.yaw = Math.atan2(dx,dz); }
+      }
+
+      if(minD < 2.0) {
+        p.health -= 100 * dt;
+        if(p.health <= 0 && !p.isDead) {
+          p.isDead = true; p.health = 0;
+          p.ws.send(JSON.stringify({ type: 'playerDied', x: p.x, y: p.y, z: p.z, name: p.name, playerId: p.id }));
+          broadcast({ type: 'playerDied', x: p.x, y: p.y, z: p.z, name: p.name, playerId: p.id }, null, 'cheese');
         }
       }
-// ...
+
+      gameInstances.cheese.cheeses.forEach(c => {
+        if(!c.collected && p.input.action && Math.hypot(p.x-c.x, p.z-c.z) < 5.0) {
+          c.collected = true; p.inventory.cheese++;
+          p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
+          if(p.inventory.cheese >= 9) gameInstances.cheese.exit.open = true;
+        }
+      });
+      if(gameInstances.cheese.exit.open && Math.hypot(p.x-gameInstances.cheese.exit.x, p.z-gameInstances.cheese.exit.z) < 5.0) {        p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000-gameInstances.cheese.time) }));
+      }
+    }
+    p.x = nx; p.z = nz; p.y = ny;
+    
+    p.ws.send(JSON.stringify({ type: 'snapshot', players: Array.from(players.values()).filter(o=>o.id!==p.id && o.gameId===p.gameId).map(o=>o.getPublic()), rat: p.gameId==='cheese'?gameInstances.cheese.rat:null, exit: p.gameId==='cheese'?gameInstances.cheese.exit:null }));
+  });
+  if(gameInstances.cheese) gameInstances.cheese.time += dt;
+}, 1000 / WORLD_CONFIG.TICK_RATE);
+
+setInterval(() => { wss.clients.forEach(ws => { if(!ws.isAlive) return ws.terminate(); ws.isAlive=false; ws.ping(); }); }, 15000);
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ SERVER RUNNING :${PORT}`));
+process.on('SIGINT', () => process.exit(0));
