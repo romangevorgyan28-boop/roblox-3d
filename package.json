@@ -1,7 +1,7 @@
 {
-  "name": "roblox-3d-ultimate-engine",
-  "version": "3.0.0",
-  "description": "High-performance 3D multiplayer engine for low-end servers",
+  "name": "roblox-3d-ultimate",
+  "version": "1.0.0",
+  "description": "Optimized 3D multiplayer for low-end servers",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,6 +11,6 @@
     "ws": "^8.14.2"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   }
 }
