@@ -1,368 +1,131 @@
-const express = require('express');
-const http = require('http');
-const { WebSocketServer } = require('ws');
-const path = require('path');
+// ... (начало файла index.html без изменений) ...
 
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server, maxPayload: 128 * 1024 });
-const PORT = process.env.PORT || 3000;
+// Добавь эти переменные в объект S
+S.deadPlayers = []; // Массив для хранения развалившихся игроков
 
-app.use(express.static(__dirname));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// ... (код функции connect без изменений) ...
 
-const WORLD_CONFIG = { TICK_RATE: 24, GRAVITY: 18, MOVE_SPEED: 8.0, JUMP_FORCE: 9.5 };
-const CELL_SIZE = 5.0;
-
-// Генерация лабиринта
-function generateMaze() {
-  const size = 21;
-  const maze = Array(size).fill().map(() => Array(size).fill(1));
-  const stack = [];
-  maze[1][1] = 0;
-  stack.push({ x: 1, y: 1 });
-
-  const directions = [
-    { x: 0, y: -2 }, { x: 0, y: 2 }, { x: -2, y: 0 }, { x: 2, y: 0 }
-  ];
-
-  while (stack.length > 0) {
-    const current = stack[stack.length - 1];
-    const neighbors = [];
-
-    for (const dir of directions) {
-      const nx = current.x + dir.x;
-      const ny = current.y + dir.y;
-      if (nx > 0 && nx < size - 1 && ny > 0 && ny < size - 1 && maze[ny][nx] === 1) {
-        neighbors.push({ x: nx, y: ny, dx: dir.x / 2, dy: dir.y / 2 });
-      }
-    }
-
-    if (neighbors.length > 0) {
-      const chosen = neighbors[Math.floor(Math.random() * neighbors.length)];
-      maze[chosen.y][chosen.x] = 0;
-      maze[current.y + chosen.dy][current.x + chosen.dx] = 0;
-      stack.push({ x: chosen.x, y: chosen.y });
-    } else {
-      stack.pop();
-    }
+// В функции spawnRemote добавь проверку на смерть
+function spawnRemote(d){
+  if(d.id===S.id)return;
+  if(d.isDead) {
+    // Если игрок умер - создаем обломки
+    createDeathEffect(d.x, d.y, d.z);
+    return;
   }
-  // Добавляем проходы
-  for (let i = 0; i < 20; i++) {
-    const x = Math.floor(Math.random() * (size - 2)) + 1;
-    const y = Math.floor(Math.random() * (size - 2)) + 1;
-    if (maze[y][x] === 1) maze[y][x] = 0;
-  }
-
-  // Размещаем сыр
-  const cheeses = [];
-  for (let i = 0; i < 9; i++) {
-    let placed = false;
-    let attempts = 0;
-    while (!placed && attempts < 100) {
-      const x = Math.floor(Math.random() * (size - 2)) + 1;
-      const y = Math.floor(Math.random() * (size - 2)) + 1;
-      if (maze[y][x] === 0 && !cheeses.find(c => c.x === x && c.y === y)) {
-        cheeses.push({ x, y });
-        placed = true;
-      }
-      attempts++;
-    }
-  }
-
-  // Выход
-  let exitX = size - 2, exitY = size - 2;
-  while (maze[exitY][exitX] === 1 && exitY > 5) exitY--;
-  maze[exitY][exitX] = 4;
-
-  // Спавн (гарантированно пустая клетка)
-  maze[1][1] = 2;
-  cheeses.forEach(c => { if (maze[c.y][c.x] !== 4) maze[c.y][c.x] = 3; });
-
-  return { maze, cheeses, exit: { x: exitX, y: exitY } };
+  const r=createRig(d.gameId==='shooter'?(d.team==='red'?0xff2a2a:0x2a8aff):0x3366cc);
+  r.group.position.set(d.x,d.y,d.z);r.group.rotation.y=-d.yaw;
+  S.scene.add(r.group);S.players.set(d.id,{mesh:r,tx:d.x,ty:d.y,tz:d.z,tryaw:d.yaw,name:d.name,animState:0, isDead: false});
+  const tag=document.createElement('div');tag.className='name-tag';tag.textContent=d.name;
+  document.getElementById('name-tags').appendChild(tag);S.players.get(d.id).tag=tag;
 }
 
-const { maze: MAZE_MAP, cheeses: CHEESE_POSITIONS, exit: EXIT_POS } = generateMaze();
-const MAZE_SIZE = MAZE_MAP.length;
-
-// Патрульные точки (только пустые клетки)
-const PATROL_SPOTS = [];
-for(let y=0; y<MAZE_SIZE; y++) {
-  for(let x=0; x<MAZE_SIZE; x++) {
-    if(MAZE_MAP[y][x] === 0) {
-      PATROL_SPOTS.push({ 
-        x: (x - MAZE_SIZE/2) * CELL_SIZE, 
-        z: (y - MAZE_SIZE/2) * CELL_SIZE 
-      });
-    }
-  }
-}
-class MazeGenerator {
-  constructor(map) {
-    this.map = map;
-    this.rows = map.length;
-    this.cols = map[0].length;
-    this.cellSize = CELL_SIZE;
-    this.wallSize = CELL_SIZE;
-    this.wallHeight = 6.0;
+// Функция создания эффекта смерти (разлет на кубики)
+function createDeathEffect(x, y, z) {
+  const colors = [0xff3333, 0x3366cc, 0xffcc88, 0x333366];
+  const debris = [];
+  const count = 15;
+  
+  for(let i=0; i<count; i++) {
+    const size = 0.2 + Math.random() * 0.3;
+    const geo = new THREE.BoxGeometry(size, size, size);
+    const mat = new THREE.MeshStandardMaterial({ color: colors[Math.floor(Math.random()*colors.length)] });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x + (Math.random()-0.5)*1.5, y + Math.random()*2, z + (Math.random()-0.5)*1.5);
+    mesh.castShadow = true;
+    
+    // Скорость разлета
+    const vel = new THREE.Vector3(
+      (Math.random()-0.5) * 5,
+      Math.random() * 5 + 2,
+      (Math.random()-0.5) * 5
+    );
+    
+    S.scene.add(mesh);
+    debris.push({ mesh, vel, rotVel: new THREE.Vector3(Math.random()*10, Math.random()*10, Math.random()*10) });
   }
   
-  getWalls() {
-    const walls = [], cheeseSpots = [], greenZones = [];
-    let exitPos = null, spawnPos = null;
-    
-    // Ищем гарантированно пустую клетку для спавна
-    for (let y = 0; y < this.rows; y++) {
-      for (let x = 0; x < this.cols; x++) {
-        const cell = this.map[y][x];
-        const worldX = (x - this.cols / 2) * this.cellSize;
-        const worldZ = (y - this.rows / 2) * this.cellSize;
-        
-        if (cell === 1) {
-          walls.push({ x: worldX, z: worldZ, w: this.wallSize, d: this.wallSize, h: this.wallHeight });
-        }
-        if (cell === 2) { 
-          greenZones.push({ x: worldX, z: worldZ }); 
-          if (!spawnPos) spawnPos = { x: worldX, z: worldZ }; 
-        }
-        if (cell === 3) cheeseSpots.push({ x: worldX, z: worldZ });
-        if (cell === 4) exitPos = { x: worldX, z: worldZ };
+  S.deadPlayers.push({ debris, timer: 5.0 });
+}
+// Обновляем функцию loop
+function loop(t){
+  if(!S.ws||S.ws.readyState!==1)return;requestAnimationFrame(loop);
+  const dt=Math.min((t-lt)/1000,0.1);lt=t;
+  
+  // Обновление мертвых игроков (физика обломков)
+  for(let i = S.deadPlayers.length - 1; i >= 0; i--) {
+    const dead = S.deadPlayers[i];
+    dead.timer -= dt;
+    dead.debris.forEach(d => {
+      d.vel.y -= 15 * dt; // Гравитация для обломков
+      d.mesh.position.add(d.vel.clone().multiplyScalar(dt));
+      d.mesh.rotation.x += d.rotVel.x * dt;
+      d.mesh.rotation.y += d.rotVel.y * dt;
+      d.mesh.rotation.z += d.rotVel.z * dt;
+      
+      if(d.mesh.position.y < -2) { // Упало слишком низко
+        S.scene.remove(d.mesh);
+        dead.debris = dead.debris.filter(x => x !== d);
       }
+    });
+    if(dead.timer <= 0 || dead.debris.length === 0) {
+      dead.debris.forEach(d => S.scene.remove(d.mesh));
+      S.deadPlayers.splice(i, 1);
     }
-    
-    // Если спавн не найден, берём первую пустую клетку
-    if (!spawnPos) {
-      for (let y = 1; y < this.rows - 1; y++) {
-        for (let x = 1; x < this.cols - 1; x++) {
-          if (this.map[y][x] === 0) {
-            spawnPos = { 
-              x: (x - this.cols / 2) * this.cellSize, 
-              z: (y - this.rows / 2) * this.cellSize 
+  }
+
+  if(S.localPlayer && !S.localPlayer.userData.isDead){
+    const sp=0.18;const fwd=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const rgt=new THREE.Vector3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
+    let mv=new THREE.Vector3();if(S.inp.f<0)mv.add(fwd);if(S.inp.f>0)mv.sub(fwd);if(S.inp.r<0)mv.sub(rgt);if(S.inp.r>0)mv.add(rgt);
+    if(mv.length()>0){mv.normalize();const nx=S.localPlayer.group.position.x+mv.x*sp,nz=S.localPlayer.group.position.z+mv.z*sp;let col=false;const pr=0.35;for(const w of S.walls){if(nx>w.x-w.w/2-pr&&nx<w.x+w.w/2+pr&&nz>w.z-w.d/2-pr&&nz<w.z+w.d/2+pr){col=true;break;}}if(!col){S.localPlayer.group.position.x=nx;S.localPlayer.group.position.z=nz;}S.localPlayer.group.rotation.y=S.yaw+Math.PI;}
+    if(S.inp.jump&&S.localPlayer.group.position.y<=1.01){S.localPlayer.group.position.y=3.5;S.inp.jump=false;}
+    if(S.localPlayer.group.position.y>1)S.localPlayer.group.position.y-=0.22;if(S.localPlayer.group.position.y<1)S.localPlayer.group.position.y=1;
+    const mvng=Math.abs(S.inp.f)>0.1||Math.abs(S.inp.r)>0.1;const spd=mvng?4.5:0;const amp=mvng?0.7:0;const tm=t*0.012;
+    S.localPlayer.lL.rotation.x=Math.sin(tm*spd)*amp;S.localPlayer.rL.rotation.x=-Math.sin(tm*spd)*amp;S.localPlayer.lA.rotation.x=-Math.sin(tm*spd)*amp;S.localPlayer.rA.rotation.x=Math.sin(tm*spd)*amp;
+    S.ws.send(JSON.stringify({playerId:S.id,type:'input',f:S.inp.f,r:S.inp.r,jump:S.inp.jump,action:S.inp.action,yaw:S.yaw}));S.inp.action=false;
+    const cd=isMobile?5.5:9.0,ch=isMobile?3.5:5.5;
+    S.cam.position.set(S.localPlayer.group.position.x+Math.sin(S.yaw)*cd,S.localPlayer.group.position.y+ch+Math.sin(S.pitch)*1.5,S.localPlayer.group.position.z+Math.cos(S.yaw)*cd);
+    S.cam.lookAt(S.localPlayer.group.position.x,S.localPlayer.group.position.y+1.5,S.localPlayer.group.position.z);
+    S.players.forEach(p=>{
+      if(p.tag){const pos=p.mesh.group.position.clone();pos.y+=3.5;pos.project(S.cam);if(pos.z<1){p.tag.style.display='block';p.tag.style.left=(pos.x*0.5+0.5)*innerWidth+'px';p.tag.style.top=(-pos.y*0.5+0.5)*innerHeight+'px';}else p.tag.style.display='none';}
+      const om=p.animState===1;const os=om?4.5:0;const oa=om?0.7:0;p.mesh.lL.rotation.x=Math.sin(t*0.012*os)*oa;p.mesh.rL.rotation.x=-Math.sin(t*0.012*os)*oa;p.mesh.lA.rotation.x=-Math.sin(t*0.012*os)*oa;p.mesh.rA.rotation.x=Math.sin(t*0.012*os)*oa;
+    });
+    S.cheeses.forEach(c=>{c.rotation.y+=0.015;c.position.y=Math.sin(Date.now()*0.002)*0.05;});
+  }
+  S.ren.render(S.scene,S.cam);
+}
+
+// В функции connect добавь обработку смерти
+// ... внутри S.ws.onmessage ...      if(d.type==='playerDied'){
+        addChat('sys', `💀 ${d.name} погиб!`);
+        if(d.playerId === S.id) {
+          S.localPlayer.userData.isDead = true;
+          S.scene.remove(S.localPlayer.group); // Скрываем модель
+          // Показываем кнопку "Возродиться"
+          if(!document.getElementById('respawn-btn')) {
+            const btn = document.createElement('button');
+            btn.id = 'respawn-btn';
+            btn.textContent = '💀 Вы погибли! Возродиться';
+            btn.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:15px 30px;font-size:20px;background:#ff2a2a;color:#fff;border:none;border-radius:10px;cursor:pointer;z-index:100;';
+            btn.onclick = () => {
+              S.ws.send(JSON.stringify({ playerId: S.id, type: 'respawn' }));
+              S.localPlayer.userData.isDead = false;
+              btn.remove();
+              // Снова показываем модель
+              S.localPlayer.group.position.set(0,1,0); // Временно
+              S.scene.add(S.localPlayer.group);
             };
-            break;
+            document.body.appendChild(btn);
+          }
+        } else {
+          // Если умер другой - создаем обломки
+          if(S.players.has(d.playerId)) {
+             const p = S.players.get(d.playerId);
+             createDeathEffect(d.x, d.y, d.z);
+             S.scene.remove(p.mesh.group);
+             if(p.tag) p.tag.remove();
+             S.players.delete(d.playerId);
           }
         }
-        if (spawnPos) break;
       }
-    }
-        return { walls, spawn: spawnPos, greenZones, cheeseSpots, exit: exitPos };
-  }
-}
-
-const players = new Map();
-const gameInstances = {};
-let nextId = 1;
-
-const maze = new MazeGenerator(MAZE_MAP);
-const mapData = maze.getWalls();
-
-gameInstances.cheese = {
-  walls: mapData.walls,
-  cheeses: mapData.cheeseSpots.map((c, i) => ({ id: `c_${i}`, x: c.x, z: c.z, collected: false })),
-  greenZones: mapData.greenZones,
-  rat: { x: 0, z: 0, speed: 4.0, yaw: 0, targetX: 0, targetZ: 0, moveTimer: 0 },
-  exit: { x: mapData.exit?.x || 0, z: mapData.exit?.z || 0, open: false },
-  spawn: mapData.spawn,
-  time: 0
-};
-
-class Player {
-  constructor(id, ws, name) {
-    this.id = id; this.ws = ws; this.name = name.substring(0, 16);
-    this.gameId = 'menu'; this.x = 0; this.y = 1; this.z = 0;
-    this.vx = 0; this.vy = 0; this.vz = 0; this.yaw = 0; this.onGround = false;
-    this.input = { f: 0, r: 0, jump: false, action: false };
-    this.health = 100; this.inventory = { cheese: 0 };
-    this.lastSent = { x: 0, y: 0, z: 0, yaw: 0, anim: 0 };
-  }
-  
-  reset(gameId) {
-    this.gameId = gameId;
-    const spawn = gameInstances.cheese?.spawn || { x: 0, z: 0 };
-    // Спавн с микро-смещением
-    this.x = spawn.x + (Math.random() - 0.5) * 1.5;
-    this.z = spawn.z + (Math.random() - 0.5) * 1.5;
-    this.y = 1; this.vx = 0; this.vy = 0; this.vz = 0; this.health = 100;
-    this.inventory.cheese = 0;
-  }
-  
-  getPublic() {
-    return { id: this.id, name: this.name, x: this.x, y: this.y, z: this.z, yaw: this.yaw, health: this.health, gameId: this.gameId, anim: Math.abs(this.input.f) > 0.1 || Math.abs(this.input.r) > 0.1 ? 1 : 0 };
-  }
-}
-
-wss.on('connection', (ws) => {
-  ws.isAlive = true;
-  ws.on('pong', () => ws.isAlive = true);
-  ws.on('message', (raw) => {    try {
-      const d = JSON.parse(raw);
-      if (!d.playerId && d.type === 'register') {
-        const id = nextId++;
-        const p = new Player(id, ws, d.name || `Player_${id}`);
-        players.set(id, p);
-        ws.send(JSON.stringify({ type: 'registered', id, name: p.name }));
-        return;
-      }
-      const p = players.get(d.playerId); if (!p) return;
-      if (d.type === 'input') {
-        p.input = { f: typeof d.f==='number'?Math.max(-1,Math.min(1,d.f)):0, r: typeof d.r==='number'?Math.max(-1,Math.min(1,d.r)):0, jump: !!d.jump, action: !!d.action };
-        if (typeof d.yaw==='number') p.yaw = d.yaw;
-      }
-      if (d.type === 'joinGame' && ['brookhaven','shooter','brainrot','cheese'].includes(d.gameId)) {
-        p.reset(d.gameId);
-        const existing = Array.from(players.values()).filter(o => o.id !== p.id && o.gameId === d.gameId).map(o => o.getPublic());
-        ws.send(JSON.stringify({ type: 'existingPlayers', players: existing }));
-        if (d.gameId === 'cheese') ws.send(JSON.stringify({ type: 'mapData', walls: gameInstances.cheese.walls, cheeses: gameInstances.cheese.cheeses, spawn: gameInstances.cheese.spawn, greenZones: gameInstances.cheese.greenZones, exit: gameInstances.cheese.exit }));
-        broadcast({ type: 'playerJoined', player: p.getPublic() }, p.id, d.gameId);
-      }
-      if (d.type === 'chat' && d.msg) broadcast({ type: 'chat', name: p.name, msg: d.msg.substring(0, 120) }, null, p.gameId);
-    } catch(e) { console.error('Msg err:', e); }
-  });
-  ws.on('close', () => { for (const [id, pl] of players) { if (pl.ws === ws) { players.delete(id); broadcast({ type: 'playerLeft', playerId: id, gameId: pl.gameId }, null, pl.gameId); break; } } });
-});
-
-function broadcast(data, excludeId = null, targetGameId = null) {
-  const msg = JSON.stringify(data);
-  players.forEach(p => { if(p.id !== excludeId && p.ws.readyState === 1 && (!targetGameId || p.gameId === targetGameId)) try{ p.ws.send(msg); }catch(e){} });
-}
-
-// Проверка: можно ли крысе быть в этой точке
-function canRatBeThere(x, z) {
-  const gridX = Math.floor((x / CELL_SIZE) + MAZE_SIZE/2);
-  const gridZ = Math.floor((z / CELL_SIZE) + MAZE_SIZE/2);
-  if (gridX < 0 || gridX >= MAZE_SIZE || gridZ < 0 || gridZ >= MAZE_SIZE) return false;
-  return MAZE_MAP[gridZ][gridX] !== 1;
-}
-
-setInterval(() => {
-  const dt = 1 / WORLD_CONFIG.TICK_RATE;
-  
-  players.forEach(p => {
-    if (p.ws.readyState !== 1 || p.gameId === 'menu') return;
-    
-    const speed = WORLD_CONFIG.MOVE_SPEED;
-    const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
-    const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
-        p.vx = (p.input.f * fx + p.input.r * rx) * speed;
-    p.vz = (p.input.f * fz + p.input.r * rz) * speed;
-    
-    if (p.input.jump && p.onGround) { p.vy = WORLD_CONFIG.JUMP_FORCE; p.onGround = false; }
-    p.vy -= WORLD_CONFIG.GRAVITY * dt;
-    
-    let nx = p.x + p.vx * dt, nz = p.z + p.vz * dt, ny = p.y + p.vy * dt;
-    if (ny <= 1) { ny = 1; p.vy = 0; p.onGround = true; }
-    
-    // Коллизия игрока со стенами
-    if (p.gameId === 'cheese') {
-      const gridX = Math.floor((nx / CELL_SIZE) + MAZE_SIZE/2);
-      const gridZ = Math.floor((nz / CELL_SIZE) + MAZE_SIZE/2);
-      if (gridX >= 0 && gridX < MAZE_SIZE && gridZ >= 0 && gridZ < MAZE_SIZE && MAZE_MAP[gridZ][gridX] === 1) {
-        nx = p.x; nz = p.z;
-      }
-    }
-    p.x = nx; p.z = nz; p.y = ny;
-
-    if (p.gameId === 'cheese') {
-      const rat = gameInstances.cheese.rat;
-      const greenZones = gameInstances.cheese.greenZones;
-      
-      // Крыса ВСЕГДА идёт за ближайшим живым игроком
-      let nearestPlayer = null, minDist = 999;
-      players.forEach(o => { 
-        if(o.gameId === 'cheese' && o.health > 0) { 
-          const d = Math.hypot(o.x - rat.x, o.z - rat.z); 
-          if(d < minDist) { minDist = d; nearestPlayer = o; } 
-        }
-      });
-      
-      if (nearestPlayer) {
-        // Целевая точка - игрок
-        rat.targetX = nearestPlayer.x;
-        rat.targetZ = nearestPlayer.z;
-      } else {
-        // Патрулирование
-        rat.moveTimer -= dt;
-        if (rat.moveTimer <= 0) {
-          const spot = PATROL_SPOTS[Math.floor(Math.random() * PATROL_SPOTS.length)];
-          rat.targetX = spot.x;
-          rat.targetZ = spot.z;
-          rat.moveTimer = 3.0 + Math.random() * 2.0;
-        }
-      }
-      
-      // Движение крысы
-      const dx = rat.targetX - rat.x;
-      const dz = rat.targetZ - rat.z;      const dist = Math.hypot(dx, dz);
-      
-      if (dist > 0.3) {
-        const moveX = (dx / dist) * rat.speed * dt;
-        const moveZ = (dz / dist) * rat.speed * dt;
-        const newX = rat.x + moveX;
-        const newZ = rat.z + moveZ;
-        
-        // Проверка коллизии крысы
-        if (canRatBeThere(newX, newZ)) {
-          rat.x = newX;
-          rat.z = newZ;
-          rat.yaw = Math.atan2(dx, dz);
-        } else {
-          // Если не может пройти, выбираем новую цель
-          rat.moveTimer = 0;
-        }
-      }
-
-      // Урон от крысы
-      let ratInGreen = false;
-      for (const gz of greenZones) { 
-        if (Math.hypot(rat.x - gz.x, rat.z - gz.z) < 5) { ratInGreen = true; break; } 
-      }
-      
-      if (p.health > 0 && !ratInGreen && minDist < 2.5) {
-        p.health -= 10;
-        if (p.health <= 0) { 
-          p.health = 100; 
-          p.x = gameInstances.cheese.spawn.x; 
-          p.z = gameInstances.cheese.spawn.z; 
-          p.ws.send(JSON.stringify({ type: 'died' })); 
-        }
-      }
-
-      // Сбор сыра
-      gameInstances.cheese.cheeses.forEach(c => {
-        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 5.0) {
-          c.collected = true; 
-          p.inventory.cheese++;
-          p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
-          if(p.inventory.cheese >= 9) gameInstances.cheese.exit.open = true;
-        }
-      });
-
-      // Выход
-      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 5.0) {
-        p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) })); 
-        p.health = 0;
-      }    }
-    
-    const curAnim = Math.abs(p.input.f) > 0.1 || Math.abs(p.input.r) > 0.1 ? 1 : 0;
-    p.ws.send(JSON.stringify({ 
-      type: 'snapshot', 
-      players: Array.from(players.values()).filter(o => o.id !== p.id && o.gameId === p.gameId).map(o => o.getPublic()), 
-      rat: p.gameId === 'cheese' ? gameInstances.cheese.rat : null, 
-      exit: p.gameId === 'cheese' ? gameInstances.cheese.exit : null 
-    }));
-    p.lastSent = { x: p.x, y: p.y, z: p.z, yaw: p.yaw, anim: curAnim };
-  });
-  
-  if(gameInstances.cheese) gameInstances.cheese.time += dt;
-}, 1000 / WORLD_CONFIG.TICK_RATE);
-
-setInterval(() => { 
-  wss.clients.forEach(ws => { 
-    if(!ws.isAlive) return ws.terminate(); 
-    ws.isAlive=false; 
-    ws.ping(); 
-  }); 
-}, 15000);
-
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ SERVER RUNNING :${PORT}`));
-process.on('SIGINT', () => process.exit(0));
+// ...
