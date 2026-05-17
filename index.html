@@ -52,7 +52,7 @@ canvas { display: block; width: 100%; height: 100%; position: fixed; top: 0; lef
 <div id="loading">Загрузка мира...</div>
 <div id="reg-modal"><div class="reg-box"><h2>👋 Добро пожаловать!</h2><p style="font-size:12px;color:#8a8f98;margin-bottom:12px">Введите никнейм</p><input type="text" id="reg-input" class="reg-input" placeholder="Никнейм" maxlength="16"><button class="btn" id="reg-btn">Играть</button></div></div>
 <div id="main-menu">
-  <div class="menu-header"><h1>🧱 ROBLOX 3D</h1><p style="color:#8a8f98;font-size:13px">Исправлен спавн • Смерть • Лабиринт</p></div>
+  <div class="menu-header"><h1>🧱 ROBLOX 3D</h1><p style="color:#8a8f98;font-size:13px">Стабильное подключение • Исправлен спавн</p></div>
   <div class="game-grid">
     <div class="game-card" data-game="brookhaven"><h3>🏡 Brookhaven RP</h3><p>Открытый мир</p><div class="tags"><span class="tag">RP</span></div><button class="play-btn">Войти</button></div>
     <div class="game-card" data-game="shooter"><h3>🔫 Team Shooter</h3><p>Командный бой</p><div class="tags"><span class="tag">FPS</span></div><button class="play-btn">Войти</button></div>
@@ -74,7 +74,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || window.innerWidth < 768;
 const CELL_SIZE = 5.0;
 const GRID_SIZE = 19;
-const S = { ws:null, id:null, name:localStorage.getItem('roblox_name')||'', gameId:'menu', players:new Map(), scene:null, cam:null, ren:null, localPlayer:null, yaw:0, pitch:0, inp:{f:0,r:0,jump:false,action:false}, joyId:null, lookId:null, joyStart:{x:0,y:0}, lookPrev:{x:0,y:0}, walls:[], cheeses:new Map(), ratModel:null, exitMesh:null, cheeseTex:null, assetsReady:false, pendingMap:null, deadPlayers:[], mazeGrid:[] };
+const S = { ws:null, id:null, name:localStorage.getItem('roblox_name')||'', gameId:'menu', players:new Map(), scene:null, cam:null, ren:null, localPlayer:null, yaw:0, pitch:0, inp:{f:0,r:0,jump:false,action:false}, joyId:null, lookId:null, joyStart:{x:0,y:0}, lookPrev:{x:0,y:0}, walls:[], cheeses:new Map(), ratModel:null, exitMesh:null, cheeseTex:null, assetsReady:false, pendingMap:null, deadPlayers:[], mazeGrid:[], reconnectTimer:null, isConnected:false };
 const regModal=document.getElementById('reg-modal'), regInput=document.getElementById('reg-input'), regBtn=document.getElementById('reg-btn');
 if(S.name){regModal.style.display='none';showMenu();}else{regModal.style.display='flex';regBtn.onclick=()=>{const n=regInput.value.trim();if(n.length<2)return alert('Минимум 2 символа');S.name=n;localStorage.setItem('roblox_name',n);regModal.style.display='none';showMenu();}}
 function showMenu(){document.getElementById('main-menu').classList.add('active');document.querySelectorAll('.game-card').forEach(c=>c.querySelector('.play-btn').onclick=()=>startGame(c.dataset.game));}
@@ -94,11 +94,18 @@ function startGame(gameId){
   document.getElementById('chat-box').innerHTML=''; addChat('sys','Подключение...');
   init3D();setupInput();connect();
 }
-function leaveGame(){document.getElementById('game-ui').classList.remove('active');document.getElementById('main-menu').classList.add('active');document.getElementById('loading').classList.remove('active');if(S.ws)S.ws.close();if(S.ren){S.ren.dispose();S.ren=null;}}
+function leaveGame(){document.getElementById('game-ui').classList.remove('active');document.getElementById('main-menu').classList.add('active');document.getElementById('loading').classList.remove('active');if(S.ws){S.ws.close();S.ws=null;}if(S.reconnectTimer)clearTimeout(S.reconnectTimer);if(S.ren){S.ren.dispose();S.ren=null;}}
 document.getElementById('exit-btn').onclick=leaveGame;
-function connect(){  const proto=location.protocol==='https:'?'wss:':'ws:';
+function connect(){  if(S.ws && S.ws.readyState === WebSocket.OPEN) return;
+  if(S.reconnectTimer) clearTimeout(S.reconnectTimer);
+  const proto=location.protocol==='https:'?'wss:':'ws:';
+  console.log('[NET] Попытка подключения...');
   S.ws=new WebSocket(`${proto}//${location.host}`);
-  S.ws.onopen=()=>S.ws.send(JSON.stringify({type:'register',name:S.name}));
+  S.ws.onopen=()=>{
+    console.log('[NET] Подключено!');
+    S.isConnected=true;
+    S.ws.send(JSON.stringify({type:'register',name:S.name}));
+  };
   S.ws.onmessage=e=>{
     try{
       const d=JSON.parse(e.data);
@@ -130,7 +137,7 @@ function connect(){  const proto=location.protocol==='https:'?'wss:':'ws:';
             S.localPlayer.userData.isDead = false;
             btn.remove();
             S.scene.add(S.localPlayer.group);
-            unstuckPlayer(); // Проверка после возрождения
+            unstuckPlayer();
           };
           document.body.appendChild(btn);
         } else {
@@ -138,14 +145,13 @@ function connect(){  const proto=location.protocol==='https:'?'wss:':'ws:';
              const p = S.players.get(d.playerId);
              createDeathEffect(d.x, d.y, d.z);
              S.scene.remove(p.mesh.group);
-             if(p.tag) p.tag.remove();
-             S.players.delete(d.playerId);
+             if(p.tag) p.tag.remove();             S.players.delete(d.playerId);
           }
         }
       }
       if(d.type==='mapData'){
         S.pendingMap=d;
-        // Сохраняем сетку для клиентской коллизии        S.mazeGrid = [];
+        S.mazeGrid = [];
         const half = 9.5;
         for(let y=0; y<GRID_SIZE; y++) {
           S.mazeGrid[y] = [];
@@ -165,9 +171,15 @@ function connect(){  const proto=location.protocol==='https:'?'wss:':'ws:';
       if(d.type==='collectCheese'){document.getElementById('hud-cheese-count').textContent=`🧀 ${d.total}/9`;addChat('sys',`Сыр собран! (${d.total}/9)`);}
       if(d.type==='win'){alert(`🏆 Победа! Счёт: ${d.score}`);leaveGame();}
       if(d.type==='chat') addChat(d.name,d.msg);
-    }catch(err){console.error('Msg err:',err);}
+    }catch(err){console.error('[MSG] Ошибка парсинга:',err);}
   };
-  S.ws.onclose=()=>{addChat('sys','Связь потеряна. Переподключение...');setTimeout(connect,3000);};
+  S.ws.onclose=(e)=>{
+    console.warn('[NET] Соединение закрыто. Код:', e.code);
+    S.isConnected=false;
+    addChat('sys','Связь потеряна. Переподключение...');
+    S.reconnectTimer = setTimeout(connect, 3000);
+  };
+  S.ws.onerror=(err)=>console.error('[NET] Ошибка сети:', err);
 }
 function spawnMap(d){
   const wallMaterial = S.cheeseTex ? new THREE.MeshStandardMaterial({map:S.cheeseTex,color:0xffffff,roughness:0.5}) : new THREE.MeshStandardMaterial({color:0xddaa00});
@@ -182,8 +194,7 @@ function spawnMap(d){
   });
   d.cheeses.forEach(c=>{if(!c.collected) spawnCheese(c);});
 }
-function createRig(color){
-  const g=new THREE.Group();const mB=new THREE.MeshStandardMaterial({color:color});const mS=new THREE.MeshStandardMaterial({color:0xffcc88});const mP=new THREE.MeshStandardMaterial({color:0x333366});
+function createRig(color){  const g=new THREE.Group();const mB=new THREE.MeshStandardMaterial({color:color});const mS=new THREE.MeshStandardMaterial({color:0xffcc88});const mP=new THREE.MeshStandardMaterial({color:0x333366});
   const t=new THREE.Mesh(new THREE.BoxGeometry(1,1.2,0.6),mB);t.position.y=1.8;t.castShadow=true;g.add(t);
   const h=new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,0.8),mS);h.position.y=2.8;h.castShadow=true;g.add(h);
   function limb(w,hh,d,mat,px,py,pz){const p=new THREE.Group();p.position.set(px,py,pz);const m=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),mat);m.position.y=-hh/2;m.castShadow=true;p.add(m);g.add(p);return p;}
@@ -194,7 +205,8 @@ function spawnRemote(d){
   const r=createRig(d.gameId==='shooter'?(d.team==='red'?0xff2a2a:0x2a8aff):0x3366cc);
   r.group.position.set(d.x,d.y,d.z);r.group.rotation.y=-d.yaw;
   S.scene.add(r.group);S.players.set(d.id,{mesh:r,tx:d.x,ty:d.y,tz:d.z,tryaw:d.yaw,name:d.name,animState:0});
-  const tag=document.createElement('div');tag.className='name-tag';tag.textContent=d.name;  document.getElementById('name-tags').appendChild(tag);S.players.get(d.id).tag=tag;
+  const tag=document.createElement('div');tag.className='name-tag';tag.textContent=d.name;
+  document.getElementById('name-tags').appendChild(tag);S.players.get(d.id).tag=tag;
 }
 function removeRemote(id){const p=S.players.get(id);if(p){S.scene.remove(p.mesh.group);if(p.tag)p.tag.remove();S.players.delete(id);}}
 function spawnCheese(c){
@@ -231,8 +243,7 @@ function unstuckPlayer() {
     S.localPlayer.group.position.x = (1.0 - half) * CELL_SIZE;
     S.localPlayer.group.position.z = (1.0 - half) * CELL_SIZE;
     S.localPlayer.group.position.y = 1;
-  }
-}
+  }}
 async function loadAssets(){
   await new Promise(resolve=>{
     new THREE.TextureLoader().load('cheese_texture.png',tex=>{
@@ -243,7 +254,8 @@ async function loadAssets(){
     },undefined,()=>{console.warn('Tex not found');resolve();});
   });
   await new Promise(resolve=>{
-    new GLTFLoader().load('rat.glb',g=>{      const m=g.scene;const box=new THREE.Box3().setFromObject(m);const h=box.max.y-box.min.y;
+    new GLTFLoader().load('rat.glb',g=>{
+      const m=g.scene;const box=new THREE.Box3().setFromObject(m);const h=box.max.y-box.min.y;
       m.scale.setScalar(3.8/h);m.position.set(0,0.5,0);m.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});
       S.scene.add(m);S.ratModel=m;resolve();
     },undefined,()=>{
@@ -280,8 +292,7 @@ let lt=0;function startLoop(){requestAnimationFrame(loop);}
 function loop(t){
   if(!S.ws||S.ws.readyState!==1)return;requestAnimationFrame(loop);
   const dt=Math.min((t-lt)/1000,0.1);lt=t;
-  for(let i = S.deadPlayers.length - 1; i >= 0; i--) {
-    const dead = S.deadPlayers[i];
+  for(let i = S.deadPlayers.length - 1; i >= 0; i--) {    const dead = S.deadPlayers[i];
     dead.timer -= dt;
     dead.debris.forEach(d => {
       d.vel.y -= 15 * dt;
@@ -293,6 +304,7 @@ function loop(t){
     });
     if(dead.timer <= 0 || dead.debris.length === 0) { dead.debris.forEach(d => S.scene.remove(d.mesh)); S.deadPlayers.splice(i, 1); }
   }
+
   if(S.localPlayer && !S.localPlayer.userData.isDead){
     const sp=0.18;const fwd=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const rgt=new THREE.Vector3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
     let mv=new THREE.Vector3();if(S.inp.f<0)mv.add(fwd);if(S.inp.f>0)mv.sub(fwd);if(S.inp.r<0)mv.sub(rgt);if(S.inp.r>0)mv.add(rgt);
