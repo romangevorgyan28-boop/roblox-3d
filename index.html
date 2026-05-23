@@ -1,2144 +1,293 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🧱 Roblox 3D Ultimate</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      outline: none;
-      touch-action: none;
-    }
-    
-    body {
-      overflow: hidden;
-      background: #05050a;
-      font-family: system-ui, -apple-system, sans-serif;
-      color: #ffffff;
-    }
-    
-    #loading {
-      position: fixed;
-      inset: 0;
-      background: #05050a;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.5s ease;
-    }
-    
-    #loading.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid #1a1a2e;
-      border-top-color: #00e5ff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    #loading p {
-      margin-top: 15px;
-      color: #8888aa;
-      font-size: 14px;
-    }
-    
-    #skipBtn {
-      margin-top: 12px;
-      padding: 8px 20px;
-      background: #1a1a2e;
-      color: #8888aa;
-      border: 1px solid #333355;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      transition: all 0.2s;
-    }
-    
-    #skipBtn:hover {
-      background: #2a2a4e;
-      color: #ffffff;
-    }
-    
-    #mainMenu {
-      position: fixed;
-      inset: 0;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px 20px;
-      background: radial-gradient(circle at 50% 30%, #0f172a 0%, #000000 100%);
-      overflow-y: auto;
-      z-index: 100;
-    }
-    
-    #mainMenu.active {
-      display: flex;
-    }
-    
-    .menuHeader {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    
-    .menuHeader h1 {
-      font-size: clamp(32px, 6vw, 48px);
-      background: linear-gradient(90deg, #ffffff 0%, #00e5ff 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 10px;
-    }
-    
-    .menuHeader p {
-      color: #666688;
-      font-size: 13px;
-    }
-    
-    .stats {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 10px 20px;
-      border-radius: 8px;
-      margin-top: 15px;
-      font-size: 12px;
-      color: #8888aa;
-    }
-    
-    .gameGrid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      max-width: 900px;
-      width: 100%;
-    }
-    
-    .gameCard {
-      background: rgba(20, 20, 35, 0.9);
-      border: 1px solid #2a2a4a;
-      border-radius: 12px;
-      padding: 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .gameCard:hover {
-      border-color: #00e5ff;
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 229, 255, 0.2);
-    }
-    
-    .gameCard h3 {
-      font-size: 18px;
-      color: #ffffff;
-    }
-    
-    .gameCard p {
-      font-size: 12px;
-      color: #8888aa;
-    }
-    
-    .tags {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    
-    .tag {
-      font-size: 10px;
-      padding: 3px 8px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      color: #a0a0c0;
-    }
-    
-    .playBtn {
-      margin-top: auto;
-      padding: 10px;
-      background: #00e5ff;
-      color: #000000;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-    
-    .playBtn:hover {
-      background: #00c0dd;
-      transform: scale(1.02);
-    }
-    
-    #gameUI {
-      display: none;
-      position: fixed;
-      inset: 0;
-    }
-    
-    #gameUI.active {
-      display: block;
-    }
-    
-    #hud {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 45px;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 15px;
-      z-index: 50;
-      font-size: 13px;
-    }
-    
-    #hudInfo {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-    
-    #chatContainer {
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      width: 280px;
-      z-index: 40;
-      pointer-events: none;
-    }
-    
-    #chatBox {
-      max-height: 150px;
-      overflow-y: auto;
-      padding: 8px;
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 8px 8px 0 0;
-      border: 1px solid #333355;
-      border-bottom: none;
-      font-size: 11px;
-      pointer-events: auto;
-    }
-    
-    #chatInput {
-      width: 100%;
-      padding: 6px 10px;
-      background: rgba(0, 0, 0, 0.8);
-      border: 1px solid #333355;
-      border-radius: 0 0 8px 8px;
-      color: #ffffff;
-      font-size: 11px;
-      pointer-events: auto;
-    }
-    
-    .message {
-      margin: 3px 0;
-      line-height: 1.3;
-    }
-    
-    .message .name {
-      color: #a78bfa;
-      font-weight: bold;
-    }
-    
-    .message.system {
-      color: #34d399;
-      font-style: italic;
-    }
-    
-    #crosshair {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 12px;
-      height: 12px;
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      display: none;
-      z-index: 60;
-    }
-    
-    #exitBtn {
-      position: fixed;
-      top: 8px;
-      right: 10px;
-      background: #ef4444;
-      color: #ffffff;
-      border: none;
-      padding: 5px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 70;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    
-    #nameTags {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 30;
-      overflow: hidden;
-    }
-    
-    .nameTag {
-      position: absolute;
-      transform: translate(-50%, -100%);
-      background: rgba(0, 0, 0, 0.7);
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-    
-    #mobileControls {
-      display: none;
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 40;
-    }
-    
-    #mobileControls.active {
-      display: block;
-    }
-    
-    #joystickZone {
-      position: absolute;
-      left: 20px;
-      bottom: 20px;
-      width: 120px;
-      height: 120px;
-      pointer-events: all;
-    }
-    
-    #joystickBase {
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      position: relative;
-    }
-    
-    #joystickStick {
-      width: 50px;
-      height: 50px;
-      background: #00e5ff;
-      border-radius: 50%;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    
-    #lookZone {
-      position: absolute;
-      right: 0;
-      top: 0;
-      width: 50%;
-      height: 70%;
-      pointer-events: all;
-    }
-    
-    .mobileBtn {
-      position: absolute;
-      right: 20px;
-      width: 65px;
-      height: 65px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      pointer-events: all;
-      transition: all 0.1s;
-    }
-    
-    .mobileBtn:active {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(0.95);
-    }
-    
-    #jumpBtn {
-      bottom: 20px;
-    }
-    
-    #actionBtn {
-      bottom: 100px;
-      right: 95px;
-      background: rgba(168, 85, 247, 0.3);
-      border-color: #a855f7;
-    }
-    
-    #editorPanel {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      border: 1px solid #00e5ff;
-      border-radius: 10px;
-      padding: 15px;
-      z-index: 80;
-      gap: 10px;
-    }
-    
-    #editorPanel.active {
-      display: flex;
-    }
-    
-    .editorBtn {
-      padding: 8px 16px;
-      background: #1a1a2e;
-      border: 1px solid #00e5ff;
-      color: #00e5ff;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    
-    .editorBtn:hover {
-      background: #00e5ff;
-      color: #000;
-    }
-    
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 1;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🧱 Roblox 3D Ultimate</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;outline:none;touch-action:none}
+body{overflow:hidden;background:#05050a;font-family:system-ui,sans-serif;color:#fff}
+#load{position:fixed;inset:0;background:#05050a;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s}
+#load.hidden{opacity:0;pointer-events:none}
+.spin{width:40px;height:40px;border:3px solid #222;border-top-color:#00e5ff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#load p{margin-top:10px;color:#777;font-size:13px}
+#skip{margin-top:12px;padding:6px 14px;background:#222;color:#aaa;border:1px solid #444;border-radius:6px;cursor:pointer;font-size:12px}
+#skip:hover{background:#333;color:#fff}
+#menu{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;padding:20px;background:radial-gradient(circle at 50% 30%,#0f172a,#000);overflow-y:auto;z-index:100}
+#menu.on{display:flex}
+h1{font-size:clamp(26px,5vw,36px);background:linear-gradient(90deg,#fff,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;max-width:800px;width:100%;margin-top:16px}
+.card{background:rgba(20,20,30,0.8);border:1px solid #333;border-radius:8px;padding:12px;cursor:pointer;transition:.2s}
+.card:hover{border-color:#00e5ff;transform:translateY(-2px)}
+.card h3{font-size:15px;margin-bottom:2px}
+.card p{font-size:10px;color:#aaa;margin-bottom:6px}
+.btn{width:100%;padding:7px;background:#00e5ff;color:#000;border:none;border-radius:5px;font-weight:bold;cursor:pointer;font-size:13px}
+#game{display:none;position:fixed;inset:0}
+#game.on{display:block}
+#hud{position:fixed;top:0;left:0;width:100%;height:32px;background:linear-gradient(180deg,rgba(0,0,0,.6),transparent);display:flex;align-items:center;justify-content:space-between;padding:0 8px;z-index:50;font-size:11px}
+#hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.7);padding:8px 16px;border-radius:6px;font-size:14px;display:none;z-index:60;pointer-events:none}
+#chat{position:fixed;top:8px;left:8px;width:220px;z-index:40;pointer-events:none}
+#box{max-height:120px;overflow-y:auto;padding:5px;background:rgba(0,0,0,.4);border-radius:5px 5px 0 0;border:1px solid #333;border-bottom:none;font-size:10px;pointer-events:auto}
+#inp{width:100%;padding:4px 7px;background:rgba(0,0,0,.6);border:1px solid #333;border-radius:0 0 5px 5px;color:#fff;font-size:10px;pointer-events:auto}
+.msg{margin:2px 0;line-height:1.1}
+.msg .n{color:#a78bfa;font-weight:bold}
+.sys{color:#34d399;font-style:italic}
+#exit{position:fixed;top:5px;right:8px;background:#ef4444;color:#fff;border:none;padding:3px 7px;border-radius:3px;cursor:pointer;z-index:60;font-size:10px}
+#tags{position:fixed;inset:0;pointer-events:none;z-index:30}
+.tag{position:absolute;transform:translate(-50%,-100%);background:rgba(0,0,0,.5);padding:1px 4px;border-radius:2px;font-size:8px;white-space:nowrap}
+#ctrl{display:none;position:fixed;inset:0;pointer-events:none;z-index:40}
+#ctrl.on{display:block}
+#joy{position:absolute;left:14px;bottom:14px;width:90px;height:90px;pointer-events:all}
+#base{width:100%;height:100%;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:50%;position:relative}
+#stick{width:34px;height:34px;background:#00e5ff;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+#look{position:absolute;right:0;top:0;width:50%;height:60%;pointer-events:all}
+.mb{position:absolute;right:14px;width:48px;height:48px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:all}
+#bj{bottom:14px}
+#ba{bottom:74px;right:74px;background:rgba(168,85,247,.15);border-color:#a855f7}
+#editorBar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);border:1px solid #00e5ff;border-radius:8px;padding:8px;display:none;gap:8px;z-index:70}
+#editorBar.on{display:flex}
+.ebtn{padding:6px 12px;background:#1a1a2e;border:1px solid #00e5ff;color:#00e5ff;border-radius:4px;cursor:pointer;font-size:11px}
+.ebtn:hover{background:#00e5ff;color:#000}
+canvas{display:block;width:100%;height:100%;position:fixed;top:0;left:0;z-index:1}
+</style>
 </head>
 <body>
-
-<div id="loading">
-  <div class="spinner"></div>
-  <p id="loadingText">Загрузка мира...</p>
-  <button id="skipBtn">⏭ Пропустить загрузку</button>
-</div>
-
-<div id="mainMenu">
-  <div class="menuHeader">
-    <h1>🧱 ROBLOX 3D ULTIMATE</h1>
-    <p>Полная версия • Редактор уровней • Статистика</p>
-    <div class="stats" id="statsDisplay">
-      📊 Всего игроков: <strong id="totalPlayers">0</strong> | 
-      👤 Онлайн: <strong id="onlinePlayers">0</strong>
-    </div>
-  </div>
-  
-  <div class="gameGrid">
-    <div class="gameCard" data-game="brookhaven">
-      <h3>🏡 Brookhaven RP</h3>
-      <p>Открытый мир для ролевых игр</p>
-      <div class="tags">
-        <span class="tag">RP</span>
-        <span class="tag">Открытый мир</span>
-      </div>
-      <button class="playBtn">Войти в игру</button>
-    </div>
-    
-    <div class="gameCard" data-game="shooter">
-      <h3>🔫 Team Shooter</h3>
-      <p>Командный шутер от первого лица</p>
-      <div class="tags">
-        <span class="tag">FPS</span>
-        <span class="tag">PvP</span>
-      </div>
-      <button class="playBtn">Войти в игру</button>
-    </div>
-    
-    <div class="gameCard" data-game="brainrot">
-      <h3>🧠 Steal a Brainrot</h3>
-      <p>Укради артефакт и убеги</p>
-      <div class="tags">
-        <span class="tag">Экшен</span>
-        <span class="tag">Аркада</span>
-      </div>
-      <button class="playBtn">Войти в игру</button>
-    </div>
-    
-    <div class="gameCard" data-game="cheese">
-      <h3>🧀 Horror of Cheese</h3>
-      <p>Лабиринт с крысой-охотником</p>
-      <div class="tags">
-        <span class="tag">Хоррор</span>
-        <span class="tag">Выживание</span>
-      </div>
-      <button class="playBtn">Войти в игру</button>
-    </div>
-    
-    <div class="gameCard" data-game="editor">
-      <h3>🎨 Level Editor</h3>
-      <p>Создавай свои уровни и загружай модели</p>
-      <div class="tags">
-        <span class="tag">Редактор</span>
-        <span class="tag">Творчество</span>
-      </div>
-      <button class="playBtn">Войти в редактор</button>
-    </div>
+<div id="load"><div class="spin"></div><p id="ltxt">Подготовка...</p><button id="skip">⏭ Пропустить</button></div>
+<div id="menu">
+  <h1>🧱 ROBLOX 3D</h1>
+  <p style="color:#555;font-size:11px">Редактор • Коллизии • Сбор на E</p>
+  <div class="grid">
+    <div class="card" data-g="b"><h3>🏡 Brookhaven RP</h3><p>Открытый мир</p><button class="btn">Войти</button></div>
+    <div class="card" data-g="s"><h3>🔫 Team Shooter</h3><p>Командный бой</p><button class="btn">Войти</button></div>
+    <div class="card" data-g="br"><h3>🧠 Steal a Brainrot</h3><p>Укради артефакт</p><button class="btn">Войти</button></div>
+    <div class="card" data-g="c"><h3>🧀 Horror of Cheese</h3><p>Лабиринт с крысой</p><button class="btn">Войти</button></div>
+    <div class="card" data-g="ed"><h3>🎨 Level Editor</h3><p>Строй уровни как в Roblox</p><button class="btn">Войти</button></div>
   </div>
 </div>
-
-<div id="gameUI">
-  <canvas id="canvas"></canvas>
-  
-  <div id="hud">
-    <span id="playerName">Player</span>
-    <div id="hudInfo">
-      <span id="onlineCount">● 1</span>
-      <span id="cheeseCount" style="display:none;color:#ffd700">🧀 0/9</span>
-    </div>
-  </div>
-  
-  <div id="chatContainer">
-    <div id="chatBox"></div>
-    <input type="text" id="chatInput" placeholder="Написать в чат...">
-  </div>
-  
-  <div id="crosshair"></div>
-  <button id="exitBtn">🏠 Меню</button>
-  <div id="nameTags"></div>
-  
-  <div id="mobileControls">
-    <div id="joystickZone">
-      <div id="joystickBase">
-        <div id="joystickStick"></div>
-      </div>
-    </div>
-    <div id="lookZone"></div>
-    <div id="jumpBtn" class="mobileBtn">⬆️</div>
-    <div id="actionBtn" class="mobileBtn">🎯</div>
-  </div>
-  
-  <div id="editorPanel">
-    <button class="editorBtn" id="addWallBtn">🧱 Добавить стену</button>
-    <button class="editorBtn" id="removeWallBtn">❌ Удалить стену</button>
-    <button class="editorBtn" id="loadModelBtn">📦 Загрузить модель</button>
-    <input type="file" id="modelInput" accept=".glb,.gltf" style="display:none">
-  </div>
+<div id="game">
+  <canvas id="c"></canvas>
+  <div id="hud"><span id="name">Player</span><span id="on">● 1</span><span id="ch" style="display:none;color:#ffd700">🧀 0/6</span></div>
+  <div id="hint">Нажми E чтобы собрать сыр</div>
+  <div id="chat"><div id="box"></div><input id="inp" placeholder="Чат..."></div>
+  <button id="exit">🏠 Меню</button>
+  <div id="tags"></div>
+  <div id="editorBar"><button class="ebtn" id="placeWall">🧱 Стена</button><button class="ebtn" id="selMode">✋ Выделить</button><button class="ebtn" id="delObj">🗑 Удалить</button><input type="file" id="mInp" accept=".glb,.gltf" style="display:none"><button class="ebtn" id="loadM">📦 Модель</button></div>
+  <div id="ctrl"><div id="joy"><div id="base"><div id="stick"></div></div></div><div id="look"></div><div id="bj" class="mb">⬆️</div><div id="ba" class="mb">🎯</div></div>
 </div>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
+<script>setTimeout(()=>document.getElementById('load')?.classList.add('hidden'),2500);document.getElementById('skip').onclick=()=>document.getElementById('load').classList.add('hidden');</script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-// ============================================
-// ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И КОНСТАНТЫ
-// ============================================
-
-const IS_MOBILE = ('ontouchstart' in window) || 
-                  (navigator.maxTouchPoints > 0) || 
-                  (window.innerWidth < 768);
-
-const CELL_SIZE = 5.0;
-const GRID_SIZE = 19;
-
-const STATE = {
-  // Сеть
-  webSocket: null,
-  playerId: null,
-  playerName: localStorage.getItem('roblox_name') || '',
-  currentGame: 'menu',
-  isConnected: false,
-  
-  // Игроки
-  players: new Map(),
-  
-  // 3D сцена
-  scene: null,
-  camera: null,
-  renderer: null,
-  localPlayer: null,
-  
-  // Управление
-  yaw: 0,
-  pitch: 0,
-  input: {
-    forward: 0,
-    right: 0,
-    jump: false,
-    action: false
-  },
-  
-  // Мобильное управление
-  joystickId: null,
-  lookId: null,
-  joystickStart: { x: 0, y: 0 },
-  lookPrev: { x: 0, y: 0 },
-  
-  // Игровой мир
-  walls: [],
-  cheeses: new Map(),
-  ratModel: null,
-  exitMesh: null,
-  cheeseTexture: null,
-  pendingMapData: null,
-  mazeGrid: [],
-  editorObjects: [],
-  customModels: [],
-  
-  // Состояние
-  isDead: false,
-  editorMode: false,
-  editorTool: 'addWall'
-};
-
-// ============================================
-// DOM ЭЛЕМЕНТЫ
-// ============================================
-
-const loadingScreen = document.getElementById('loading');
-const loadingText = document.getElementById('loadingText');
-const skipBtn = document.getElementById('skipBtn');
-const mainMenu = document.getElementById('mainMenu');
-const gameUI = document.getElementById('gameUI');
-const chatBox = document.getElementById('chatBox');
-const chatInput = document.getElementById('chatInput');
-const editorPanel = document.getElementById('editorPanel');
-const modelInput = document.getElementById('modelInput');
-
-// ============================================
-// ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
-// ============================================
-
-// Принудительное скрытие загрузки через 2 секунды
-setTimeout(() => {
-  if (loadingScreen) {
-    loadingScreen.classList.add('hidden');
-  }
-}, 2000);
-
-// Кнопка пропуска
-if (skipBtn) {
-  skipBtn.addEventListener('click', () => {
-    if (loadingScreen) {
-      loadingScreen.classList.add('hidden');
+const mob='ontouchstart'in window||navigator.maxTouchPoints>0||innerWidth<768;
+const C=5,G=13;
+const S={ws:null,id:null,name:localStorage.getItem('n')||'Player',gid:'menu',pl:new Map(),sc:null,cam:null,ren:null,me:null,yaw:0,pit:0,inp:{f:0,r:0,j:false,a:false},jId:null,lId:null,js:{x:0,y:0},lp:{x:0,y:0},w:[],ch:new Map(),rat:null,ex:null,ct:null,pm:null,dp:[],mg:[],on:false,ed:false,sel:null,selOff:{x:0,z:0}};
+const ld=document.getElementById('load'),mn=document.getElementById('menu'),gm=document.getElementById('game'),bx=document.getElementById('box'),ip=document.getElementById('inp'),hint=document.getElementById('hint'),ebar=document.getElementById('editorBar');
+if(S.name){ld.classList.add('hidden');mn.classList.add('on');}else{const r=prompt('Никнейм:','Player');if(r&&r.trim().length>1){S.name=r.trim();localStorage.setItem('n',S.name);ld.classList.add('hidden');mn.classList.add('on');}else location.reload();}
+document.querySelectorAll('.card').forEach(c=>c.querySelector('.btn').onclick=()=>go(c.dataset.g));
+function go(g){
+  ld.classList.add('hidden');try{
+    S.gid=g;mn.classList.remove('on');gm.classList.add('on');
+    document.getElementById('name').textContent=S.name;
+    document.getElementById('ch').style.display=(g==='c')?'inline':'none';
+    ebar.classList.toggle('on',g==='ed');S.ed=(g==='ed');
+    bx.innerHTML='';add('sys','Запуск...');init3D();setup();conn();
+  }catch(e){add('sys','Ошибка запуска');console.error(e);}
+}
+document.getElementById('exit').onclick=()=>{gm.classList.remove('on');mn.classList.add('on');ld.classList.remove('hidden');if(S.ws)S.ws.close();if(S.ren){S.ren.dispose();S.ren=null;}};
+function conn(){
+  if(S.ws?.readyState===1)return;
+  const pr=location.protocol==='https:'?'wss:':'ws:';
+  try{
+    S.ws=new WebSocket(`${pr}//${location.host}`);
+    S.ws.onopen=()=>{S.ws.send(JSON.stringify({type:'reg',name:S.name}));add('sys','Сеть OK');};
+    S.ws.onmessage=e=>{
+      try{
+        const d=JSON.parse(e.data);
+        if(d.type==='reg'){S.id=d.id;S.ws.send(JSON.stringify({pid:S.id,type:'join',gid:S.gid}));S.on=true;}
+        if(d.type==='ex')d.players.forEach(p=>spR(p));
+        if(d.type==='join'){if(!d.player.dead)spR(d.player);else dieFx(d.player.x,d.player.y,d.player.z);}
+        if(d.type==='left')rmR(d.id);
+        if(d.type==='mv'){const p=S.pl.get(d.player.id);if(p){p.m.position.set(d.player.x,d.player.y,d.player.z);p.m.rotation.y=-d.player.yaw;}}
+        if(d.type==='snap'){
+          d.players.forEach(p=>{
+            if(!S.pl.has(p.id)&&!p.dead)spR(p);
+            else if(!p.dead){const r=S.pl.get(p.id);r.m.position.x+=(p.x-r.m.position.x)*.12;r.m.position.y+=(p.y-r.m.position.y)*.12;r.m.position.z+=(p.z-r.m.position.z)*.12;r.m.rotation.y+=(-p.yaw-r.m.rotation.y)*.12;r.a=p.anim;}
+          });
+          if(d.rat&&S.rat){S.rat.position.x+=(d.rat.x-S.rat.position.x)*.15;S.rat.position.z+=(d.rat.z-S.rat.position.z)*.15;S.rat.rotation.y=-d.rat.yaw;}
+          if(d.exit&&S.ex)S.ex.visible=d.exit.open;
+          document.getElementById('on').textContent=`● ${d.players.length+1}`;
+          if(d.editorObjects&&S.ed)syncEditor(d.editorObjects);
+        }
+        if(d.type==='die'){
+          if(d.pid===S.id){S.me.userData.dead=true;S.sc.remove(S.me);const b=document.createElement('button');b.textContent='💀 Возродиться';b.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);padding:10px 20px;font-size:16px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;z-index:100;';b.onclick=()=>{S.ws.send(JSON.stringify({pid:S.id,type:'resp'}));S.me.userData.dead=false;b.remove();S.sc.add(S.me);unstuck();};document.body.appendChild(b);}
+          else if(S.pl.has(d.pid)){dieFx(d.x,d.y,d.z);S.sc.remove(S.pl.get(d.pid).m);S.pl.delete(d.pid);}
+        }
+        if(d.type==='map'){
+          S.pm=d;S.mg=[];const h=G/2;for(let y=0;y<G;y++){S.mg[y]=[];for(let x=0;x<G;x++)S.mg[y][x]={w:false};}
+          d.walls.forEach(w=>{const gx=Math.floor(w.x/C+h),gz=Math.floor(w.z/C+h);if(gx>=0&&gx<G&&gz>=0&&gz<G)S.mg[gz][gx].w=true;});
+          if(S.ct)spM(d);else loadA().then(()=>spM(d)).catch(()=>spM(d));
+        }
+        if(d.type==='cheese')document.getElementById('ch').textContent=`🧀 ${d.t}/6`;
+        if(d.type==='win'){alert(`🏆 Победа! ${d.score}`);document.getElementById('exit').click();}
+        if(d.type==='chat')add(d.name,d.msg);
+      }catch(err){}
+    };
+    S.ws.onclose=()=>{S.on=false;setTimeout(conn,2000);};
+  }catch(e){add('sys','Ошибка сети.');}
+}
+function spM(d){
+  try{
+    const mt=S.ct?new THREE.MeshStandardMaterial({map:S.ct,color:0xffffff,roughness:.5}):new THREE.MeshStandardMaterial({color:0xddaa00});
+    d.walls.forEach(w=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w.w,w.h||6,w.d),mt);m.position.set(w.x,(w.h||6)/2,w.z);m.castShadow=true;m.receiveShadow=true;S.sc.add(m);S.w.push({m,x:w.x,z:w.z,w:w.w,d:w.d,h:w.h||6});});
+    if(d.green)d.green.forEach(g=>{const z=new THREE.Mesh(new THREE.PlaneGeometry(5,5),new THREE.MeshBasicMaterial({color:0x00ff88,transparent:true,opacity:.2,side:THREE.DoubleSide}));z.rotation.x=-Math.PI/2;z.position.set(g.x,.05,g.z);S.sc.add(z);});
+    d.cheeses.forEach(c=>{if(!c.col)spCh(c);});
+  }catch(e){}
+}
+function mkRig(c){
+  const g=new THREE.Group(),mB=new THREE.MeshStandardMaterial({color:c}),mS=new THREE.MeshStandardMaterial({color:0xffcc88}),mP=new THREE.MeshStandardMaterial({color:0x333366});
+  g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(1,1.2,.6),mB),{position:new THREE.Vector3(0,1.8,0),castShadow:true}));
+  g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8),mS),{position:new THREE.Vector3(0,2.8,0),castShadow:true}));
+  function lb(w,h,d,mt,x,y,z){const p=new THREE.Group();p.position.set(x,y,z);p.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mt),{position:new THREE.Vector3(0,-h/2,0),castShadow:true}));g.add(p);return p;}
+  return{g,lA:lb(.35,1.1,.35,mS,-.7,2.3,0),rA:lb(.35,1.1,.35,mS,.7,2.3,0),lL:lb(.4,1.1,.4,mP,-.25,1.15,0),rL:lb(.4,1.1,.4,mP,.25,1.15,0)};
+}
+function spR(d){
+  if(d.id===S.id)return;
+  try{
+    const r=mkRig(d.gid==='s'?(d.team==='red'?0xff2a2a:0x2a8aff):0x3366cc);
+    r.g.position.set(d.x,d.y,d.z);r.g.rotation.y=-d.yaw;S.sc.add(r.g);S.pl.set(d.id,{m:r.g,a:d.anim,n:d.name});
+    const t=document.createElement('div');t.className='tag';t.textContent=d.n;document.getElementById('tags').appendChild(t);S.pl.get(d.id).t=t;
+  }catch(e){}
+}
+function rmR(id){try{const p=S.pl.get(id);if(p){S.sc.remove(p.m);if(p.t)p.t.remove();S.pl.delete(id);}}catch(e){}}
+function spCh(c){
+  try{
+    const g=new THREE.Group();g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,1.2,8),new THREE.MeshStandardMaterial({color:0x5c3a21})),{position:new THREE.Vector3(0,.6,0)}));
+    const tp=new THREE.Mesh(new THREE.BoxGeometry(1.4,.1,1.4),new THREE.MeshStandardMaterial({color:0x6b4423}));tp.position.y=1.25;tp.castShadow=true;tp.receiveShadow=true;g.add(tp);
+    const mt=S.ct?new THREE.MeshStandardMaterial({map:S.ct,color:0xffffff,roughness:.3}):new THREE.MeshStandardMaterial({color:0xffd700});
+    const ch=new THREE.Mesh(new THREE.ConeGeometry(.45,.7,8),mt);ch.position.y=1.65;ch.rotation.x=Math.PI/6;ch.castShadow=true;g.add(ch);g.position.set(c.x,0,c.z);S.sc.add(g);S.ch.set(c.id,g);
+  }catch(e){}
+}
+function dieFx(x,y,z){try{const cl=[0xff3333,0x3366cc,0xffcc88,0x333366];for(let i=0;i<6;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.2),new THREE.MeshStandardMaterial({color:cl[i%4]}));m.position.set(x+(Math.random()-.5)*1,y+Math.random()*1.2,z+(Math.random()-.5)*1);S.sc.add(m);S.dp.push({m,v:new THREE.Vector3((Math.random()-.5)*2,Math.random()*2+1,(Math.random()-.5)*2),t:1.5+Math.random()});}}catch(e){}}
+function unstuck(){try{if(!S.me||!S.mg.length)return;const h=G/2,gx=Math.floor(S.me.position.x/C+h),gz=Math.floor(S.me.position.z/C+h);if(gx>=0&&gx<G&&gz>=0&&gz<G&&S.mg[gz][gx].w){S.me.position.set((1-h)*C,1,(1-h)*C);}}catch(e){}}
+async function loadA(){
+  try{const t=await new Promise(r=>new THREE.TextureLoader().load('cheese_texture.png',x=>r(x),undefined,()=>r(null)));if(t){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);S.ct=t;S.w.forEach(w=>w.m.material.map=t);S.ch.forEach(c=>c.children[2].material.map=t);}}catch(e){}
+  try{const l=await import('three/addons/loaders/GLTFLoader.js');const g=await new Promise(r=>new l.GLTFLoader().load('rat.glb',x=>r(x.scene),undefined,()=>r(null)));if(g){const b=new THREE.Box3().setFromObject(g);g.scale.setScalar(3.2/(b.max.y-b.min.y));g.position.set(0,.5,0);g.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;}});S.sc.add(g);S.rat=g;}}catch(e){}
+}
+function init3D(){
+  try{
+    const cv=document.getElementById('c');cv.width=innerWidth;cv.height=innerHeight;
+    S.sc=new THREE.Scene();S.sc.background=new THREE.Color(0x15151d);S.sc.fog=new THREE.Fog(0x15151d,12,35);
+    S.cam=new THREE.PerspectiveCamera(65,cv.width/cv.height,.1,50);
+    S.ren=new THREE.WebGLRenderer({canvas:cv,antialias:false,powerPreference:'default',failIfMajorPerformanceCaveat:false});
+    S.ren.setSize(cv.width,cv.height);S.ren.setPixelRatio(Math.min(devicePixelRatio,1.5));
+    S.ren.shadowMap.enabled=true;S.ren.shadowMap.type=THREE.BasicShadowMap;
+    S.sc.add(new THREE.AmbientLight(0xffffff,.7));
+    const sun=new THREE.DirectionalLight(0xffffff,.8);sun.position.set(8,15,8);sun.castShadow=true;sun.shadow.mapSize.set(512,512);S.sc.add(sun);
+    const fl=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.MeshStandardMaterial({color:0x22222a}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;S.sc.add(fl);
+    S.me=mkRig(0xff3333).g;S.me.position.y=1;S.me.userData.dead=false;S.sc.add(S.me);
+    if(S.gid==='c'){const ex=new THREE.Mesh(new THREE.TorusGeometry(1.8,.15,8,12),new THREE.MeshStandardMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:.6}));ex.rotation.x=Math.PI/2;ex.position.y=2;ex.visible=false;S.sc.add(ex);S.ex=ex;}
+  }catch(e){console.error('[3D]',e);}
+}
+function setup(){
+  try{
+    if(!mob){
+      document.addEventListener('keydown',e=>{if(e.code==='KeyW')S.inp.f=-1;if(e.code==='KeyS')S.inp.f=1;if(e.code==='KeyA')S.inp.r=-1;if(e.code==='KeyD')S.inp.r=1;if(e.code==='Space')S.inp.j=true;if(e.code==='KeyE')S.inp.a=true;});
+      document.addEventListener('keyup',e=>{if(['KeyW','KeyS'].includes(e.code))S.inp.f=0;if(['KeyA','KeyD'].includes(e.code))S.inp.r=0;if(e.code==='Space')S.inp.j=false;if(e.code==='KeyE')S.inp.a=false;});
+      document.addEventListener('mousemove',e=>{if(document.pointerLockElement){S.yaw-=e.movementX*.0015;S.pit=Math.max(-1,Math.min(1,S.pit-e.movementY*.0015));}});
+      document.addEventListener('click',()=>{if(!document.pointerLockElement)S.ren.domElement.requestPointerLock();});
+    }else{
+      document.getElementById('ctrl').classList.add('on');
+      const j=document.getElementById('joy'),sk=document.getElementById('stick'),lk=document.getElementById('look');
+      j.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];S.jId=t.identifier;S.js={x:t.clientX,y:t.clientY};},{passive:false});
+      lk.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];S.lId=t.identifier;S.lp={x:t.clientX,y:t.clientY};},{passive:false});
+      window.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){if(t.identifier===S.jId){const dx=t.clientX-S.js.x,dy=t.clientY-S.js.y,ds=Math.min(35,Math.hypot(dx,dy)),ag=Math.atan2(dy,dx);sk.style.transform=`translate(calc(-50% + ${Math.cos(ag)*ds}px), calc(-50% + ${Math.sin(ag)*ds}px))`;S.inp.r=Math.cos(ag)*(ds/35);S.inp.f=Math.sin(ag)*(ds/35);}if(t.identifier===S.lId){S.yaw-=(t.clientX-S.lp.x)*.006;S.pit=Math.max(-1,Math.min(1,S.pit-(t.clientY-S.lp.y)*.006));S.lp={x:t.clientX,y:t.clientY};}}},{passive:false});
+      window.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(t.identifier===S.jId){S.jId=null;S.inp.f=0;S.inp.r=0;sk.style.transform='translate(-50%,-50%)';}if(t.identifier===S.lId)S.lId=null;}});
+      document.getElementById('bj').addEventListener('touchstart',e=>{e.preventDefault();S.inp.j=true;});document.getElementById('bj').addEventListener('touchend',()=>S.inp.j=false);
+      document.getElementById('ba').addEventListener('touchstart',e=>{e.preventDefault();S.inp.a=true;});document.getElementById('ba').addEventListener('touchend',()=>S.inp.a=false);
+    }
+    ip.addEventListener('keypress',e=>{if(e.key==='Enter'&&e.target.value.trim()&&S.ws?.readyState===1){S.ws.send(JSON.stringify({pid:S.id,type:'chat',msg:e.target.value.trim()}));add(S.name,e.target.value.trim(),true);e.target.value='';}});
+    
+    // Редактор
+    document.getElementById('placeWall').onclick=()=>{
+      if(!S.ed||!S.ws)return;
+      const gx=Math.round(S.me.position.x/C)*C, gz=Math.round(S.me.position.z/C)*C;
+      S.ws.send(JSON.stringify({pid:S.id,type:'editorAction',action:'addWall',x:gx,z:gz}));
+    };
+    document.getElementById('selMode').onclick=()=>{
+      S.sel=null;add('sys','Режим выделения. Кликни на объект.');
+    };
+    document.getElementById('delObj').onclick=()=>{
+      if(S.sel!==null&&S.ws){S.ws.send(JSON.stringify({pid:S.id,type:'editorAction',action:'deleteObj',index:S.sel}));S.sel=null;}
+    };
+    document.getElementById('loadM').onclick=()=>document.getElementById('mInp').click();
+    document.getElementById('mInp').addEventListener('change',e=>{
+      const f=e.target.files[0];if(!f)return;
+      const r=new FileReader();r.onload=ev=>{
+        try{
+          import('three/addons/loaders/GLTFLoader.js').then(mod=>{
+            const l=new mod.GLTFLoader();
+            l.load(URL.createObjectURL(new Blob([ev.target.result])),g=>{
+              const m=g.scene;const b=new THREE.Box3().setFromObject(m);m.scale.setScalar(2/(b.max.y-b.min.y));
+              m.position.set(S.me.position.x,0,S.me.position.z);m.castShadow=true;
+              S.sc.add(m);S.w.push({m,x:m.position.x,z:m.position.z,w:2,d:2,h:2});
+              if(S.ws)S.ws.send(JSON.stringify({pid:S.id,type:'editorAction',action:'addWall',x:m.position.x,z:m.position.z}));
+            });
+          });
+        }catch(err){add('sys','Ошибка загрузки модели');}
+      };r.readAsArrayBuffer(f);
+    });
+  }catch(e){}
+}
+let lt=0;function loop(){
+  requestAnimationFrame(loop);
+  const dt=Math.min((performance.now()-lt)/1000,.08);lt=performance.now();
+  try{
+    for(let i=S.dp.length-1;i>=0;i--){const d=S.dp[i];d.t-=dt;d.v.y-=10*dt;d.m.position.add(d.v.clone().multiplyScalar(dt));d.m.rotation.x+=dt*3;if(d.t<=0||d.m.position.y<-3){S.sc.remove(d.m);S.dp.splice(i,1);}}
+    if(S.me&&!S.me.userData.dead){
+      const sp=.12,fw=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw)),rt=new THREE.Vector3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
+      let mv=new THREE.Vector3();if(S.inp.f<0)mv.add(fw);if(S.inp.f>0)mv.sub(fw);if(S.inp.r<0)mv.sub(rt);if(S.inp.r>0)mv.add(rt);
+      if(mv.length()>0){
+        mv.normalize();const nx=S.me.position.x+mv.x*sp,nz=S.me.position.z+mv.z*sp,h=G/2,gx=Math.floor(nx/C+h),gz=Math.floor(nz/C+h);
+        let blocked=(gx>=0&&gx<G&&gz>=0&&gz<G&&S.mg[gz]?.[gx]?.w);
+        if(!blocked){S.me.position.x=nx;S.me.position.z=nz;}
+        S.me.rotation.y=S.yaw+Math.PI;
+      }
+      if(S.inp.j&&S.me.position.y<=1.01){S.me.position.y=2.8;S.inp.j=false;}
+      if(S.me.position.y>1)S.me.position.y-=.15;if(S.me.position.y<1)S.me.position.y=1;
+      const mn=Math.abs(S.inp.f)>.1||Math.abs(S.inp.r)>.1,sp2=mn?3:0,am=mn?.4:0,tm=performance.now()*.006;
+      S.me.children[2].rotation.x=Math.sin(tm*sp2)*am;S.me.children[3].rotation.x=-Math.sin(tm*sp2)*am;S.me.children[4].rotation.x=-Math.sin(tm*sp2)*am;S.me.children[5].rotation.x=Math.sin(tm*sp2)*am;
+      if(S.on){S.ws.send(JSON.stringify({pid:S.id,type:'inp',f:S.inp.f,r:S.inp.r,j:S.inp.j,a:S.inp.a,yaw:S.yaw}));S.inp.a=false;}
+      const cd=mob?3:5,ch=mob?2.2:3;
+      S.cam.position.set(S.me.position.x+Math.sin(S.yaw)*cd,S.me.position.y+ch+Math.sin(S.pit)*1,S.me.position.z+Math.cos(S.yaw)*cd);
+      S.cam.lookAt(S.me.position.x,S.me.position.y+1,S.me.position.z);
+      S.pl.forEach((p)=>{
+        if(p.t){const pos=p.m.position.clone();pos.y+=3;pos.project(S.cam);if(pos.z<1){p.t.style.display='block';p.t.style.left=(pos.x*.5+.5)*innerWidth+'px';p.t.style.top=(-pos.y*.5+.5)*innerHeight+'px';}else p.t.style.display='none';}
+        const om=p.a===1,os=om?3:0,oa=om?.4:0;p.m.children[2].rotation.x=Math.sin(performance.now()*.006*os)*oa;p.m.children[3].rotation.x=-Math.sin(performance.now()*.006*os)*oa;p.m.children[4].rotation.x=-Math.sin(performance.now()*.006*os)*oa;p.m.children[5].rotation.x=Math.sin(performance.now()*.006*os)*oa;
+      });
+      S.ch.forEach(c=>{c.rotation.y+=.01;c.position.y=Math.sin(Date.now()*.0015)*.03;});
+      
+      // Подсказка сыра
+      let nearCheese=false;
+      S.ch.forEach(c=>{if(!c.collected&&Math.hypot(S.me.position.x-c.position.x,S.me.position.z-c.position.z)<4.5)nearCheese=true;});
+      hint.style.display=nearCheese?'block':'none';
+    }
+    if(S.sc&&S.cam&&S.ren)S.ren.render(S.sc,S.cam);
+  }catch(e){}
+}
+function add(n,m,self=false){const d=document.createElement('div');d.className='msg'+(self?'':' sys');d.innerHTML=self?`<span class="n">${n}:</span> ${m}`:m;bx.appendChild(d);bx.scrollTop=bx.scrollHeight;}
+function syncEditor(objs){
+  // Упрощенная синхронизация редактора
+  S.w=S.w.filter(w=>!w.isEditor);
+  objs.forEach((o,i)=>{
+    if(o.type==='wall'){
+      const m=new THREE.Mesh(new THREE.BoxGeometry(o.w,o.h,o.d),new THREE.MeshStandardMaterial({color:0x888888}));
+      m.position.set(o.x,o.h/2,o.z);m.castShadow=true;m.receiveShadow=true;m.isEditor=true;
+      S.sc.add(m);S.w.push({m,x:o.x,z:o.z,w:o.w,d:o.d,h:o.h,isEditor:true});
     }
   });
 }
-
-// Проверка сохраненного имени
-if (STATE.playerName && STATE.playerName.length > 0) {
-  if (loadingScreen) {
-    loadingScreen.classList.add('hidden');
-  }
-  showMainMenu();
-} else {
-  // Запрос имени
-  const newName = prompt('Введите ваш никнейм:', 'Player');
-  if (newName && newName.trim().length >= 2) {
-    STATE.playerName = newName.trim();
-    localStorage.setItem('roblox_name', STATE.playerName);
-    if (loadingScreen) {
-      loadingScreen.classList.add('hidden');
-    }
-    showMainMenu();
-  } else {
-    location.reload();
-  }
-}
-
-// ============================================
-// ФУНКЦИИ МЕНЮ
-// ============================================
-
-function showMainMenu() {
-  if (mainMenu) {
-    mainMenu.classList.add('active');
-  }
-  
-  // Загрузка статистики
-  fetch('/stats')
-    .then(response => response.json())
-    .then(data => {
-      const totalEl = document.getElementById('totalPlayers');
-      const onlineEl = document.getElementById('onlinePlayers');
-      if (totalEl) totalEl.textContent = data.totalPlayers || 0;
-      if (onlineEl) onlineEl.textContent = data.online || 0;
-    })
-    .catch(err => console.log('[STATS] Ошибка загрузки:', err));
-  
-  // Обработчики кнопок игр
-  document.querySelectorAll('.gameCard').forEach(card => {
-    const btn = card.querySelector('.playBtn');
-    if (btn) {
-      btn.onclick = () => {
-        const gameId = card.dataset.game;
-        startGame(gameId);
-      };
-    }
-  });
-}
-
-// ============================================
-// ЗАПУСК ИГРЫ
-// ============================================
-
-function startGame(gameId) {
-  console.log('[GAME] Запуск игры:', gameId);
-  
-  STATE.currentGame = gameId;
-  
-  if (mainMenu) {
-    mainMenu.classList.remove('active');
-  }
-  
-  if (gameUI) {
-    gameUI.classList.add('active');
-  }
-  
-  // Обновление UI
-  const nameEl = document.getElementById('playerName');
-  if (nameEl) {
-    nameEl.textContent = STATE.playerName;
-  }
-  
-  const cheeseEl = document.getElementById('cheeseCount');
-  if (cheeseEl) {
-    cheeseEl.style.display = (gameId === 'cheese') ? 'inline' : 'none';
-  }
-  
-  const crosshairEl = document.getElementById('crosshair');
-  if (crosshairEl) {
-    crosshairEl.style.display = (gameId === 'shooter') ? 'block' : 'none';
-  }
-  
-  // Редактор
-  if (editorPanel) {
-    editorPanel.classList.remove('active');
-  }
-  STATE.editorMode = (gameId === 'editor');
-  
-  if (STATE.editorMode && editorPanel) {
-    editorPanel.classList.add('active');
-  }
-  
-  // Очистка
-  clearGame();
-  
-  // Инициализация
-  initialize3D();
-  setupControls();
-  connectToServer();
-  
-  addChatMessage('system', 'Подключение к серверу...');
-}
-
-function clearGame() {
-  // Удаление всех игроков
-  STATE.players.forEach((player, id) => {
-    if (player.mesh && player.mesh.parent) {
-      STATE.scene.remove(player.mesh);
-    }
-    if (player.tag && player.tag.parentNode) {
-      player.tag.parentNode.removeChild(player.tag);
-    }
-  });
-  STATE.players.clear();
-  
-  // Удаление стен
-  STATE.walls.forEach(wall => {
-    if (wall.mesh && wall.mesh.parent) {
-      STATE.scene.remove(wall.mesh);
-    }
-  });
-  STATE.walls = [];
-  
-  // Удаление сыров
-  STATE.cheeses.forEach((cheese, id) => {
-    if (cheese.mesh && cheese.mesh.parent) {
-      STATE.scene.remove(cheese.mesh);
-    }
-  });
-  STATE.cheeses.clear();
-  
-  // Удаление крысы
-  if (STATE.ratModel && STATE.ratModel.parent) {
-    STATE.scene.remove(STATE.ratModel);
-    STATE.ratModel = null;
-  }
-  
-  // Удаление выхода
-  if (STATE.exitMesh && STATE.exitMesh.parent) {
-    STATE.scene.remove(STATE.exitMesh);
-    STATE.exitMesh = null;
-  }
-  
-  // Удаление локального игрока
-  if (STATE.localPlayer && STATE.localPlayer.parent) {
-    STATE.scene.remove(STATE.localPlayer);
-    STATE.localPlayer = null;
-  }
-  
-  STATE.pendingMapData = null;
-  STATE.mazeGrid = [];
-  STATE.editorObjects = [];
-  STATE.customModels = [];
-}
-
-// ============================================
-// СЕТЕВОЕ ПОДКЛЮЧЕНИЕ
-// ============================================
-
-function connectToServer() {
-  if (STATE.webSocket && STATE.webSocket.readyState === WebSocket.OPEN) {
-    return;
-  }
-  
-  const protocol = (location.protocol === 'https:') ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${location.host}`;
-  
-  console.log('[NET] Подключение к:', wsUrl);
-  
-  try {
-    STATE.webSocket = new WebSocket(wsUrl);
-    
-    STATE.webSocket.onopen = () => {
-      console.log('[NET] Подключено!');
-      STATE.isConnected = true;
-      
-      STATE.webSocket.send(JSON.stringify({
-        type: 'register',
-        name: STATE.playerName
-      }));
-      
-      addChatMessage('system', 'Подключено к серверу!');
-    };
-    
-    STATE.webSocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        handleServerMessage(data);
-      } catch (error) {
-        console.error('[NET] Ошибка парсинга:', error);
-      }
-    };
-    
-    STATE.webSocket.onclose = () => {
-      console.log('[NET] Соединение закрыто');
-      STATE.isConnected = false;
-      addChatMessage('system', 'Потеряно соединение. Переподключение...');
-      setTimeout(connectToServer, 3000);
-    };
-    
-    STATE.webSocket.onerror = (error) => {
-      console.error('[NET] Ошибка:', error);
-    };
-    
-  } catch (error) {
-    console.error('[NET] Ошибка подключения:', error);
-    addChatMessage('system', 'Ошибка подключения к серверу');
-  }
-}
-
-function handleServerMessage(data) {
-  switch (data.type) {
-    case 'registered':
-      STATE.playerId = data.id;
-      if (data.stats) {
-        updateStats(data.stats);
-      }
-      STATE.webSocket.send(JSON.stringify({
-        playerId: STATE.playerId,
-        type: 'joinGame',
-        gameId: STATE.currentGame
-      }));
-      break;
-      
-    case 'existingPlayers':
-      data.players.forEach(player => {
-        spawnRemotePlayer(player);
-      });
-      if (data.stats) {
-        updateStats(data.stats);
-      }
-      break;
-      
-    case 'playerJoined':
-      if (!data.player.isDead) {
-        spawnRemotePlayer(data.player);
-      }
-      break;
-      
-    case 'playerLeft':
-      removeRemotePlayer(data.playerId);
-      break;
-      
-    case 'playerMoved':
-      const movedPlayer = STATE.players.get(data.player.id);
-      if (movedPlayer) {
-        movedPlayer.mesh.position.set(
-          data.player.x,
-          data.player.y,
-          data.player.z
-        );
-        movedPlayer.mesh.rotation.y = -data.player.yaw;
-      }
-      break;
-      
-    case 'snapshot':
-      handleSnapshot(data);
-      break;
-      
-    case 'playerDied':
-      handlePlayerDeath(data);
-      break;
-      
-    case 'mapData':
-      STATE.pendingMapData = data;
-      if (STATE.cheeseTexture) {
-        spawnMap(data);
-      } else {
-        loadAssets().then(() => {
-          spawnMap(data);
-        });
-      }
-      break;
-      
-    case 'collectCheese':
-      const cheeseEl = document.getElementById('cheeseCount');
-      if (cheeseEl) {
-        cheeseEl.textContent = `🧀 ${data.total}/9`;
-      }
-      addChatMessage('system', `Сыр собран! (${data.total}/9)`);
-      break;
-      
-    case 'win':
-      alert(`🏆 Победа! Ваш счёт: ${data.score}`);
-      document.getElementById('exitBtn').click();
-      break;
-      
-    case 'chat':
-      addChatMessage(data.name, data.msg);
-      break;
-      
-    case 'editorUpdate':
-      handleEditorUpdate(data);
-      break;
-  }
-}
-
-function updateStats(stats) {
-  const totalEl = document.getElementById('totalPlayers');
-  const onlineEl = document.getElementById('onlinePlayers');
-  if (totalEl) totalEl.textContent = stats.totalPlayers || 0;
-  if (onlineEl) onlineEl.textContent = stats.online || 0;
-}
-
-// ============================================
-// СПАВН ИГРОКОВ
-// ============================================
-
-function spawnRemotePlayer(playerData) {
-  if (playerData.id === STATE.playerId) {
-    return;
-  }
-  
-  const rig = createPlayerRig(0x3366cc);
-  rig.position.set(playerData.x, playerData.y, playerData.z);
-  rig.rotation.y = -playerData.yaw;
-  
-  if (STATE.scene) {
-    STATE.scene.add(rig);
-  }
-  
-  STATE.players.set(playerData.id, {
-    mesh: rig,
-    animState: playerData.anim || 0,
-    name: playerData.name,
-    tag: null
-  });
-  
-  // Создание тега с именем
-  const tag = document.createElement('div');
-  tag.className = 'nameTag';
-  tag.textContent = playerData.name;
-  document.getElementById('nameTags').appendChild(tag);
-  STATE.players.get(playerData.id).tag = tag;
-}
-
-function removeRemotePlayer(playerId) {
-  const player = STATE.players.get(playerId);
-  if (player) {
-    if (player.mesh && player.mesh.parent) {
-      STATE.scene.remove(player.mesh);
-    }
-    if (player.tag && player.tag.parentNode) {
-      player.tag.parentNode.removeChild(player.tag);
-    }
-    STATE.players.delete(playerId);
-  }
-}
-
-// ============================================
-// СОЗДАНИЕ МОДЕЛИ ИГРОКА
-// ============================================
-
-function createPlayerRig(color) {
-  const group = new THREE.Group();
-  
-  // Материалы
-  const bodyMaterial = new THREE.MeshStandardMaterial({ color: color });
-  const skinMaterial = new THREE.MeshStandardMaterial({ color: 0xffcc88 });
-  const pantsMaterial = new THREE.MeshStandardMaterial({ color: 0x333366 });
-  
-  // Тело
-  const torso = new THREE.Mesh(
-    new THREE.BoxGeometry(1.0, 1.2, 0.6),
-    bodyMaterial
-  );
-  torso.position.y = 1.8;
-  torso.castShadow = true;
-  group.add(torso);
-  
-  // Голова
-  const head = new THREE.Mesh(
-    new THREE.BoxGeometry(0.8, 0.8, 0.8),
-    skinMaterial
-  );
-  head.position.y = 2.8;
-  head.castShadow = true;
-  group.add(head);
-  
-  // Конечности
-  function createLimb(width, height, depth, material, posX, posY, posZ) {
-    const limbGroup = new THREE.Group();
-    limbGroup.position.set(posX, posY, posZ);
-    
-    const limbMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(width, height, depth),
-      material
-    );
-    limbMesh.position.y = -height / 2;
-    limbMesh.castShadow = true;
-    limbGroup.add(limbMesh);
-    
-    group.add(limbGroup);
-    return limbGroup;
-  }
-  
-  const leftArm = createLimb(0.35, 1.1, 0.35, skinMaterial, -0.7, 2.3, 0);
-  const rightArm = createLimb(0.35, 1.1, 0.35, skinMaterial, 0.7, 2.3, 0);
-  const leftLeg = createLimb(0.4, 1.1, 0.4, pantsMaterial, -0.25, 1.15, 0);
-  const rightLeg = createLimb(0.4, 1.1, 0.4, pantsMaterial, 0.25, 1.15, 0);
-  
-  // Сохраняем ссылки для анимации
-  group.userData = {
-    leftArm: leftArm,
-    rightArm: rightArm,
-    leftLeg: leftLeg,
-    rightLeg: rightLeg
-  };
-  
-  return group;
-}
-
-// ============================================
-// ИНИЦИАЛИЗАЦИЯ 3D СЦЕНЫ
-// ============================================
-
-function initialize3D() {
-  try {
-    const canvas = document.getElementById('canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    // Сцена
-    STATE.scene = new THREE.Scene();
-    STATE.scene.background = new THREE.Color(0x1a1a24);
-    STATE.scene.fog = new THREE.Fog(0x1a1a24, 20, 60);
-    
-    // Камера
-    STATE.camera = new THREE.PerspectiveCamera(
-      70,
-      canvas.width / canvas.height,
-      0.1,
-      100
-    );
-    
-    // Рендерер
-    STATE.renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-      antialias: false,
-      powerPreference: 'default'
-    });
-    STATE.renderer.setSize(canvas.width, canvas.height);
-    STATE.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    STATE.renderer.shadowMap.enabled = true;
-    STATE.renderer.shadowMap.type = THREE.BasicShadowMap;
-    
-    // Освещение
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    STATE.scene.add(ambientLight);
-    
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    sunLight.position.set(10, 20, 10);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(1024, 1024);
-    STATE.scene.add(sunLight);
-    
-    // Пол
-    const floorGeometry = new THREE.PlaneGeometry(100, 100);
-    const floorMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x22222a 
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    STATE.scene.add(floor);
-    
-    // Локальный игрок
-    STATE.localPlayer = createPlayerRig(0xff3333);
-    STATE.localPlayer.position.y = 1;
-    STATE.localPlayer.userData.isDead = false;
-    STATE.scene.add(STATE.localPlayer);
-    
-    // Выход для игры с сыром
-    if (STATE.currentGame === 'cheese') {
-      const exitGeometry = new THREE.TorusGeometry(2, 0.2, 8, 16);
-      const exitMaterial = new THREE.MeshStandardMaterial({
-        color: 0x00ff88,
-        emissive: 0x00ff88,
-        emissiveIntensity: 0.8
-      });
-      STATE.exitMesh = new THREE.Mesh(exitGeometry, exitMaterial);
-      STATE.exitMesh.rotation.x = Math.PI / 2;
-      STATE.exitMesh.position.y = 2;
-      STATE.exitMesh.visible = false;
-      STATE.scene.add(STATE.exitMesh);
-    }
-    
-    // Запуск цикла
-    gameLoop();
-    
-  } catch (error) {
-    console.error('[3D] Ошибка инициализации:', error);
-    addChatMessage('system', 'Ошибка 3D графики');
-  }
-}
-
-// ============================================
-// ЗАГРУЗКА АССЕТОВ
-// ============================================
-
-async function loadAssets() {
-  try {
-    // Загрузка текстуры сыра
-    const texture = await new Promise((resolve) => {
-      new THREE.TextureLoader().load(
-        'cheese_texture.png',
-        (tex) => resolve(tex),
-        undefined,
-        () => resolve(null)
-      );
-    });
-    
-    if (texture) {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(2, 2);
-      STATE.cheeseTexture = texture;
-      
-      // Применяем к уже созданным стенам
-      STATE.walls.forEach(wall => {
-        if (wall.mesh && wall.mesh.material) {
-          wall.mesh.material.map = texture;
-          wall.mesh.material.needsUpdate = true;
-        }
-      });
-      
-      // Применяем к сырам
-      STATE.cheeses.forEach((cheese, id) => {
-        if (cheese.mesh && cheese.mesh.children[2]) {
-          cheese.mesh.children[2].material.map = texture;
-          cheese.mesh.children[2].material.needsUpdate = true;
-        }
-      });
-    }
-    
-    // Загрузка модели крысы
-    try {
-      const loader = new GLTFLoader();
-      const gltf = await new Promise((resolve) => {
-        loader.load(
-          'rat.glb',
-          (g) => resolve(g),
-          undefined,
-          () => resolve(null)
-        );
-      });
-      
-      if (gltf && gltf.scene) {
-        const model = gltf.scene;
-        const box = new THREE.Box3().setFromObject(model);
-        const height = box.max.y - box.min.y;
-        const scale = 3.5 / height;
-        
-        model.scale.setScalar(scale);
-        model.position.set(0, 0.5, 0);
-        
-        model.traverse((node) => {
-          if (node.isMesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-          }
-        });
-        
-        STATE.scene.add(model);
-        STATE.ratModel = model;
-      }
-    } catch (error) {
-      console.warn('[ASSETS] Не удалось загрузить крысу');
-      // Создаем простую крысу-заглушку
-      const ratGroup = new THREE.Group();
-      const body = new THREE.Mesh(
-        new THREE.SphereGeometry(0.6, 8, 8),
-        new THREE.MeshStandardMaterial({ color: 0x444444 })
-      );
-      ratGroup.add(body);
-      
-      const eye = new THREE.Mesh(
-        new THREE.SphereGeometry(0.1, 6, 6),
-        new THREE.MeshStandardMaterial({ 
-          color: 0xff0000,
-          emissive: 0xff0000
-        })
-      );
-      eye.position.set(0, 0.25, 0.5);
-      ratGroup.add(eye);
-      
-      ratGroup.position.set(0, 0.6, 0);
-      STATE.scene.add(ratGroup);
-      STATE.ratModel = ratGroup;
-    }
-    
-  } catch (error) {
-    console.error('[ASSETS] Ошибка загрузки:', error);
-  }
-}
-
-// ============================================
-// СПАВН КАРТЫ
-// ============================================
-
-function spawnMap(mapData) {
-  try {
-    // Материал стен
-    const wallMaterial = STATE.cheeseTexture ?
-      new THREE.MeshStandardMaterial({
-        map: STATE.cheeseTexture,
-        color: 0xffffff,
-        roughness: 0.5
-      }) :
-      new THREE.MeshStandardMaterial({
-        color: 0xddaa00
-      });
-    
-    // Стены
-    mapData.walls.forEach((wallData) => {
-      const geometry = new THREE.BoxGeometry(
-        wallData.w,
-        wallData.h || 6.0,
-        wallData.d
-      );
-      const wall = new THREE.Mesh(geometry, wallMaterial);
-      wall.position.set(
-        wallData.x,
-        (wallData.h || 6.0) / 2,
-        wallData.z
-      );
-      wall.castShadow = true;
-      wall.receiveShadow = true;
-      
-      if (STATE.scene) {
-        STATE.scene.add(wall);
-      }
-      
-      STATE.walls.push({
-        mesh: wall,
-        x: wallData.x,
-        z: wallData.z,
-        w: wallData.w,
-        d: wallData.d,
-        h: wallData.h || 6.0
-      });
-    });
-    
-    // Зеленые зоны спавна
-    if (mapData.greenZones) {
-      mapData.greenZones.forEach((zone) => {
-        const geometry = new THREE.PlaneGeometry(5, 5);
-        const material = new THREE.MeshBasicMaterial({
-          color: 0x00ff88,
-          transparent: true,
-          opacity: 0.2,
-          side: THREE.DoubleSide
-        });
-        const zoneMesh = new THREE.Mesh(geometry, material);
-        zoneMesh.rotation.x = -Math.PI / 2;
-        zoneMesh.position.set(zone.x, 0.05, zone.z);
-        
-        if (STATE.scene) {
-          STATE.scene.add(zoneMesh);
-        }
-      });
-    }
-    
-    // Сыры
-    mapData.cheeses.forEach((cheeseData) => {
-      if (!cheeseData.collected) {
-        spawnCheese(cheeseData);
-      }
-    });
-    
-    // Сохраняем сетку для коллизий
-    STATE.mazeGrid = [];
-    const half = GRID_SIZE / 2;
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      STATE.mazeGrid[y] = [];
-      for (let x = 0; x < GRID_SIZE; x++) {
-        STATE.mazeGrid[y][x] = { isWall: false };
-      }
-    }
-    
-    mapData.walls.forEach((wall) => {
-      const gx = Math.floor((wall.x / CELL_SIZE) + half);
-      const gz = Math.floor((wall.z / CELL_SIZE) + half);
-      if (gx >= 0 && gx < GRID_SIZE && gz >= 0 && gz < GRID_SIZE) {
-        STATE.mazeGrid[gz][gx].isWall = true;
-      }
-    });
-    
-  } catch (error) {
-    console.error('[MAP] Ошибка спавна карты:', error);
-  }
-}
-
-function spawnCheese(cheeseData) {
-  try {
-    const group = new THREE.Group();
-    
-    // Ножка стола
-    const legGeometry = new THREE.CylinderGeometry(0.15, 0.15, 1.2, 8);
-    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
-    const leg = new THREE.Mesh(legGeometry, legMaterial);
-    leg.position.y = 0.6;
-    group.add(leg);
-    
-    // Столешница
-    const topGeometry = new THREE.BoxGeometry(1.4, 0.1, 1.4);
-    const topMaterial = new THREE.MeshStandardMaterial({ color: 0x6b4423 });
-    const top = new THREE.Mesh(topGeometry, topMaterial);
-    top.position.y = 1.25;
-    top.castShadow = true;
-    top.receiveShadow = true;
-    group.add(top);
-    
-    // Сыр
-    const cheeseGeometry = new THREE.ConeGeometry(0.45, 0.7, 8);
-    const cheeseMaterial = STATE.cheeseTexture ?
-      new THREE.MeshStandardMaterial({
-        map: STATE.cheeseTexture,
-        color: 0xffffff,
-        roughness: 0.3
-      }) :
-      new THREE.MeshStandardMaterial({
-        color: 0xffd700
-      });
-    
-    const cheese = new THREE.Mesh(cheeseGeometry, cheeseMaterial);
-    cheese.position.y = 1.65;
-    cheese.rotation.x = Math.PI / 6;
-    cheese.castShadow = true;
-    group.add(cheese);
-    
-    group.position.set(cheeseData.x, 0, cheeseData.z);
-    
-    if (STATE.scene) {
-      STATE.scene.add(group);
-    }
-    
-    STATE.cheeses.set(cheeseData.id, group);
-    
-  } catch (error) {
-    console.error('[CHEESE] Ошибка спавна сыра:', error);
-  }
-}
-
-// ============================================
-// ОБРАБОТКА СНЭПШОТОВ
-// ============================================
-
-function handleSnapshot(data) {
-  // Обновление игроков
-  data.players.forEach((playerData) => {
-    if (!STATE.players.has(playerData.id) && !playerData.isDead) {
-      spawnRemotePlayer(playerData);
-    } else if (!playerData.isDead) {
-      const player = STATE.players.get(playerData.id);
-      
-      // Плавная интерполяция
-      player.mesh.position.x += (playerData.x - player.mesh.position.x) * 0.15;
-      player.mesh.position.y += (playerData.y - player.mesh.position.y) * 0.15;
-      player.mesh.position.z += (playerData.z - player.mesh.position.z) * 0.15;
-      player.mesh.rotation.y += (-playerData.yaw - player.mesh.rotation.y) * 0.15;
-      
-      player.animState = playerData.anim;
-    }
-  });
-  
-  // Обновление крысы
-  if (data.rat && STATE.ratModel) {
-    STATE.ratModel.position.x += (data.rat.x - STATE.ratModel.position.x) * 0.2;
-    STATE.ratModel.position.z += (data.rat.z - STATE.ratModel.position.z) * 0.2;
-    STATE.ratModel.rotation.y = -data.rat.yaw;
-  }
-  
-  // Обновление выхода
-  if (data.exit && STATE.exitMesh) {
-    STATE.exitMesh.visible = data.exit.open;
-  }
-  
-  // Обновление счетчика онлайн
-  const onlineEl = document.getElementById('onlineCount');
-  if (onlineEl) {
-    onlineEl.textContent = `● ${data.players.length + 1}`;
-  }
-  
-  // Обновление объектов редактора
-  if (data.editorObjects && STATE.editorMode) {
-    STATE.editorObjects = data.editorObjects;
-  }
-}
-
-// ============================================
-// СМЕРТЬ ИГРОКА
-// ============================================
-
-function handlePlayerDeath(data) {
-  if (data.playerId === STATE.playerId) {
-    STATE.isDead = true;
-    
-    if (STATE.localPlayer && STATE.localPlayer.parent) {
-      STATE.scene.remove(STATE.localPlayer);
-    }
-    
-    // Кнопка возрождения
-    const respawnBtn = document.createElement('button');
-    respawnBtn.textContent = '💀 Возродиться';
-    respawnBtn.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 15px 30px;
-      font-size: 20px;
-      background: #ef4444;
-      color: #ffffff;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      z-index: 100;
-    `;
-    
-    respawnBtn.onclick = () => {
-      STATE.webSocket.send(JSON.stringify({
-        playerId: STATE.playerId,
-        type: 'respawn'
-      }));
-      
-      STATE.isDead = false;
-      respawnBtn.remove();
-      
-      if (STATE.localPlayer) {
-        STATE.scene.add(STATE.localPlayer);
-        unstuckPlayer();
-      }
-    };
-    
-    document.body.appendChild(respawnBtn);
-    
-  } else {
-    // Смерть другого игрока - эффект разлета
-    createDeathEffect(data.x, data.y, data.z);
-    
-    const player = STATE.players.get(data.playerId);
-    if (player) {
-      if (player.mesh && player.mesh.parent) {
-        STATE.scene.remove(player.mesh);
-      }
-      if (player.tag && player.tag.parentNode) {
-        player.tag.parentNode.removeChild(player.tag);
-      }
-      STATE.players.delete(data.playerId);
-    }
-  }
-}
-
-function createDeathEffect(x, y, z) {
-  const colors = [0xff3333, 0x3366cc, 0xffcc88, 0x333366];
-  
-  for (let i = 0; i < 10; i++) {
-    const size = 0.2 + Math.random() * 0.3;
-    const geometry = new THREE.BoxGeometry(size, size, size);
-    const material = new THREE.MeshStandardMaterial({
-      color: colors[Math.floor(Math.random() * colors.length)]
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    
-    mesh.position.set(
-      x + (Math.random() - 0.5) * 1.5,
-      y + Math.random() * 2,
-      z + (Math.random() - 0.5) * 1.5
-    );
-    
-    mesh.castShadow = true;
-    
-    if (STATE.scene) {
-      STATE.scene.add(mesh);
-    }
-    
-    const velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * 5,
-      Math.random() * 5 + 2,
-      (Math.random() - 0.5) * 5
-    );
-    
-    STATE.customModels.push({
-      mesh: mesh,
-      velocity: velocity,
-      rotationVelocity: new THREE.Vector3(
-        Math.random() * 10,
-        Math.random() * 10,
-        Math.random() * 10
-      ),
-      timer: 5.0
-    });
-  }
-}
-
-// ============================================
-// РЕДАКТОР УРОВНЕЙ
-// ============================================
-
-function handleEditorUpdate(data) {
-  if (data.action === 'addWall') {
-    const wallGeometry = new THREE.BoxGeometry(
-      data.object.w,
-      data.object.h,
-      data.object.d
-    );
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 });
-    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-    
-    wall.position.set(
-      data.object.x,
-      data.object.h / 2,
-      data.object.z
-    );
-    
-    wall.castShadow = true;
-    wall.receiveShadow = true;
-    
-    if (STATE.scene) {
-      STATE.scene.add(wall);
-    }
-    
-    STATE.editorObjects.push({
-      mesh: wall,
-      data: data.object
-    });
-    
-  } else if (data.action === 'removeWall') {
-    const obj = STATE.editorObjects[data.index];
-    if (obj && obj.mesh && obj.mesh.parent) {
-      STATE.scene.remove(obj.mesh);
-    }
-    STATE.editorObjects.splice(data.index, 1);
-  }
-}
-
-// ============================================
-// УПРАВЛЕНИЕ
-// ============================================
-
-function setupControls() {
-  if (!IS_MOBILE) {
-    // Клавиатура
-    document.addEventListener('keydown', (event) => {
-      switch (event.code) {
-        case 'KeyW': STATE.input.forward = -1; break;
-        case 'KeyS': STATE.input.forward = 1; break;
-        case 'KeyA': STATE.input.right = -1; break;
-        case 'KeyD': STATE.input.right = 1; break;
-        case 'Space': STATE.input.jump = true; break;
-        case 'KeyE': STATE.input.action = true; break;
-      }
-    });
-    
-    document.addEventListener('keyup', (event) => {
-      switch (event.code) {
-        case 'KeyW':
-        case 'KeyS':
-          STATE.input.forward = 0;
-          break;
-        case 'KeyA':
-        case 'KeyD':
-          STATE.input.right = 0;
-          break;
-        case 'Space':
-          STATE.input.jump = false;
-          break;
-        case 'KeyE':
-          STATE.input.action = false;
-          break;
-      }
-    });
-    
-    // Мышь
-    document.addEventListener('mousemove', (event) => {
-      if (document.pointerLockElement) {
-        STATE.yaw -= event.movementX * 0.002;
-        STATE.pitch = Math.max(-1.2, Math.min(1.2, STATE.pitch - event.movementY * 0.002));
-      }
-    });
-    
-    document.addEventListener('click', () => {
-      if (!document.pointerLockElement && STATE.renderer) {
-        STATE.renderer.domElement.requestPointerLock();
-      }
-    });
-    
-  } else {
-    // Мобильное управление
-    setupMobileControls();
-  }
-  
-  // Чат
-  if (chatInput) {
-    chatInput.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter' && 
-          event.target.value.trim() && 
-          STATE.webSocket && 
-          STATE.webSocket.readyState === WebSocket.OPEN) {
-        
-        STATE.webSocket.send(JSON.stringify({
-          playerId: STATE.playerId,
-          type: 'chat',
-          msg: event.target.value.trim()
-        }));
-        
-        addChatMessage(STATE.playerName, event.target.value.trim(), true);
-        event.target.value = '';
-      }
-    });
-  }
-  
-  // Кнопка выхода
-  const exitBtn = document.getElementById('exitBtn');
-  if (exitBtn) {
-    exitBtn.onclick = () => {
-      gameUI.classList.remove('active');
-      mainMenu.classList.add('active');
-      loadingScreen.classList.remove('hidden');
-      
-      if (STATE.webSocket) {
-        STATE.webSocket.close();
-      }
-      
-      if (STATE.renderer) {
-        STATE.renderer.dispose();
-        STATE.renderer = null;
-      }
-    };
-  }
-  
-  // Редактор
-  const addWallBtn = document.getElementById('addWallBtn');
-  const removeWallBtn = document.getElementById('removeWallBtn');
-  const loadModelBtn = document.getElementById('loadModelBtn');
-  
-  if (addWallBtn) {
-    addWallBtn.onclick = () => {
-      STATE.editorTool = 'addWall';
-      STATE.webSocket.send(JSON.stringify({
-        playerId: STATE.playerId,
-        type: 'editorAction',
-        action: 'addWall',
-        x: STATE.localPlayer.position.x,
-        z: STATE.localPlayer.position.z
-      }));
-    };
-  }
-  
-  if (removeWallBtn) {
-    removeWallBtn.onclick = () => {
-      STATE.webSocket.send(JSON.stringify({
-        playerId: STATE.playerId,
-        type: 'editorAction',
-        action: 'removeWall',
-        x: STATE.localPlayer.position.x,
-        z: STATE.localPlayer.position.z
-      }));
-    };
-  }
-  
-  if (loadModelBtn && modelInput) {
-    loadModelBtn.onclick = () => {
-      modelInput.click();
-    };
-    
-    modelInput.addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        loadCustomModel(file);
-      }
-    });
-  }
-}
-
-function setupMobileControls() {
-  document.getElementById('mobileControls').classList.add('active');
-  
-  const joystick = document.getElementById('joystickZone');
-  const stick = document.getElementById('joystickStick');
-  const lookZone = document.getElementById('lookZone');
-  
-  // Джойстик
-  joystick.addEventListener('touchstart', (event) => {
-    event.preventDefault();
-    const touch = event.changedTouches[0];
-    STATE.joystickId = touch.identifier;
-    STATE.joystickStart = { x: touch.clientX, y: touch.clientY };
-  }, { passive: false });
-  
-  // Зона взгляда
-  lookZone.addEventListener('touchstart', (event) => {
-    event.preventDefault();
-    const touch = event.changedTouches[0];
-    STATE.lookId = touch.identifier;
-    STATE.lookPrev = { x: touch.clientX, y: touch.clientY };
-  }, { passive: false });
-  
-  // Движение
-  window.addEventListener('touchmove', (event) => {
-    event.preventDefault();
-    
-    for (const touch of event.changedTouches) {
-      if (touch.identifier === STATE.joystickId) {
-        const dx = touch.clientX - STATE.joystickStart.x;
-        const dy = touch.clientY - STATE.joystickStart.y;
-        const distance = Math.min(45, Math.hypot(dx, dy));
-        const angle = Math.atan2(dy, dx);
-        
-        stick.style.transform = `translate(calc(-50% + ${Math.cos(angle) * distance}px), calc(-50% + ${Math.sin(angle) * distance}px))`;
-        
-        STATE.input.right = Math.cos(angle) * (distance / 45);
-        STATE.input.forward = Math.sin(angle) * (distance / 45);
-      }
-      
-      if (touch.identifier === STATE.lookId) {
-        STATE.yaw -= (touch.clientX - STATE.lookPrev.x) * 0.008;
-        STATE.pitch = Math.max(-1.2, Math.min(1.2, STATE.pitch - (touch.clientY - STATE.lookPrev.y) * 0.008));
-        STATE.lookPrev = { x: touch.clientX, y: touch.clientY };
-      }
-    }
-  }, { passive: false });
-  
-  // Конец касания
-  window.addEventListener('touchend', (event) => {
-    for (const touch of event.changedTouches) {
-      if (touch.identifier === STATE.joystickId) {
-        STATE.joystickId = null;
-        STATE.input.forward = 0;
-        STATE.input.right = 0;
-        stick.style.transform = 'translate(-50%, -50%)';
-      }
-      if (touch.identifier === STATE.lookId) {
-        STATE.lookId = null;
-      }
-    }
-  });
-  
-  // Кнопки
-  const jumpBtn = document.getElementById('jumpBtn');
-  const actionBtn = document.getElementById('actionBtn');
-  
-  if (jumpBtn) {
-    jumpBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      STATE.input.jump = true;
-    });
-    jumpBtn.addEventListener('touchend', () => {
-      STATE.input.jump = false;
-    });
-  }
-  
-  if (actionBtn) {
-    actionBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      STATE.input.action = true;
-    });
-    actionBtn.addEventListener('touchend', () => {
-      STATE.input.action = false;
-    });
-  }
-}
-
-// ============================================
-// ЗАГРУЗКА ПОЛЬЗОВАТЕЛЬСКИХ МОДЕЛЕЙ
-// ============================================
-
-function loadCustomModel(file) {
-  const reader = new FileReader();
-  
-  reader.onload = (event) => {
-    try {
-      const loader = new GLTFLoader();
-      const arrayBuffer = event.target.result;
-      
-      // Создаем blob URL
-      const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
-      const url = URL.createObjectURL(blob);
-      
-      loader.load(url, (gltf) => {
-        const model = gltf.scene;
-        
-        // Масштабирование
-        const box = new THREE.Box3().setFromObject(model);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 3.0 / maxDim;
-        
-        model.scale.setScalar(scale);
-        model.position.set(
-          STATE.localPlayer.position.x,
-          0,
-          STATE.localPlayer.position.z
-        );
-        
-        model.traverse((node) => {
-          if (node.isMesh) {
-            node.castShadow = true;
-            node.receiveShadow = true;
-          }
-        });
-        
-        if (STATE.scene) {
-          STATE.scene.add(model);
-        }
-        
-        STATE.customModels.push({
-          mesh: model,
-          isCustom: true
-        });
-        
-        addChatMessage('system', `Модель "${file.name}" загружена!`);
-        
-        // Отправка другим игрокам (упрощенно)
-        if (STATE.webSocket && STATE.webSocket.readyState === WebSocket.OPEN) {
-          STATE.webSocket.send(JSON.stringify({
-            playerId: STATE.playerId,
-            type: 'modelLoaded',
-            fileName: file.name
-          }));
-        }
-        
-      }, undefined, (error) => {
-        console.error('[MODEL] Ошибка загрузки:', error);
-        addChatMessage('system', 'Ошибка загрузки модели');
-      });
-      
-    } catch (error) {
-      console.error('[MODEL] Ошибка:', error);
-      addChatMessage('system', 'Не удалось загрузить файл');
-    }
-  };
-  
-  reader.readAsArrayBuffer(file);
-}
-
-// ============================================
-// ИГРОВОЙ ЦИКЛ
-// ============================================
-
-let lastTime = 0;
-
-function gameLoop(currentTime) {
-  requestAnimationFrame(gameLoop);
-  
-  const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
-  lastTime = currentTime;
-  
-  if (!STATE.isConnected || !STATE.localPlayer) {
-    return;
-  }
-  
-  // Обновление разлетающихся объектов
-  for (let i = STATE.customModels.length - 1; i >= 0; i--) {
-    const obj = STATE.customModels[i];
-    
-    if (obj.timer !== undefined) {
-      obj.timer -= deltaTime;
-      obj.velocity.y -= 15 * deltaTime;
-      obj.mesh.position.add(obj.velocity.clone().multiplyScalar(deltaTime));
-      obj.mesh.rotation.x += obj.rotationVelocity.x * deltaTime;
-      obj.mesh.rotation.y += obj.rotationVelocity.y * deltaTime;
-      obj.mesh.rotation.z += obj.rotationVelocity.z * deltaTime;
-      
-      if (obj.timer <= 0 || obj.mesh.position.y < -5) {
-        if (STATE.scene) {
-          STATE.scene.remove(obj.mesh);
-        }
-        STATE.customModels.splice(i, 1);
-      }
-    }
-  }
-  
-  // Локальный игрок
-  if (!STATE.isDead && STATE.localPlayer) {
-    const speed = 0.15;
-    const forward = new THREE.Vector3(
-      -Math.sin(STATE.yaw),
-      0,
-      -Math.cos(STATE.yaw)
-    );
-    const right = new THREE.Vector3(
-      Math.cos(STATE.yaw),
-      0,
-      -Math.sin(STATE.yaw)
-    );
-    
-    let movement = new THREE.Vector3();
-    
-    if (STATE.input.forward < 0) movement.add(forward);
-    if (STATE.input.forward > 0) movement.sub(forward);
-    if (STATE.input.right < 0) movement.sub(right);
-    if (STATE.input.right > 0) movement.add(right);
-    
-    if (movement.length() > 0) {
-      movement.normalize();
-      
-      const newX = STATE.localPlayer.position.x + movement.x * speed;
-      const newZ = STATE.localPlayer.position.z + movement.z * speed;
-      
-      // Коллизии
-      const half = GRID_SIZE / 2;
-      const gridX = Math.floor((newX / CELL_SIZE) + half);
-      const gridZ = Math.floor((newZ / CELL_SIZE) + half);
-      
-      let blocked = false;
-      
-      if (gridX >= 0 && gridX < GRID_SIZE && gridZ >= 0 && gridZ < GRID_SIZE) {
-        if (STATE.mazeGrid[gridZ] && STATE.mazeGrid[gridZ][gridX]) {
-          if (STATE.mazeGrid[gridZ][gridX].isWall) {
-            blocked = true;
-          }
-        }
-      }
-      
-      if (!blocked) {
-        STATE.localPlayer.position.x = newX;
-        STATE.localPlayer.position.z = newZ;
-      }
-      
-      STATE.localPlayer.rotation.y = STATE.yaw + Math.PI;
-    }
-    
-    // Прыжок
-    if (STATE.input.jump && STATE.localPlayer.position.y <= 1.01) {
-      STATE.localPlayer.position.y = 3.2;
-      STATE.input.jump = false;
-    }
-    
-    // Гравитация
-    if (STATE.localPlayer.position.y > 1) {
-      STATE.localPlayer.position.y -= 0.2;
-    }
-    if (STATE.localPlayer.position.y < 1) {
-      STATE.localPlayer.position.y = 1;
-    }
-    
-    // Анимация ходьбы
-    const isMoving = Math.abs(STATE.input.forward) > 0.1 || Math.abs(STATE.input.right) > 0.1;
-    const animSpeed = isMoving ? 4 : 0;
-    const animAmp = isMoving ? 0.5 : 0;
-    const time = currentTime * 0.008;
-    
-    if (STATE.localPlayer.userData.leftLeg) {
-      STATE.localPlayer.userData.leftLeg.rotation.x = Math.sin(time * animSpeed) * animAmp;
-      STATE.localPlayer.userData.rightLeg.rotation.x = -Math.sin(time * animSpeed) * animAmp;
-      STATE.localPlayer.userData.leftArm.rotation.x = -Math.sin(time * animSpeed) * animAmp;
-      STATE.localPlayer.userData.rightArm.rotation.x = Math.sin(time * animSpeed) * animAmp;
-    }
-    
-    // Отправка ввода на сервер
-    if (STATE.webSocket && STATE.webSocket.readyState === WebSocket.OPEN) {
-      STATE.webSocket.send(JSON.stringify({
-        playerId: STATE.playerId,
-        type: 'input',
-        f: STATE.input.forward,
-        r: STATE.input.right,
-        jump: STATE.input.jump,
-        action: STATE.input.action,
-        yaw: STATE.yaw
-      }));
-      
-      STATE.input.action = false;
-    }
-    
-    // Камера
-    const camDist = IS_MOBILE ? 4 : 7;
-    const camHeight = IS_MOBILE ? 2.8 : 4;
-    
-    STATE.camera.position.set(
-      STATE.localPlayer.position.x + Math.sin(STATE.yaw) * camDist,
-      STATE.localPlayer.position.y + camHeight + Math.sin(STATE.pitch) * 1.5,
-      STATE.localPlayer.position.z + Math.cos(STATE.yaw) * camDist
-    );
-    
-    STATE.camera.lookAt(
-      STATE.localPlayer.position.x,
-      STATE.localPlayer.position.y + 1.5,
-      STATE.localPlayer.position.z
-    );
-    
-    // Обновление тегов имен
-    STATE.players.forEach((player, id) => {
-      if (player.tag) {
-        const pos = player.mesh.position.clone();
-        pos.y += 3.5;
-        pos.project(STATE.camera);
-        
-        if (pos.z < 1) {
-          player.tag.style.display = 'block';
-          player.tag.style.left = (pos.x * 0.5 + 0.5) * window.innerWidth + 'px';
-          player.tag.style.top = (-pos.y * 0.5 + 0.5) * window.innerHeight + 'px';
-        } else {
-          player.tag.style.display = 'none';
-        }
-      }
-      
-      // Анимация других игроков
-      const otherSpeed = player.animState === 1 ? 4 : 0;
-      const otherAmp = player.animState === 1 ? 0.5 : 0;
-      
-      if (player.mesh.userData.leftLeg) {
-        player.mesh.userData.leftLeg.rotation.x = Math.sin(currentTime * 0.008 * otherSpeed) * otherAmp;
-        player.mesh.userData.rightLeg.rotation.x = -Math.sin(currentTime * 0.008 * otherSpeed) * otherAmp;
-        player.mesh.userData.leftArm.rotation.x = -Math.sin(currentTime * 0.008 * otherSpeed) * otherAmp;
-        player.mesh.userData.rightArm.rotation.x = Math.sin(currentTime * 0.008 * otherSpeed) * otherAmp;
-      }
-    });
-    
-    // Анимация сыров
-    STATE.cheeses.forEach((cheese, id) => {
-      cheese.rotation.y += 0.012;
-      cheese.position.y = Math.sin(Date.now() * 0.002) * 0.05;
-    });
-  }
-  
-  // Рендер
-  if (STATE.renderer && STATE.scene && STATE.camera) {
-    STATE.renderer.render(STATE.scene, STATE.camera);
-  }
-}
-
-// ============================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-// ============================================
-
-function addChatMessage(name, message, isSelf = false) {
-  if (!chatBox) return;
-  
-  const msgDiv = document.createElement('div');
-  msgDiv.className = 'message' + (isSelf ? '' : ' system');
-  
-  if (isSelf) {
-    msgDiv.innerHTML = `<span class="name">${name}:</span> ${message}`;
-  } else {
-    msgDiv.textContent = message;
-  }
-  
-  chatBox.appendChild(msgDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function unstuckPlayer() {
-  if (!STATE.localPlayer || STATE.mazeGrid.length === 0) {
-    return;
-  }
-  
-  const half = GRID_SIZE / 2;
-  const gridX = Math.floor((STATE.localPlayer.position.x / CELL_SIZE) + half);
-  const gridZ = Math.floor((STATE.localPlayer.position.z / CELL_SIZE) + half);
-  
-  if (gridX >= 0 && gridX < GRID_SIZE && gridZ >= 0 && gridZ < GRID_SIZE) {
-    if (STATE.mazeGrid[gridZ][gridX].isWall) {
-      STATE.localPlayer.position.set(
-        (1 - half) * CELL_SIZE,
-        1,
-        (1 - half) * CELL_SIZE
-      );
-    }
-  }
-}
-
-// ============================================
-// ОБРАБОТКА ИЗМЕНЕНИЯ РАЗМЕРА ОКНА
-// ============================================
-
-window.addEventListener('resize', () => {
-  if (STATE.camera && STATE.renderer) {
-    const canvas = document.getElementById('canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    STATE.camera.aspect = window.innerWidth / window.innerHeight;
-    STATE.camera.updateProjectionMatrix();
-    STATE.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-});
-
+window.addEventListener('resize',()=>{try{if(S.cam&&S.ren){const cv=document.getElementById('c');cv.width=innerWidth;cv.height=innerHeight;S.cam.aspect=innerWidth/innerHeight;S.cam.updateProjectionMatrix();S.ren.setSize(innerWidth,innerHeight);}}catch(e){}});
 </script>
 </body>
 </html>
