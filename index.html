@@ -1,548 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox 3D Ultimate</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #fff; color: #191919; overflow-x: hidden; }
+        
+        /* НАВИГАЦИЯ */
+        .navbar { display: flex; align-items: center; padding: 8px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 800; margin-right: 32px; display: flex; align-items: center; gap: 8px; }
+        .search-bar { flex: 1; max-width: 400px; margin-right: 16px; }
+        .search-bar input { width: 100%; padding: 8px 16px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00e5ff, #a855f7); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 14px; cursor: pointer; }
+        
+        /* БОКОВАЯ ПАНЕЛЬ */
+        .container { display: flex; }
+        .sidebar { width: 200px; padding: 16px 0; position: fixed; height: 100vh; overflow-y: auto; }
+        .sidebar-item { padding: 10px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 8px; margin: 2px 8px; transition: background 0.2s; }
+        .sidebar-item:hover { background: #f2f2f2; }
+        .sidebar-item.active { background: #e8f4f8; font-weight: 600; }
+        .sidebar-icon { width: 20px; height: 20px; }
+        
+        /* ОСНОВНОЙ КОНТЕНТ */
+        .main-content { margin-left: 200px; flex: 1; padding: 24px; }
+        .section-title { font-size: 20px; font-weight: 700; margin: 24px 0 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title a { color: #191919; text-decoration: none; }
+        .section-title a:hover { text-decoration: underline; }
+        
+        /* СЕТКА ИГР */
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+        .game-card { cursor: pointer; transition: transform 0.2s; }
+        .game-card:hover { transform: translateY(-4px); }
+        .game-thumbnail { width: 100%; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; margin-bottom: 8px; background: #f2f2f2; }
+        .game-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+        .game-title { font-size: 14px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .game-meta { font-size: 12px; color: #737373; display: flex; align-items: center; gap: 8px; }
+        .rating { display: flex; align-items: center; gap: 4px; }
+        .players { display: flex; align-items: center; gap: 4px; }
+        
+        /* ДРУЗЬЯ */
+        .friends-scroll { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; }
+        .friend-item { text-align: center; min-width: 80px; cursor: pointer; }
+        .friend-avatar { width: 80px; height: 80px; border-radius: 50%; background: #e0e0e0; margin-bottom: 6px; overflow: hidden; }
+        .friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .friend-name { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .friend-game { font-size: 11px; color: #737373; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        /* РЕГИСТРАЦИЯ */
+        #reg-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .reg-box { background: #fff; padding: 32px; border-radius: 12px; text-align: center; max-width: 400px; width: 90%; }
+        .reg-box h2 { margin-bottom: 16px; font-size: 24px; }
+        .reg-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 15px; }
+        .reg-btn { width: 100%; padding: 12px; margin-top: 12px; background: #00e5ff; color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+        .reg-btn:disabled { background: #ccc; cursor: not-allowed; }
+        
+        /* ИГРА */
+        #game-ui { position: fixed; inset: 0; display: none; background: #000; z-index: 2000; }
+        #game-canvas { width: 100%; height: 100%; }
+        #exit-game { position: fixed; top: 16px; left: 16px; padding: 8px 16px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 6px; cursor: pointer; z-index: 10; }
+        
+        /* СКРОЛЛБАР */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+</head>
+<body>
+
+<!-- РЕГИСТРАЦИЯ -->
+<div id="reg-modal">
+    <div class="reg-box">
+        <h2>👋 Добро пожаловать!</h2>
+        <p style="color:#666;margin-bottom:16px">Введите никнейм для входа</p>
+        <input type="text" id="reg-input" class="reg-input" placeholder="Никнейм" maxlength="16">
+        <div id="reg-error" style="color:#f44;margin:8px 0;font-size:13px"></div>
+        <button id="reg-btn" class="reg-btn" disabled>Играть</button>
+    </div>
+</div>
+
+<!-- НАВИГАЦИЯ -->
+<nav class="navbar">
+    <div class="logo">🧱 ROBLOX</div>
+    <div class="search-bar">
+        <input type="text" placeholder="Поиск">
+    </div>
+    <div class="nav-right">
+        <div class="user-avatar" id="user-avatar">?</div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- БОКОВАЯ ПАНЕЛЬ -->
+    <aside class="sidebar">
+        <div class="sidebar-item active">
+            <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home</span>
+        </div>
+        <div class="sidebar-item">
+            <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Charts</span>
+        </div>
+        <div class="sidebar-item">
+            <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Avatar</span>
+        </div>
+        <div class="sidebar-item">
+            <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span>Party</span>
+        </div>
+    </aside>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="main-content">
+        <!-- ДРУЗЬЯ -->
+        <h2 class="section-title">Friends (169) ›</h2>
+        <div class="friends-scroll" id="friends-list">
+            <div class="friend-item">
+                <div class="friend-avatar" style="background:#ddd;display:flex;align-items:center;justify-content:center;font-size:24px">+</div>
+                <div class="friend-name">Add Friends</div>
+            </div>
+        </div>
+
+        <!-- РЕКОМЕНДАЦИИ -->
+        <h2 class="section-title">Рекомендации для тебя</h2>
+        <div class="games-grid">
+            <div class="game-card" data-game="brookhaven">
+                <div class="game-thumbnail" style="background:#90EE90;display:flex;align-items:center;justify-content:center;font-size:48px">🏡</div>
+                <div class="game-title">🏡 Brookhaven RP</div>
+                <div class="game-meta">
+                    <span class="rating">👍 98%</span>
+                    <span class="players">👥 125K</span>
+                </div>
+            </div>
+            <div class="game-card" data-game="shooter">
+                <div class="game-thumbnail" style="background:#FF6B6B;display:flex;align-items:center;justify-content:center;font-size:48px">🔫</div>
+                <div class="game-title">🔫 Team Shooter</div>
+                <div class="game-meta">
+                    <span class="rating">👍 95%</span>
+                    <span class="players">👥 89K</span>
+                </div>
+            </div>
+            <div class="game-card" data-game="brainrot">
+                <div class="game-thumbnail" style="background:#A855F7;display:flex;align-items:center;justify-content:center;font-size:48px">🧠</div>
+                <div class="game-title">🧠 Steal a Brainrot</div>
+                <div class="game-meta">
+                    <span class="rating">👍 92%</span>
+                    <span class="players">👥 67K</span>
+                </div>
+            </div>
+            <div class="game-card" data-game="cheese">
+                <div class="game-thumbnail" style="background:#FBBF24;display:flex;align-items:center;justify-content:center;font-size:48px">🧀</div>
+                <div class="game-title">🧀 Horror of Cheese</div>
+                <div class="game-meta">
+                    <span class="rating">👍 96%</span>
+                    <span class="players">👥 45K</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПРОДОЛЖИТЬ -->
+        <h2 class="section-title">Продолжить ›</h2>
+        <div class="games-grid" id="continue-games">
+            <p style="color:#666;grid-column:1/-1">Вы ещё не играли</p>
+        </div>
+    </main>
+</div>
+
+<!-- ИГРОВОЙ ИНТЕРФЕЙС -->
+<div id="game-ui">
+    <canvas id="game-canvas"></canvas>
+    <button id="exit-game" onclick="exitGame()">🏠 В меню</button>
+</div>
+
 <script type="module">
-// ===== ПРЯМЫЕ ИМПОРТЫ (без importmap) =====
+// ===== ИМПОРТЫ THREE.JS =====
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 // ===== ГЛОБАЛЬНОЕ СОСТОЯНИЕ =====
-const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || window.innerWidth < 768;
 const State = {
-  ws: null,
-  playerId: null,
-  playerName: '',
-  currentGame: null,
-  scene: null,
-  camera: null,
-  renderer: null,
-  playerMesh: null,
-  gunMesh: null,
-  otherPlayers: new Map(),
-  joystick: { x: 0, y: 0, active: false },
-  keys: { f: 0, r: 0, jump: false },
-  isShooting: false,
-  audioContext: null,
-  sounds: {},
-  textures: {},
-  playerHealth: 100
+    ws: null,
+    playerId: null,
+    playerName: '',
+    currentGame: null,
+    scene: null,
+    camera: null,
+    renderer: null,
+    playerMesh: null,
+    keys: {},
+    isMobile: /Android|iPhone|iPad/i.test(navigator.userAgent)
 };
 
 // ===== DOM ЭЛЕМЕНТЫ =====
 const DOM = {
-  regModal: document.getElementById('reg-modal'),
-  regInput: document.getElementById('reg-input'),
-  regBtn: document.getElementById('reg-btn'),
-  regError: document.getElementById('reg-error'),
-  loadingScreen: document.getElementById('loading-screen'),
-  loadText: document.getElementById('load-text'),
-  mainMenu: document.getElementById('main-menu'),
-  menuAvatar: document.getElementById('menu-avatar'),
-  menuUsername: document.getElementById('menu-username'),
-  gameUI: document.getElementById('game-ui'),
-  canvas: document.getElementById('game-canvas'),
-  chatMessages: document.getElementById('chat-messages'),
-  chatInput: document.getElementById('chat-input'),
-  joyZone: document.getElementById('joy-zone'),
-  joyKnob: document.getElementById('joy-knob'),
-  jumpBtn: document.getElementById('jump-btn'),
-  shooterHud: document.getElementById('shooter-hud'),
-  healthFill: document.getElementById('health-fill'),
-  scoreBoard: document.getElementById('score-board')
+    regModal: document.getElementById('reg-modal'),
+    regInput: document.getElementById('reg-input'),
+    regBtn: document.getElementById('reg-btn'),
+    regError: document.getElementById('reg-error'),
+    userAvatar: document.getElementById('user-avatar'),
+    gameUI: document.getElementById('game-ui'),
+    canvas: document.getElementById('game-canvas'),
+    friendsList: document.getElementById('friends-list'),
+    continueGames: document.getElementById('continue-games')
 };
 
-// ===== ИНИЦИАЛИЗАЦИЯ РЕГИСТРАЦИИ =====
-function initRegistration() {
-  const savedName = localStorage.getItem('r3d_player_name');
-  if (savedName && savedName.length >= 2 && savedName.length <= 16) {
-    State.playerName = savedName;
-    DOM.regModal.style.display = 'none';
-    showMenu();
-    return;
-  }
-
-  DOM.regInput.addEventListener('input', () => {
-    const value = DOM.regInput.value.trim();
-    const isValid = value.length >= 2 && value.length <= 16;
-    
-    if (isValid) {
-      DOM.regError.textContent = '';
-      DOM.regBtn.disabled = false;
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+function init() {
+    const saved = localStorage.getItem('r3d_name');
+    if (saved) {
+        State.playerName = saved;
+        DOM.regModal.style.display = 'none';
+        DOM.userAvatar.textContent = saved.charAt(0).toUpperCase();
     } else {
-      DOM.regError.textContent = value.length === 0 ? '' : (value.length < 2 ? 'Минимум 2 символа' : 'Максимум 16 символов');
-      DOM.regBtn.disabled = true;
+        DOM.regInput.addEventListener('input', checkName);
+        DOM.regBtn.addEventListener('click', register);
+        DOM.regInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter' && !DOM.regBtn.disabled) register();
+        });
     }
-  });
-
-  DOM.regInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !DOM.regBtn.disabled) {
-      completeRegistration();
-    }
-  });
-
-  DOM.regBtn.addEventListener('click', completeRegistration);
-  DOM.regInput.focus();
+    
+    // КЛИКИ ПО ИГРАМ
+    document.querySelectorAll('.game-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const game = card.dataset.game;
+            if (game) startGame(game);
+        });
+    });
 }
 
-function completeRegistration() {
-  const name = DOM.regInput.value.trim();
-  if (name.length < 2 || name.length > 16) return;
-  
-  State.playerName = name;
-  localStorage.setItem('r3d_player_name', name);
-  DOM.regModal.style.display = 'none';
-  showMenu();
+function checkName() {
+    const val = DOM.regInput.value.trim();
+    if (val.length >= 2 && val.length <= 16) {
+        DOM.regError.textContent = '';
+        DOM.regBtn.disabled = false;
+    } else {
+        DOM.regError.textContent = val.length < 2 ? 'Минимум 2 символа' : 'Максимум 16 символов';
+        DOM.regBtn.disabled = true;
+    }
 }
 
-// ===== МЕНЮ =====
-function showMenu() {
-  DOM.mainMenu.style.display = 'flex';
-  DOM.menuUsername.textContent = State.playerName;
-  DOM.menuAvatar.textContent = State.playerName.charAt(0).toUpperCase();
-  
-  document.querySelectorAll('.game-card').forEach(card => {
-    card.onclick = () => {
-      const gameId = card.dataset.game;
-      startGameSession(gameId);
-    };
-  });
+function register() {
+    const name = DOM.regInput.value.trim();
+    if (name.length < 2 || name.length > 16) return;
+    
+    State.playerName = name;
+    localStorage.setItem('r3d_name', name);
+    DOM.regModal.style.display = 'none';
+    DOM.userAvatar.textContent = name.charAt(0).toUpperCase();
 }
 
 // ===== ЗАПУСК ИГРЫ =====
-function startGameSession(gameId) {
-  State.currentGame = gameId;
-  DOM.mainMenu.style.display = 'none';
-  DOM.loadingScreen.style.display = 'flex';
-  DOM.loadText.textContent = 'Подключение к серверу...';
-  connectToServer();
+function startGame(gameId) {
+    State.currentGame = gameId;
+    DOM.gameUI.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    
+    init3D();
+    connect();
 }
 
 window.exitGame = function() {
-  if (State.ws) State.ws.close();
-  if (State.renderer) {
-    State.renderer.dispose();
-    State.renderer = null;
-  }
-  if (State.scene) {
-    State.scene.traverse(obj => {
-      if (obj.geometry) obj.geometry.dispose();
-      if (obj.material) {
-        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-        else obj.material.dispose();
-      }
-    });
-    State.scene = null;
-  }
-  
-  State.currentGame = null;
-  State.otherPlayers.clear();
-  State.playerMesh = null;
-  State.gunMesh = null;
-  
-  DOM.gameUI.style.display = 'none';
-  DOM.shooterHud.style.display = 'none';
-  DOM.scoreBoard.style.display = 'none';
-  DOM.chatMessages.innerHTML = '';
-  DOM.loadingScreen.style.display = 'none';
-  showMenu();
+    if (State.ws) State.ws.close();
+    if (State.renderer) {
+        State.renderer.dispose();
+        State.renderer = null;
+    }
+    if (State.scene) {
+        State.scene.traverse(obj => {
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+                else obj.material.dispose();
+            }
+        });
+        State.scene = null;
+    }
+    
+    DOM.gameUI.style.display = 'none';
+    document.body.style.overflow = '';
+    State.currentGame = null;
 };
 
-// ===== СЕТЬ =====
-function connectToServer() {
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  State.ws = new WebSocket(`${protocol}//${location.host}`);
-  
-  State.ws.onopen = () => {
-    State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
-  };
-  
-  State.ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      
-      if (data.type === 'registered') {
-        State.playerId = data.id;
-        DOM.loadText.textContent = 'Загрузка ресурсов...';
-        loadAssets().then(() => {
-          DOM.loadingScreen.style.display = 'none';
-          init3DScene(State.currentGame);
-          State.ws.send(JSON.stringify({ type: 'join', gameId: State.currentGame }));
-          startGameLoop();
-        });
-      }
-      
-      if (data.type === 'gameReady') {
-        addChatMessage('sys', `Вы вошли в игру. Команда: ${data.team || 'Наблюдатель'}`);
-        if (State.currentGame === 'shooter') {
-          DOM.shooterHud.style.display = 'block';
-          DOM.scoreBoard.style.display = 'block';
-        }
-      }
-      
-      if (data.type === 'snapshot') {
-        if (data.health !== undefined) {
-          State.playerHealth = data.health;
-          if (State.currentGame === 'shooter') {
-            DOM.healthFill.style.width = `${Math.max(0, data.health)}%`;
-          }
-        }
-        if (data.scores) {
-          DOM.scoreBoard.textContent = `🔴 ${data.scores.red} : ${data.scores.blue} 🔵`;
-        }
-        
-        data.players.forEach(p => {
-          if (!State.otherPlayers.has(p.id)) {
-            spawnOtherPlayer(p);
-          } else {
-            const mesh = State.otherPlayers.get(p.id);
-            mesh.position.set(p.x, p.y, p.z);
-            mesh.rotation.y = -p.yaw;
-          }
-        });
-      }
-      
-      if (data.type === 'chat') {
-        addChatMessage(data.name, data.msg);
-      }
-      
-      if (data.type === 'shoot') {
-        playSound('shoot');
-      }
-      
-      if (data.type === 'kill') {
-        addChatMessage('sys', `💀 ${data.killer} убил ${data.victim}`);
-      }
-      
-    } catch (e) {
-      console.error('WebSocket message error:', e);
-    }
-  };
-  
-  State.ws.onclose = () => {
-    addChatMessage('sys', '⚠️ Соединение разорвано. Переподключение...');
-    setTimeout(() => {
-      if (State.currentGame) {
-        DOM.loadingScreen.style.display = 'flex';
-        connectToServer();
-      }
-    }, 3000);
-  };
-}
-
-// ===== РЕСУРСЫ =====
-async function loadAssets() {
-  const loader = new THREE.TextureLoader();
-  
-  State.textures.floor = await new Promise(resolve => {
-    loader.load('floor.png', resolve, undefined, () => resolve(null));
-  });
-  State.textures.wall = await new Promise(resolve => {
-    loader.load('wall.png', resolve, undefined, () => resolve(null));
-  });
-  
-  State.gunModel = await new Promise(resolve => {
-    new GLTFLoader().load('pistol.glb', gltf => resolve(gltf.scene), undefined, () => {
-      const fallback = new THREE.Group();
-      fallback.add(new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.35), new THREE.MeshStandardMaterial({ color: 0x222 })));
-      fallback.add(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.08), new THREE.MeshStandardMaterial({ color: 0x444 })).translateY(-0.12));
-      resolve(fallback);
-    });
-  });
-  
-  State.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  State.sounds.shoot = createFallbackSound(800, 0.1, 0.1);
-  State.sounds.hit = createFallbackSound(200, 0.15, 0.15);
-  State.sounds.reload = createFallbackSound(400, 0.1, 0.2);
-  
-  try {
-    const audioShoot = new Audio('shoot.mp3'); audioShoot.volume = 0.3; State.sounds.shootFile = audioShoot;
-    const audioHit = new Audio('hit.mp3'); audioHit.volume = 0.3; State.sounds.hitFile = audioHit;
-    const audioReload = new Audio('reload.mp3'); audioReload.volume = 0.3; State.sounds.reloadFile = audioReload;
-  } catch(e) {}
-}
-
-function createFallbackSound(freq, vol, dur) {
-  return () => {
-    if (!State.audioContext) return;
-    const osc = State.audioContext.createOscillator();
-    const gain = State.audioContext.createGain();
-    osc.connect(gain);
-    gain.connect(State.audioContext.destination);
-    osc.frequency.value = freq;
-    gain.gain.value = vol;
-    osc.start();
-    osc.stop(State.audioContext.currentTime + dur);
-  };
-}
-
-function playSound(type) {
-  if (State.audioContext?.state === 'suspended') State.audioContext.resume();
-  const file = State.sounds[type + 'File'];
-  if (file) {
-    const clone = file.cloneNode();
-    clone.play().catch(() => State.sounds[type]());
-  } else {
-    State.sounds[type]();
-  }
-}
-
-// ===== 3D СЦЕНА =====
-function init3DScene(gameId) {
-  const cv = DOM.canvas;
-  cv.width = window.innerWidth;
-  cv.height = window.innerHeight;
-  
-  State.scene = new THREE.Scene();
-  State.scene.background = new THREE.Color(gameId === 'shooter' ? 0x1a1a24 : 0x87CEEB);
-  State.scene.fog = new THREE.Fog(State.scene.background, 20, 60);
-  
-  State.camera = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 100);
-  State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
-  State.renderer.setSize(cv.width, cv.height);
-  State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  State.renderer.shadowMap.enabled = true;
-  
-  State.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-  const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-  sun.position.set(15, 25, 15);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
-  State.scene.add(sun);
-  
-  const floorMat = new THREE.MeshStandardMaterial({ color: gameId === 'shooter' ? 0x333344 : 0x2a8a2a });
-  if (State.textures.floor) {
-    State.textures.floor.wrapS = State.textures.floor.wrapT = THREE.RepeatWrapping;
-    State.textures.floor.repeat.set(10, 10);
-    floorMat.map = State.textures.floor;
-    floorMat.color.set(0xffffff);
-  }
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  State.scene.add(floor);
-  
-  if (gameId === 'shooter' && State.textures.wall) {
-    State.textures.wall.wrapS = State.textures.wall.wrapT = THREE.RepeatWrapping;
-    State.textures.wall.repeat.set(3, 1);
-    const wMat = new THREE.MeshStandardMaterial({ map: State.textures.wall });
-    const walls = [
-      { x: -38, z: 0, w: 2, d: 78 },
-      { x: 38, z: 0, w: 2, d: 78 },
-      { x: 0, z: -38, w: 78, d: 2 },
-      { x: 0, z: 38, w: 78, d: 2 }
-    ];
-    walls.forEach(w => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w.w, 7, w.d), wMat);
-      m.position.set(w.x, 3.5, w.z);
-      m.castShadow = true;
-      State.scene.add(m);
-    });
-  }
-  
-  State.playerMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(0.8, 1.8, 0.8),
-    new THREE.MeshStandardMaterial({ color: 0xff3333 })
-  );
-  State.playerMesh.position.y = 1;
-  State.playerMesh.castShadow = true;
-  State.scene.add(State.playerMesh);
-  
-  State.gunMesh = State.gunModel.clone();
-  State.gunMesh.position.set(0.35, -0.25, -0.5);
-  State.gunMesh.rotation.y = Math.PI;
-  State.camera.add(State.gunMesh);
-  State.scene.add(State.camera);
-  
-  setupInputControls(gameId);
-}
-
-function spawnOtherPlayer(data) {
-  const color = data.team === 'red' ? 0xff2222 : (data.team === 'blue' ? 0x2266ff : 0x888888);
-  const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(0.8, 1.8, 0.8),
-    new THREE.MeshStandardMaterial({ color })
-  );
-  mesh.position.set(data.x, data.y, data.z);
-  mesh.rotation.y = -data.yaw;
-  mesh.castShadow = true;
-  State.scene.add(mesh);
-  State.otherPlayers.set(data.id, mesh);
-}
-
-// ===== УПРАВЛЕНИЕ =====
-function setupInputControls(gameId) {
-  if (!isMobile) {
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyW') State.keys.f = -1;
-      if (e.code === 'KeyS') State.keys.f = 1;
-      if (e.code === 'KeyA') State.keys.r = -1;
-      if (e.code === 'KeyD') State.keys.r = 1;
-      if (e.code === 'Space') State.keys.jump = true;
-      if (e.code === 'KeyE') State.isShooting = true;
-      if (e.code === 'KeyR') { playSound('reload'); State.isShooting = false; }
-    });
-    
-    document.addEventListener('keyup', (e) => {
-      if (e.code === 'KeyW' || e.code === 'KeyS') State.keys.f = 0;
-      if (e.code === 'KeyA' || e.code === 'KeyD') State.keys.r = 0;
-      if (e.code === 'Space') State.keys.jump = false;
-      if (e.code === 'KeyE') State.isShooting = false;
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-      if (document.pointerLockElement) {
-        State.camera.rotation.y -= e.movementX * 0.002;
-        State.camera.rotation.x = Math.max(-1.2, Math.min(1.2, State.camera.rotation.x - e.movementY * 0.002));
-      }
-    });
-    
-    document.addEventListener('click', () => {
-      if (!document.pointerLockElement && State.renderer?.domElement) {
-        State.renderer.domElement.requestPointerLock();
-      }
-      if (gameId === 'shooter' && document.pointerLockElement) {
-        State.isShooting = true;
-      }
-    });
-  } else {
-    let startX = 0, startY = 0;
-    DOM.joyZone.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      const t = e.changedTouches[0];
-      startX = t.clientX;
-      startY = t.clientY;
-      State.joystick.active = true;
-    }, { passive: false });
-    
-    DOM.joyZone.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      if (!State.joystick.active) return;
-      const t = e.changedTouches[0];
-      let dx = t.clientX - startX;
-      let dy = t.clientY - startY;
-      const dist = Math.min(35, Math.hypot(dx, dy));
-      const angle = Math.atan2(dy, dx);
-      DOM.joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px))`;
-      State.joystick.x = Math.cos(angle) * (dist / 35);
-      State.joystick.y = Math.sin(angle) * (dist / 35);
-    }, { passive: false });
-    
-    const resetJoystick = () => {
-      State.joystick.active = false;
-      State.joystick.x = 0;
-      State.joystick.y = 0;
-      DOM.joyKnob.style.transform = 'translate(-50%, -50%)';
-    };
-    DOM.joyZone.addEventListener('touchend', resetJoystick);
-    DOM.joyZone.addEventListener('touchcancel', resetJoystick);
-    
-    DOM.jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); State.keys.jump = true; }, { passive: false });
-    DOM.jumpBtn.addEventListener('touchend', () => State.keys.jump = false);
-  }
-  
-  DOM.chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.value.trim() && State.ws?.readyState === 1) {
-      State.ws.send(JSON.stringify({ type: 'chat', msg: e.target.value.trim() }));
-      e.target.value = '';
-    }
-  });
-}
-
-// ===== ИГРОВОЙ ЦИКЛ =====
-let lastTime = 0;
-function startGameLoop() {
-  requestAnimationFrame(gameLoop);
-}
-
-function gameLoop(timestamp) {
-  if (!State.ws || State.ws.readyState !== 1 || !State.playerMesh) {
-    requestAnimationFrame(gameLoop);
-    return;
-  }
-  
-  const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
-  lastTime = timestamp;
-  
-  const forward = isMobile ? State.joystick.y : State.keys.f;
-  const right = isMobile ? State.joystick.x : State.keys.r;
-  const speed = 0.18;
-  
-  const yaw = State.camera.rotation.y;
-  State.playerMesh.position.x += (forward * Math.sin(yaw + Math.PI) + right * Math.cos(yaw)) * speed;
-  State.playerMesh.position.z += (forward * Math.cos(yaw + Math.PI) - right * Math.sin(yaw)) * speed;
-  
-  if (State.keys.jump && State.playerMesh.position.y <= 1.1) {
-    State.playerMesh.position.y = 3.2;
-    State.keys.jump = false;
-  }
-  if (State.playerMesh.position.y > 1) {
-    State.playerMesh.position.y -= 0.22;
-  }
-  if (State.playerMesh.position.y < 1) {
-    State.playerMesh.position.y = 1;
-  }
-  
-  State.playerMesh.rotation.y = yaw + Math.PI;
-  
-  if (State.isShooting && State.currentGame === 'shooter') {
-    State.ws.send(JSON.stringify({ type: 'action' }));
-    playSound('shoot');
-    State.isShooting = false;
-  }
-  
-  State.ws.send(JSON.stringify({
-    type: 'input',
-    f: forward,
-    r: right,
-    jump: State.keys.jump,
-    yaw: yaw
-  }));
-  State.keys.jump = false;
-  
-  const camDist = isMobile ? 4 : 6;
-  const camHeight = isMobile ? 2.5 : 4;
-  State.camera.position.set(
-    State.playerMesh.position.x + Math.sin(yaw) * camDist,
-    State.playerMesh.position.y + camHeight,
-    State.playerMesh.position.z + Math.cos(yaw) * camDist
-  );
-  State.camera.lookAt(State.playerMesh.position.x, State.playerMesh.position.y + 1.5, State.playerMesh.position.z);
-  
-  if (State.gunMesh) {
-    State.gunMesh.position.y = -0.25 + Math.sin(timestamp * 0.005) * 0.008;
-    State.gunMesh.rotation.x = State.isShooting ? -0.25 : 0;
-  }
-  
-  State.renderer.render(State.scene, State.camera);
-  requestAnimationFrame(gameLoop);
-}
-
-// ===== УТИЛИТЫ =====
-function addChatMessage(name, message) {
-  const div = document.createElement('div');
-  div.className = 'msg';
-  if (name === 'sys') {
-    div.classList.add('sys');
-    div.textContent = message;
-  } else {
-    div.innerHTML = `<span class="n">${name}:</span> ${message}`;
-  }
-  DOM.chatMessages.appendChild(div);
-  DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
-  
-  if (DOM.chatMessages.children.length > 50) {
-    DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
-  }
-}
-
-// ===== ЗАПУСК =====
-window.addEventListener('resize', () => {
-  if (State.camera && State.renderer) {
+// ===== 3D ИНИЦИАЛИЗАЦИЯ =====
+function init3D() {
     const cv = DOM.canvas;
     cv.width = window.innerWidth;
     cv.height = window.innerHeight;
-    State.camera.aspect = window.innerWidth / window.innerHeight;
-    State.camera.updateProjectionMatrix();
-    State.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-});
+    
+    State.scene = new THREE.Scene();
+    State.scene.background = new THREE.Color(State.currentGame === 'shooter' ? 0x1a1a24 : 0x87CEEB);
+    
+    State.camera = new THREE.PerspectiveCamera(70, cv.width/cv.height, 0.1, 100);
+    State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+    State.renderer.setSize(cv.width, cv.height);
+    
+    // Освещение
+    State.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+    sun.position.set(10, 20, 10);
+    State.scene.add(sun);
+    
+    // Пол
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(50, 50),
+        new THREE.MeshStandardMaterial({ color: State.currentGame === 'shooter' ? 0x333344 : 0x2a8a2a })
+    );
+    floor.rotation.x = -Math.PI/2;
+    State.scene.add(floor);
+    
+    // Игрок
+    State.playerMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 2, 1),
+        new THREE.MeshStandardMaterial({ color: 0xff3333 })
+    );
+    State.playerMesh.position.y = 1;
+    State.scene.add(State.playerMesh);
+    
+    // Управление
+    setupControls();
+    gameLoop();
+}
 
-initRegistration();
+// ===== УПРАВЛЕНИЕ =====
+function setupControls() {
+    if (!State.isMobile) {
+        document.addEventListener('keydown', e => {
+            State.keys[e.code] = true;
+        });
+        document.addEventListener('keyup', e => {
+            State.keys[e.code] = false;
+        });
+        document.addEventListener('mousemove', e => {
+            if (document.pointerLockElement) {
+                State.camera.rotation.y -= e.movementX * 0.002;
+            }
+        });
+        document.addEventListener('click', () => {
+            if (!document.pointerLockElement) {
+                State.renderer.domElement.requestPointerLock();
+            }
+        });
+    }
+}
+
+// ===== ИГРОВОЙ ЦИКЛ =====
+function gameLoop() {
+    if (!State.playerMesh) return;
+    
+    const speed = 0.15;
+    if (State.keys['KeyW']) State.playerMesh.position.z -= speed;
+    if (State.keys['KeyS']) State.playerMesh.position.z += speed;
+    if (State.keys['KeyA']) State.playerMesh.position.x -= speed;
+    if (State.keys['KeyD']) State.playerMesh.position.x += speed;
+    
+    State.camera.position.copy(State.playerMesh.position);
+    State.camera.position.y += 2;
+    State.camera.lookAt(State.playerMesh.position);
+    
+    State.renderer.render(State.scene, State.camera);
+    requestAnimationFrame(gameLoop);
+}
+
+// ===== СЕТЬ =====
+function connect() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    State.ws = new WebSocket(`${proto}//${location.host}`);
+    
+    State.ws.onopen = () => {
+        State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
+    };
+    
+    State.ws.onmessage = (e) => {
+        try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'registered') {
+                State.playerId = data.id;
+                State.ws.send(JSON.stringify({ type: 'join', gameId: State.currentGame }));
+            }
+        } catch(err) {
+            console.error('WS Error:', err);
+        }
+    };
+    
+    State.ws.onclose = () => {
+        setTimeout(() => {
+            if (State.currentGame) connect();
+        }, 3000);
+    };
+}
+
+// ===== ЗАПУСК =====
+init();
 </script>
+</body>
+</html>
