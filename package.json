@@ -1,16 +1,11 @@
 {
-  "name": "roblox-3d-ultimate",
+  "name": "roblox-3d-flat",
   "version": "1.0.0",
-  "description": "Optimized 3D multiplayer for low-end servers",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "^4.18.2",
     "ws": "^8.14.2"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "engines": { "node": ">=16.0.0" }
 }
