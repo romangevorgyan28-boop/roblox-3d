@@ -2,349 +2,693 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>🧱 Roblox 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🧱 Roblox 3D Ultimate</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none}
-body{overflow:hidden;background:#0a0a12;font-family:system-ui,sans-serif;color:#fff}
-#reg{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:100}
-.reg-box{background:#111;padding:20px;border-radius:12px;text-align:center;width:90%;max-width:300px;border:1px solid #333}
-.reg-input{width:100%;padding:10px;background:#222;border:1px solid #444;color:#fff;border-radius:6px;margin:10px 0}
-.btn{width:100%;padding:10px;background:#00e5ff;color:#000;border:none;border-radius:6px;font-weight:bold;cursor:pointer;margin-top:5px}
-.btn:disabled{opacity:0.5;cursor:not-allowed}
-#menu{position:fixed;inset:0;background:#fff;display:none;flex-direction:column;overflow-y:auto;color:#000}
-.menu-head{padding:15px;text-align:center;border-bottom:1px solid #eee}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:15px}
-.card{background:#f8f9fa;border:1px solid #ddd;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:0.2s}
-.card:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,0.1)}
-#game{position:fixed;inset:0;display:none;background:#111}
-#hud{position:fixed;top:0;left:0;width:100%;padding:10px;display:flex;justify-content:space-between;z-index:20;pointer-events:none}
-#hud button{pointer-events:auto;background:#f44;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer}
-#chat{position:fixed;top:50px;left:10px;width:220px;max-height:120px;overflow-y:auto;background:rgba(0,0,0,0.6);border-radius:8px;padding:6px;font-size:12px;z-index:20;pointer-events:auto}
-#chat input{width:100%;padding:4px;background:#000;border:1px solid #444;color:#fff;border-radius:4px;margin-top:4px}
-#joy{position:fixed;bottom:30px;left:30px;width:100px;height:100px;background:rgba(255,255,255,0.15);border-radius:50%;border:2px solid rgba(255,255,255,0.3);display:none}
-#joy-k{position:absolute;top:50%;left:50%;width:40px;height:40px;background:#00e5ff;border-radius:50%;transform:translate(-50%,-50%)}
-#jump{position:fixed;bottom:40px;right:40px;width:60px;height:60px;background:rgba(0,229,255,0.3);border:2px solid #00e5ff;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:20px;pointer-events:auto}
-#shooter-hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:15}
-#cross{position:fixed;top:50%;left:50%;width:16px;height:16px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%)}
-#hp{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);width:160px;height:12px;background:#333;border-radius:6px;overflow:hidden}
-#hp-f{width:100%;height:100%;background:linear-gradient(90deg,#f44,#4f4);transition:width 0.2s}
-#score{position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:6px 10px;border-radius:6px;font-weight:bold;font-size:14px}
-#loading{position:fixed;inset:0;background:#0a0a12;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:50}
-.loader{width:40px;height:40px;border:4px solid #333;border-top-color:#00e5ff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:15px}
-@keyframes spin{to{transform:rotate(360deg)}}
-canvas{display:block;width:100%;height:100%}
+* { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; }
+body { overflow: hidden; background: #0a0a12; font-family: system-ui, -apple-system, sans-serif; color: #ffffff; }
+
+/* ===== РЕГИСТРАЦИЯ ===== */
+#reg-modal { position: fixed; inset: 0; background: rgba(5, 5, 10, 0.95); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.reg-box { background: linear-gradient(145deg, #111827, #0a0a12); border: 1px solid rgba(255,255,255,0.08); padding: 28px; border-radius: 16px; text-align: center; width: 90%; max-width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.reg-box h2 { font-size: 22px; margin-bottom: 8px; background: linear-gradient(90deg, #fff, #00e5ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.reg-box p { color: #8a8f98; font-size: 13px; margin-bottom: 16px; }
+.reg-input { width: 100%; padding: 12px; background: #050508; border: 1px solid #333; color: #fff; border-radius: 8px; font-size: 15px; outline: none; transition: border 0.2s; }
+.reg-input:focus { border-color: #00e5ff; }
+.reg-btn { width: 100%; padding: 12px; background: #00e5ff; color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 12px; transition: all 0.2s; }
+.reg-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
+.reg-btn:not(:disabled):hover { background: #00c4d8; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,229,255,0.3); }
+.reg-error { color: #ff5555; font-size: 12px; min-height: 16px; margin-top: 8px; }
+
+/* ===== МЕНЮ ===== */
+#main-menu { position: fixed; inset: 0; background: linear-gradient(135deg, #0f172a, #020617); display: none; flex-direction: column; overflow-y: auto; }
+.menu-header { padding: 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.2); }
+.menu-logo { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+.menu-logo span { background: linear-gradient(90deg, #fff, #00e5ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.menu-user { display: flex; align-items: center; gap: 10px; }
+.menu-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #00e5ff, #a855f7); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+.menu-name { font-weight: 600; font-size: 14px; }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; }
+.game-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; cursor: pointer; transition: all 0.25s ease; position: relative; overflow: hidden; }
+.game-card:hover { transform: translateY(-4px); border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.05); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+.game-card h3 { font-size: 16px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.game-card p { font-size: 12px; color: #8a8f98; line-height: 1.4; margin-bottom: 8px; }
+.game-tag { display: inline-block; font-size: 10px; padding: 3px 8px; background: rgba(0,229,255,0.1); color: #00e5ff; border-radius: 20px; font-weight: 600; }
+
+/* ===== ЗАГРУЗКА ===== */
+#loading-screen { position: fixed; inset: 0; background: #020617; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 150; }
+.loader { width: 44px; height: 44px; border: 3px solid #1e293b; border-top-color: #00e5ff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#load-text { color: #00e5ff; font-size: 14px; font-weight: 500; }
+
+/* ===== ИГРА ===== */
+#game-ui { position: fixed; inset: 0; display: none; background: #000; }
+#hud-top { position: fixed; top: 0; left: 0; width: 100%; padding: 12px; display: flex; justify-content: space-between; align-items: center; z-index: 30; pointer-events: none; }
+#hud-top button { pointer-events: auto; background: rgba(255,42,42,0.8); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px); }
+#chat-box { position: fixed; top: 50px; left: 10px; width: 240px; max-height: 140px; overflow-y: auto; background: rgba(0,0,0,0.6); border-radius: 8px; padding: 8px; font-size: 12px; z-index: 25; pointer-events: auto; border: 1px solid rgba(255,255,255,0.05); }
+#chat-input { width: 100%; padding: 6px; background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 4px; margin-top: 4px; font-size: 12px; }
+.msg { margin: 3px 0; line-height: 1.3; word-break: break-word; }
+.msg .n { font-weight: 700; color: #a78bfa; }
+.msg.sys { color: #34d399; font-style: italic; }
+
+#mobile-controls { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 40; }
+#joy-zone { position: absolute; bottom: 30px; left: 30px; width: 110px; height: 110px; background: rgba(255,255,255,0.08); border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); pointer-events: auto; }
+#joy-knob { position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; background: rgba(0,229,255,0.7); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+#jump-btn { position: absolute; bottom: 40px; right: 40px; width: 64px; height: 64px; background: rgba(0,229,255,0.2); border: 2px solid rgba(0,229,255,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; pointer-events: auto; }
+#jump-btn:active { background: rgba(0,229,255,0.5); transform: scale(0.95); }
+
+#shooter-hud { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 35; }
+#crosshair { position: fixed; top: 50%; left: 50%; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.8); border-radius: 50%; transform: translate(-50%, -50%); }
+#health-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 180px; height: 14px; background: rgba(0,0,0,0.5); border-radius: 7px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+#health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ef4444, #22c55e); transition: width 0.2s; }
+#score-board { position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; border: 1px solid rgba(255,255,255,0.1); }
+
+canvas { display: block; width: 100%; height: 100%; }
 </style>
 </head>
 <body>
 
 <!-- РЕГИСТРАЦИЯ -->
-<div id="reg">
+<div id="reg-modal">
   <div class="reg-box">
-    <h2>👋 Привет!</h2>
-    <p style="color:#888;font-size:13px;margin:8px 0">Придумай ник (2-16 символов)</p>
-    <input type="text" id="nick" class="reg-input" placeholder="Никнейм" maxlength="16">
-    <div id="err" style="color:#f66;font-size:12px;min-height:16px"></div>
-    <button id="reg-btn" class="btn" disabled>Играть</button>
+    <h2>👋 Добро пожаловать!</h2>
+    <p>Введите никнейм для входа в игру</p>
+    <input type="text" id="reg-input" class="reg-input" placeholder="Ваш никнейм" maxlength="16" autocomplete="off">
+    <div id="reg-error" class="reg-error"></div>
+    <button id="reg-btn" class="reg-btn" disabled>Начать игру</button>
   </div>
 </div>
 
 <!-- ЗАГРУЗКА -->
-<div id="loading">
+<div id="loading-screen">
   <div class="loader"></div>
-  <div id="load-text" style="color:#00e5ff">Подключение...</div>
+  <div id="load-text">Подготовка мира...</div>
 </div>
 
-<!-- МЕНЮ -->
-<div id="menu">
-  <div class="menu-head">
-    <h1>🧱 ROBLOX 3D</h1>
-    <p style="color:#666;font-size:13px" id="uname">Гость</p>
+<!-- ГЛАВНОЕ МЕНЮ -->
+<div id="main-menu">
+  <div class="menu-header">
+    <div class="menu-logo">🧱 <span>ROBLOX 3D</span></div>
+    <div class="menu-user">
+      <div class="menu-avatar" id="menu-avatar">?</div>
+      <div class="menu-name" id="menu-username">Гость</div>
+    </div>
   </div>
-  <div class="grid">
-    <div class="card" data-g="brookhaven"><h3>🏡 RP</h3><p style="font-size:12px;color:#666">Свободный мир</p></div>
-    <div class="card" data-g="shooter"><h3> Шутер</h3><p style="font-size:12px;color:#666">Командный бой</p></div>
-    <div class="card" data-g="brainrot"><h3>🧠 Brainrot</h3><p style="font-size:12px;color:#666">Укради артефакт</p></div>
-    <div class="card" data-g="cheese"><h3> Сыр</h3><p style="font-size:12px;color:#666">Лабиринт + крыса</p></div>
+  
+  <h2 style="padding: 20px 20px 10px; font-size: 20px; font-weight: 700;"> Наши игры</h2>
+  <div class="menu-grid">
+    <div class="game-card" data-game="brookhaven">
+      <h3>🏡 Brookhaven RP</h3>
+      <p>Свободный город, общение и исследование</p>
+      <span class="game-tag">RP</span>
+    </div>
+    <div class="game-card" data-game="shooter">
+      <h3> Team Shooter</h3>
+      <p>Командный бой, стрельба и тактика</p>
+      <span class="game-tag">PvP</span>
+    </div>
+    <div class="game-card" data-game="brainrot">
+      <h3>🧠 Steal a Brainrot</h3>
+      <p>Укради артефакт и унеси ноги!</p>
+      <span class="game-tag">Стелс</span>
+    </div>
+    <div class="game-card" data-game="cheese">
+      <h3>🧀 Horror of Cheese</h3>
+      <p>Найди 9 сыров в лабиринте, избегай крысы</p>
+      <span class="game-tag">Хоррор</span>
+    </div>
   </div>
 </div>
 
-<!-- ИГРА -->
-<div id="game">
-  <canvas id="c"></canvas>
-  <div id="hud">
-    <button onclick="back()">🏠 Меню</button>
-    <div id="score" style="display:none">🔴 0 : 0 🔵</div>
+<!-- ИГРОВОЙ ИНТЕРФЕЙС -->
+<div id="game-ui">
+  <canvas id="game-canvas"></canvas>
+  
+  <div id="hud-top">
+    <button onclick="exitGame()">🏠 В меню</button>
+    <div id="score-board" style="display:none">🔴 0 : 0 🔵</div>
   </div>
-  <div id="chat"><div id="msg"></div><input id="ci" placeholder="Чат..."></div>
-  <div id="joy"><div id="joy-k"></div></div>
-  <div id="jump">⬆️</div>
-  <div id="shooter-hud"><div id="cross"></div><div id="hp"><div id="hp-f"></div></div></div>
+  
+  <div id="chat-box">
+    <div id="chat-messages"></div>
+    <input type="text" id="chat-input" placeholder="Написать сообщение...">
+  </div>
+  
+  <div id="mobile-controls">
+    <div id="joy-zone"><div id="joy-knob"></div></div>
+    <div id="jump-btn">⬆️</div>
+  </div>
+  
+  <div id="shooter-hud">
+    <div id="crosshair"></div>
+    <div id="health-bar"><div id="health-fill"></div></div>
+  </div>
 </div>
 
-<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// ===== КОНФИГ =====
-const isMob = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || window.innerWidth < 768;
-const S = { ws:null, id:null, name:'', game:null, scene:null, cam:null, ren:null, p:null, others:new Map(), gun:null, joy:{x:0,y:0,active:false}, keys:{}, shoot:false, audioCtx:null };
-
-// ===== DOM =====
-const $ = id => document.getElementById(id);
-const reg=$('reg'), menu=$('menu'), game=$('game'), nick=$('nick'), regBtn=$('reg-btn'), err=$('err'), uname=$('uname');
-const chatBox=$('msg'), chatIn=$('ci'), joy=$('joy'), joyK=$('joy-k'), jump=$('jump'), sHud=$('shooter-hud'), scoreEl=$('score'), hpF=$('hp-f'), loadEl=$('loading'), loadTxt=$('load-text');
-
-// ===== РЕГИСТРАЦИЯ + СОХРАНЕНИЕ =====
-const saved = localStorage.getItem('r3d_nick');
-if (saved) { nick.value = saved; checkNick(); }
-nick.addEventListener('input', checkNick);
-regBtn.onclick = () => {
-  S.name = nick.value.trim();
-  localStorage.setItem('r3d_nick', S.name);
-  reg.style.display = 'none';
-  menu.style.display = 'flex';
-  uname.textContent = S.name;
-  connect();
-};
-function checkNick() {
-  const v = nick.value.trim();
-  const ok = /^[a-zA-Z0-9_а-яА-ЯёЁ]{2,16}$/.test(v);
-  err.textContent = ok ? '' : 'Только буквы, цифры и _ (2-16)';
-  regBtn.disabled = !ok;
-}
-
-// ===== КНОПКИ МЕНЮ =====
-document.querySelectorAll('.card').forEach(c => {
-  c.onclick = () => startGame(c.dataset.g);
-});
-
-window.back = () => {
-  game.style.display = 'none';
-  menu.style.display = 'flex';
-  sHud.style.display = 'none';
-  if (S.ren) { S.ren.dispose(); S.ren=null; }
-  if (S.gun) { S.scene.remove(S.gun); S.gun=null; }
-  S.scene=null; S.others.clear();
+// ===== ГЛОБАЛЬНОЕ СОСТОЯНИЕ =====
+const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || window.innerWidth < 768;
+const State = {
+  ws: null,
+  playerId: null,
+  playerName: '',
+  currentGame: null,
+  scene: null,
+  camera: null,
+  renderer: null,
+  playerMesh: null,
+  gunMesh: null,
+  otherPlayers: new Map(),
+  joystick: { x: 0, y: 0, active: false },
+  keys: { f: 0, r: 0, jump: false },
+  isShooting: false,
+  audioContext: null,
+  sounds: {},
+  textures: {}
 };
 
-// ===== ЗАГРУЗКА РЕСУРСОВ (ПЛОСКАЯ СТРУКТУРА) =====
-async function loadAssets() {
-  loadEl.style.display = 'flex';
-  loadTxt.textContent = 'Загрузка текстур...';
-  
-  const texLoader = new THREE.TextureLoader();
-  S.floorTex = await new Promise(r => texLoader.load('floor.png', r, undefined, () => r(null)));
-  S.wallTex = await new Promise(r => texLoader.load('wall.png', r, undefined, () => r(null)));
-  
-  loadTxt.textContent = 'Загрузка модели оружия...';
-  S.gunModel = await new Promise(r => {
-    new GLTFLoader().load('pistol.glb', g => r(g.scene), undefined, () => {
-      // Фолбэк: простой пистолет из кубов
-      const g = new THREE.Group();
-      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.15,0.15,0.4), new THREE.MeshStandardMaterial({color:0x333})));
-      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.2,0.1), new THREE.MeshStandardMaterial({color:0x555})).translateY(-0.15));
-      r(g);
-    });
+// ===== DOM ЭЛЕМЕНТЫ =====
+const DOM = {
+  regModal: document.getElementById('reg-modal'),
+  regInput: document.getElementById('reg-input'),
+  regBtn: document.getElementById('reg-btn'),
+  regError: document.getElementById('reg-error'),
+  loadingScreen: document.getElementById('loading-screen'),
+  loadText: document.getElementById('load-text'),
+  mainMenu: document.getElementById('main-menu'),
+  menuAvatar: document.getElementById('menu-avatar'),
+  menuUsername: document.getElementById('menu-username'),
+  gameUI: document.getElementById('game-ui'),
+  canvas: document.getElementById('game-canvas'),
+  chatMessages: document.getElementById('chat-messages'),
+  chatInput: document.getElementById('chat-input'),
+  joyZone: document.getElementById('joy-zone'),
+  joyKnob: document.getElementById('joy-knob'),
+  jumpBtn: document.getElementById('jump-btn'),
+  shooterHud: document.getElementById('shooter-hud'),
+  healthFill: document.getElementById('health-fill'),
+  scoreBoard: document.getElementById('score-board')
+};
+
+// ===== ИНИЦИАЛИЗАЦИЯ РЕГИСТРАЦИИ =====
+function initRegistration() {
+  const savedName = localStorage.getItem('r3d_player_name');
+  if (savedName && savedName.length >= 2 && savedName.length <= 16) {
+    State.playerName = savedName;
+    DOM.regModal.style.display = 'none';
+    showMenu();
+    return;
+  }
+
+  DOM.regInput.addEventListener('input', () => {
+    const value = DOM.regInput.value.trim();
+    const isValid = value.length >= 2 && value.length <= 16;
+    
+    if (isValid) {
+      DOM.regError.textContent = '';
+      DOM.regBtn.disabled = false;
+    } else {
+      DOM.regError.textContent = value.length === 0 ? '' : (value.length < 2 ? 'Минимум 2 символа' : 'Максимум 16 символов');
+      DOM.regBtn.disabled = true;
+    }
   });
 
-  loadTxt.textContent = 'Инициализация звуков...';
-  S.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  S.sndShoot = new Audio('shoot.mp3'); S.sndShoot.volume = 0.3;
-  S.sndReload = new Audio('reload.mp3'); S.sndReload.volume = 0.3;
-  S.sndHit = new Audio('hit.mp3'); S.sndHit.volume = 0.3;
-  
-  // Фолбэк звуки если файлов нет
-  const playFallback = (type) => {
-    const o = S.audioCtx.createOscillator(), g = S.audioCtx.createGain();
-    o.connect(g); g.connect(S.audioCtx.destination);
-    if(type==='shoot'){o.frequency.value=800;g.gain.value=0.1;o.start();o.stop(S.audioCtx.currentTime+0.1);}
-    else if(type==='hit'){o.frequency.value=200;g.gain.value=0.15;o.start();o.stop(S.audioCtx.currentTime+0.15);}
-  };
-  S.playSound = (type) => {
-    const snd = type==='shoot'?S.sndShoot:type==='reload'?S.sndReload:S.sndHit;
-    if(snd && snd.src) { const c=snd.cloneNode(); c.play().catch(()=>playFallback(type)); }
-    else playFallback(type);
-  };
+  DOM.regInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !DOM.regBtn.disabled) {
+      completeRegistration();
+    }
+  });
 
-  loadEl.style.display = 'none';
+  DOM.regBtn.addEventListener('click', completeRegistration);
+  DOM.regInput.focus();
 }
+
+function completeRegistration() {
+  const name = DOM.regInput.value.trim();
+  if (name.length < 2 || name.length > 16) return;
+  
+  State.playerName = name;
+  localStorage.setItem('r3d_player_name', name);
+  DOM.regModal.style.display = 'none';
+  showMenu();
+}
+
+// ===== МЕНЮ =====
+function showMenu() {
+  DOM.mainMenu.style.display = 'flex';
+  DOM.menuUsername.textContent = State.playerName;
+  DOM.menuAvatar.textContent = State.playerName.charAt(0).toUpperCase();
+  
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.onclick = () => {
+      const gameId = card.dataset.game;
+      DOM.mainMenu.style.display = 'none';
+      DOM.loadingScreen.style.display = 'flex';
+      DOM.loadText.textContent = 'Подключение к серверу...';
+      startGameSession(gameId);
+    };
+  });
+}
+
+window.exitGame = function() {
+  if (State.ws) State.ws.close();
+  if (State.renderer) {
+    State.renderer.dispose();
+    State.renderer = null;
+  }
+  if (State.scene) {
+    State.scene.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+        else obj.material.dispose();
+      }
+    });
+    State.scene = null;
+  }
+  
+  State.currentGame = null;
+  State.otherPlayers.clear();
+  State.playerMesh = null;
+  State.gunMesh = null;
+  
+  DOM.gameUI.style.display = 'none';
+  DOM.shooterHud.style.display = 'none';
+  DOM.scoreBoard.style.display = 'none';
+  DOM.chatMessages.innerHTML = '';
+  showMenu();
+};
 
 // ===== СЕТЬ =====
-function connect() {
-  const proto = location.protocol==='https:'?'wss:':'ws:';
-  S.ws = new WebSocket(`${proto}//${location.host}`);
-  S.ws.onopen = () => S.ws.send(JSON.stringify({type:'register', name:S.name}));
-  S.ws.onmessage = e => {
+function connectToServer() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  State.ws = new WebSocket(`${protocol}//${location.host}`);
+  
+  State.ws.onopen = () => {
+    State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
+  };
+  
+  State.ws.onmessage = (event) => {
     try {
-      const d = JSON.parse(e.data);
-      if(d.type==='registered') S.id = d.id;
-      if(d.type==='gameReady') {
-        S.p = {x:0,y:1,z:0,yaw:0,health:100,team:d.team};
-        if(d.gameId==='shooter') { sHud.style.display='block'; scoreEl.style.display='block'; }
-      }
-      if(d.type==='snapshot') {
-        S.p.health = d.health;
-        if(S.game==='shooter') {
-          hpF.style.width = `${d.health}%`;
-          scoreEl.textContent = `🔴 ${d.scores?.red||0} : ${d.scores?.blue||0} 🔵`;
-        }
-        d.players.forEach(o => {
-          if(!S.others.has(o.id)) spawnOther(o);
-          else { const m=S.others.get(o.id); m.position.set(o.x,o.y,o.z); m.rotation.y=-o.yaw; }
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'registered') {
+        State.playerId = data.id;
+        DOM.loadText.textContent = 'Загрузка ресурсов...';
+        loadAssets().then(() => {
+          DOM.loadingScreen.style.display = 'none';
+          init3DScene(State.currentGame);
+          State.ws.send(JSON.stringify({ type: 'join', gameId: State.currentGame }));
+          startGameLoop();
         });
       }
-      if(d.type==='chat') addChat(d.name, d.msg);
-      if(d.type==='shoot') S.playSound('shoot');
-      if(d.type==='kill') addChat('sys', `💀 ${d.killer} убил ${d.victim}`);
-    } catch(e){}
+      
+      if (data.type === 'gameReady') {
+        addChatMessage('sys', `Вы вошли в игру. Команда: ${data.team || 'Наблюдатель'}`);
+        if (State.currentGame === 'shooter') {
+          DOM.shooterHud.style.display = 'block';
+          DOM.scoreBoard.style.display = 'block';
+        }
+      }
+      
+      if (data.type === 'snapshot') {
+        if (data.health !== undefined) {
+          State.playerHealth = data.health;
+          if (State.currentGame === 'shooter') {
+            DOM.healthFill.style.width = `${Math.max(0, data.health)}%`;
+          }
+        }
+        if (data.scores) {
+          DOM.scoreBoard.textContent = `🔴 ${data.scores.red} : ${data.scores.blue} 🔵`;
+        }
+        
+        data.players.forEach(p => {
+          if (!State.otherPlayers.has(p.id)) {
+            spawnOtherPlayer(p);
+          } else {
+            const mesh = State.otherPlayers.get(p.id);
+            mesh.position.set(p.x, p.y, p.z);
+            mesh.rotation.y = -p.yaw;
+          }
+        });
+      }
+      
+      if (data.type === 'chat') {
+        addChatMessage(data.name, data.msg);
+      }
+      
+      if (data.type === 'shoot') {
+        playSound('shoot');
+      }
+      
+      if (data.type === 'kill') {
+        addChatMessage('sys', `💀 ${data.killer} убил ${data.victim}`);
+      }
+      
+    } catch (e) {
+      console.error('WebSocket message error:', e);
+    }
+  };
+  
+  State.ws.onclose = () => {
+    addChatMessage('sys', '⚠️ Соединение разорвано. Переподключение...');
+    setTimeout(() => {
+      if (State.currentGame) connectToServer();
+    }, 3000);
   };
 }
 
-// ===== 3D ИНИЦИАЛИЗАЦИЯ =====
-async function init3D(g) {
-  await loadAssets();
-  const cv = $('c'); cv.width=innerWidth; cv.height=innerHeight;
-  S.scene = new THREE.Scene();
-  S.scene.background = new THREE.Color(g==='shooter'?0x222233:0x87CEEB);
-  S.cam = new THREE.PerspectiveCamera(70, cv.width/cv.height, 0.1, 100);
-  S.ren = new THREE.WebGLRenderer({canvas:cv, antialias:true});
-  S.ren.setSize(cv.width, cv.height);
-  S.ren.setPixelRatio(Math.min(devicePixelRatio, 2));
+// ===== РЕСУРСЫ =====
+async function loadAssets() {
+  const loader = new THREE.TextureLoader();
   
-  S.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  State.textures.floor = await new Promise(resolve => {
+    loader.load('floor.png', resolve, undefined, () => resolve(null));
+  });
+  State.textures.wall = await new Promise(resolve => {
+    loader.load('wall.png', resolve, undefined, () => resolve(null));
+  });
+  
+  State.gunModel = await new Promise(resolve => {
+    new GLTFLoader().load('pistol.glb', gltf => resolve(gltf.scene), undefined, () => {
+      const fallback = new THREE.Group();
+      fallback.add(new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.35), new THREE.MeshStandardMaterial({ color: 0x222 })));
+      fallback.add(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.08), new THREE.MeshStandardMaterial({ color: 0x444 })).translateY(-0.12));
+      resolve(fallback);
+    });
+  });
+  
+  State.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  State.sounds.shoot = createFallbackSound(800, 0.1, 0.1);
+  State.sounds.hit = createFallbackSound(200, 0.15, 0.15);
+  State.sounds.reload = createFallbackSound(400, 0.1, 0.2);
+  
+  try {
+    const audioShoot = new Audio('shoot.mp3'); audioShoot.volume = 0.3; State.sounds.shootFile = audioShoot;
+    const audioHit = new Audio('hit.mp3'); audioHit.volume = 0.3; State.sounds.hitFile = audioHit;
+    const audioReload = new Audio('reload.mp3'); audioReload.volume = 0.3; State.sounds.reloadFile = audioReload;
+  } catch(e) {}
+}
+
+function createFallbackSound(freq, vol, dur) {
+  return () => {
+    if (!State.audioContext) return;
+    const osc = State.audioContext.createOscillator();
+    const gain = State.audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(State.audioContext.destination);
+    osc.frequency.value = freq;
+    gain.gain.value = vol;
+    osc.start();
+    osc.stop(State.audioContext.currentTime + dur);
+  };
+}
+
+function playSound(type) {
+  if (State.audioContext?.state === 'suspended') State.audioContext.resume();
+  const file = State.sounds[type + 'File'];
+  if (file) {
+    const clone = file.cloneNode();
+    clone.play().catch(() => State.sounds[type]());
+  } else {
+    State.sounds[type]();
+  }
+}
+
+// ===== 3D СЦЕНА =====
+function init3DScene(gameId) {
+  State.currentGame = gameId;
+  const cv = DOM.canvas;
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  
+  State.scene = new THREE.Scene();
+  State.scene.background = new THREE.Color(gameId === 'shooter' ? 0x1a1a24 : 0x87CEEB);
+  State.scene.fog = new THREE.Fog(State.scene.background, 20, 60);
+  
+  State.camera = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 100);
+  State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+  State.renderer.setSize(cv.width, cv.height);
+  State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  State.renderer.shadowMap.enabled = true;
+  
+  State.scene.add(new THREE.AmbientLight(0xffffff, 0.5));
   const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-  sun.position.set(10,20,10); S.scene.add(sun);
+  sun.position.set(15, 25, 15);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  State.scene.add(sun);
   
-  // Пол
-  let floorMat = new THREE.MeshStandardMaterial({color: g==='shooter'?0x444455:0x33aa33});
-  if(S.floorTex) { S.floorTex.wrapS=S.floorTex.wrapT=THREE.RepeatWrapping; S.floorTex.repeat.set(8,8); floorMat.map=S.floorTex; floorMat.color.set(0xffffff); }
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(60,60), floorMat);
-  floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; S.scene.add(floor);
+  const floorMat = new THREE.MeshStandardMaterial({ color: gameId === 'shooter' ? 0x333344 : 0x2a8a2a });
+  if (State.textures.floor) {
+    State.textures.floor.wrapS = State.textures.floor.wrapT = THREE.RepeatWrapping;
+    State.textures.floor.repeat.set(10, 10);
+    floorMat.map = State.textures.floor;
+    floorMat.color.set(0xffffff);
+  }
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  State.scene.add(floor);
   
-  // Стены (для шутера)
-  if(g==='shooter' && S.wallTex) {
-    S.wallTex.wrapS=S.wallTex.wrapT=THREE.RepeatWrapping; S.wallTex.repeat.set(2,1);
-    const wMat = new THREE.MeshStandardMaterial({map:S.wallTex});
-    [[-28,0,2,10],[28,0,2,10],[0,-28,58,2],[0,28,58,2]].forEach(([x,z,w,d])=>{
-      const m=new THREE.Mesh(new THREE.BoxGeometry(w,6,d),wMat);
-      m.position.set(x,3,z); S.scene.add(m);
+  if (gameId === 'shooter' && State.textures.wall) {
+    State.textures.wall.wrapS = State.textures.wall.wrapT = THREE.RepeatWrapping;
+    State.textures.wall.repeat.set(3, 1);
+    const wMat = new THREE.MeshStandardMaterial({ map: State.textures.wall });
+    const walls = [
+      { x: -38, z: 0, w: 2, d: 78 },
+      { x: 38, z: 0, w: 2, d: 78 },
+      { x: 0, z: -38, w: 78, d: 2 },
+      { x: 0, z: 38, w: 78, d: 2 }
+    ];
+    walls.forEach(w => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w.w, 7, w.d), wMat);
+      m.position.set(w.x, 3.5, w.z);
+      m.castShadow = true;
+      State.scene.add(m);
     });
   }
   
-  // Игрок + Оружие
-  S.p = {x:0,y:1,z:0,yaw:0,health:100};
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1,2,1), new THREE.MeshStandardMaterial({color:0xff3333}));
-  body.position.y=1; S.scene.add(body); S.p.mesh = body;
+  State.playerMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.8, 1.8, 0.8),
+    new THREE.MeshStandardMaterial({ color: 0xff3333 })
+  );
+  State.playerMesh.position.y = 1;
+  State.playerMesh.castShadow = true;
+  State.scene.add(State.playerMesh);
   
-  S.gun = S.gunModel.clone();
-  S.gun.position.set(0.4, -0.3, -0.6);
-  S.gun.rotation.y = Math.PI;
-  S.cam.add(S.gun);
-  S.scene.add(S.cam);
+  State.gunMesh = State.gunModel.clone();
+  State.gunMesh.position.set(0.35, -0.25, -0.5);
+  State.gunMesh.rotation.y = Math.PI;
+  State.camera.add(State.gunMesh);
+  State.scene.add(State.camera);
   
-  setupInput(g);
-  loop();
+  setupInputControls(gameId);
 }
 
-function spawnOther(o) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(1,2,1), new THREE.MeshStandardMaterial({color:o.team==='red'?0xff2a2a:0x2a8aff}));
-  m.position.set(o.x,o.y,o.z); m.rotation.y=-o.yaw;
-  S.scene.add(m); S.others.set(o.id, m);
+function spawnOtherPlayer(data) {
+  const color = data.team === 'red' ? 0xff2222 : (data.team === 'blue' ? 0x2266ff : 0x888888);
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.8, 1.8, 0.8),
+    new THREE.MeshStandardMaterial({ color })
+  );
+  mesh.position.set(data.x, data.y, data.z);
+  mesh.rotation.y = -data.yaw;
+  mesh.castShadow = true;
+  State.scene.add(mesh);
+  State.otherPlayers.set(data.id, mesh);
 }
 
-// ===== ВВОД =====
-function setupInput(g) {
-  if(!isMob) {
-    document.addEventListener('keydown', e => {
-      if(e.code==='KeyW') S.keys.f=-1; if(e.code==='KeyS') S.keys.f=1;
-      if(e.code==='KeyA') S.keys.r=-1; if(e.code==='KeyD') S.keys.r=1;
-      if(e.code==='Space') S.keys.jump=true;
-      if(e.code==='KeyE') S.shoot=true;
-      if(e.code==='KeyR') { S.playSound('reload'); S.shoot=false; }
+// ===== УПРАВЛЕНИЕ =====
+function setupInputControls(gameId) {
+  if (!isMobile) {
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'KeyW') State.keys.f = -1;
+      if (e.code === 'KeyS') State.keys.f = 1;
+      if (e.code === 'KeyA') State.keys.r = -1;
+      if (e.code === 'KeyD') State.keys.r = 1;
+      if (e.code === 'Space') State.keys.jump = true;
+      if (e.code === 'KeyE') State.isShooting = true;
+      if (e.code === 'KeyR') { playSound('reload'); State.isShooting = false; }
     });
-    document.addEventListener('keyup', e => {
-      if(['KeyW','KeyS'].includes(e.code)) S.keys.f=0;
-      if(['KeyA','KeyD'].includes(e.code)) S.keys.r=0;
-      if(e.code==='Space') S.keys.jump=false;
-      if(e.code==='KeyE') S.shoot=false;
+    
+    document.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyW' || e.code === 'KeyS') State.keys.f = 0;
+      if (e.code === 'KeyA' || e.code === 'KeyD') State.keys.r = 0;
+      if (e.code === 'Space') State.keys.jump = false;
+      if (e.code === 'KeyE') State.isShooting = false;
     });
-    document.addEventListener('mousemove', e => {
-      if(document.pointerLockElement) S.p.yaw -= e.movementX*0.002;
+    
+    document.addEventListener('mousemove', (e) => {
+      if (document.pointerLockElement) {
+        State.camera.rotation.y -= e.movementX * 0.002;
+        State.camera.rotation.x = Math.max(-1.2, Math.min(1.2, State.camera.rotation.x - e.movementY * 0.002));
+      }
     });
+    
     document.addEventListener('click', () => {
-      if(!document.pointerLockElement && S.ren?.domElement) S.ren.domElement.requestPointerLock();
-      if(g==='shooter' && document.pointerLockElement) S.shoot=true;
+      if (!document.pointerLockElement && State.renderer?.domElement) {
+        State.renderer.domElement.requestPointerLock();
+      }
+      if (gameId === 'shooter' && document.pointerLockElement) {
+        State.isShooting = true;
+      }
     });
   } else {
-    let sx,sy;
-    joy.addEventListener('touchstart', e=>{e.preventDefault();const t=e.changedTouches[0];sx=t.clientX;sy=t.clientY;S.joy.active=true;},{passive:false});
-    joy.addEventListener('touchmove', e=>{e.preventDefault();const t=e.changedTouches[0];let dx=t.clientX-sx,dy=t.clientY-sy;const d=Math.min(35,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);joyK.style.transform=`translate(calc(-50% + ${Math.cos(a)*d}px), calc(-50% + ${Math.sin(a)*d}px))`;S.joy.x=Math.cos(a)*(d/35);S.joy.y=Math.sin(a)*(d/35);},{passive:false});
-    joy.addEventListener('touchend', e=>{e.preventDefault();S.joy.active=false;S.joy.x=0;S.joy.y=0;joyK.style.transform='translate(-50%,-50%)';});
-    jump.addEventListener('touchstart', e=>{e.preventDefault();S.keys.jump=true;},{passive:false});
-    jump.addEventListener('touchend', ()=>S.keys.jump=false);
+    let startX = 0, startY = 0;
+    DOM.joyZone.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      State.joystick.active = true;
+    }, { passive: false });
+    
+    DOM.joyZone.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!State.joystick.active) return;
+      const t = e.changedTouches[0];
+      let dx = t.clientX - startX;
+      let dy = t.clientY - startY;
+      const dist = Math.min(35, Math.hypot(dx, dy));
+      const angle = Math.atan2(dy, dx);
+      DOM.joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px))`;
+      State.joystick.x = Math.cos(angle) * (dist / 35);
+      State.joystick.y = Math.sin(angle) * (dist / 35);
+    }, { passive: false });
+    
+    const resetJoystick = () => {
+      State.joystick.active = false;
+      State.joystick.x = 0;
+      State.joystick.y = 0;
+      DOM.joyKnob.style.transform = 'translate(-50%, -50%)';
+    };
+    DOM.joyZone.addEventListener('touchend', resetJoystick);
+    DOM.joyZone.addEventListener('touchcancel', resetJoystick);
+    
+    DOM.jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); State.keys.jump = true; }, { passive: false });
+    DOM.jumpBtn.addEventListener('touchend', () => State.keys.jump = false);
   }
   
-  chatIn.addEventListener('keypress', e=>{
-    if(e.key==='Enter' && e.target.value.trim() && S.ws?.readyState===1) {
-      S.ws.send(JSON.stringify({type:'chat',msg:e.target.value.trim()}));
-      e.target.value='';
+  DOM.chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() && State.ws?.readyState === 1) {
+      State.ws.send(JSON.stringify({ type: 'chat', msg: e.target.value.trim() }));
+      e.target.value = '';
     }
   });
 }
 
-// ===== ЦИКЛ =====
-let lt=0;
-function loop(t) {
-  if(!S.ws || S.ws.readyState!==1 || !S.p) { requestAnimationFrame(loop); return; }
-  const dt = Math.min((t-lt)/1000, 0.1); lt=t;
-  
-  const f = isMob ? S.joy.y : S.keys.f;
-  const r = isMob ? S.joy.x : S.keys.r;
-  S.p.x += (f * Math.sin(S.p.yaw+Math.PI) + r * Math.cos(S.p.yaw)) * 0.18;
-  S.p.z += (f * Math.cos(S.p.yaw+Math.PI) - r * Math.sin(S.p.yaw)) * 0.18;
-  if(S.keys.jump && S.p.y<=1.1) S.p.y=3;
-  if(S.p.y>1) S.p.y-=0.22;
-  S.p.mesh.position.set(S.p.x, S.p.y, S.p.z);
-  S.p.mesh.rotation.y = S.p.yaw + Math.PI;
-  
-  if(S.shoot && S.game==='shooter') {
-    S.ws.send(JSON.stringify({type:'action'}));
-    S.playSound('shoot');
-    S.shoot = false;
-  }
-  
-  S.ws.send(JSON.stringify({type:'input', f:isMob?S.joy.y:S.keys.f, r:isMob?S.joy.x:S.keys.r, jump:S.keys.jump, yaw:S.p.yaw}));
-  S.keys.jump=false;
-  
-  const cd = isMob?4:6, ch = isMob?2.5:4;
-  S.cam.position.set(S.p.x+Math.sin(S.p.yaw)*cd, S.p.y+ch, S.p.z+Math.cos(S.p.yaw)*cd);
-  S.cam.lookAt(S.p.x, S.p.y+1.5, S.p.z);
-  
-  // Анимация оружия
-  if(S.gun) {
-    S.gun.position.y = -0.3 + Math.sin(t*0.005)*0.01;
-    S.gun.rotation.x = S.shoot ? -0.2 : 0;
-  }
-  
-  S.ren.render(S.scene, S.cam);
-  requestAnimationFrame(loop);
+// ===== ИГРОВОЙ ЦИКЛ =====
+let lastTime = 0;
+function startGameLoop() {
+  requestAnimationFrame(gameLoop);
 }
 
-function addChat(n,m) {
-  const d=document.createElement('div'); d.className='msg';
-  d.innerHTML = n==='sys' ? m : `<b style="color:#8b5cf6">${n}:</b> ${m}`;
-  chatBox.appendChild(d); chatBox.scrollTop=chatBox.scrollHeight;
+function gameLoop(timestamp) {
+  if (!State.ws || State.ws.readyState !== 1 || !State.playerMesh) {
+    requestAnimationFrame(gameLoop);
+    return;
+  }
+  
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+  lastTime = timestamp;
+  
+  const forward = isMobile ? State.joystick.y : State.keys.f;
+  const right = isMobile ? State.joystick.x : State.keys.r;
+  const speed = 0.18;
+  
+  const yaw = State.camera.rotation.y;
+  State.playerMesh.position.x += (forward * Math.sin(yaw + Math.PI) + right * Math.cos(yaw)) * speed;
+  State.playerMesh.position.z += (forward * Math.cos(yaw + Math.PI) - right * Math.sin(yaw)) * speed;
+  
+  if (State.keys.jump && State.playerMesh.position.y <= 1.1) {
+    State.playerMesh.position.y = 3.2;
+    State.keys.jump = false;
+  }
+  if (State.playerMesh.position.y > 1) {
+    State.playerMesh.position.y -= 0.22;
+  }
+  if (State.playerMesh.position.y < 1) {
+    State.playerMesh.position.y = 1;
+  }
+  
+  State.playerMesh.rotation.y = yaw + Math.PI;
+  
+  if (State.isShooting && State.currentGame === 'shooter') {
+    State.ws.send(JSON.stringify({ type: 'action' }));
+    playSound('shoot');
+    State.isShooting = false;
+  }
+  
+  State.ws.send(JSON.stringify({
+    type: 'input',
+    f: forward,
+    r: right,
+    jump: State.keys.jump,
+    yaw: yaw
+  }));
+  State.keys.jump = false;
+  
+  const camDist = isMobile ? 4 : 6;
+  const camHeight = isMobile ? 2.5 : 4;
+  State.camera.position.set(
+    State.playerMesh.position.x + Math.sin(yaw) * camDist,
+    State.playerMesh.position.y + camHeight,
+    State.playerMesh.position.z + Math.cos(yaw) * camDist
+  );
+  State.camera.lookAt(State.playerMesh.position.x, State.playerMesh.position.y + 1.5, State.playerMesh.position.z);
+  
+  if (State.gunMesh) {
+    State.gunMesh.position.y = -0.25 + Math.sin(timestamp * 0.005) * 0.008;
+    State.gunMesh.rotation.x = State.isShooting ? -0.25 : 0;
+  }
+  
+  State.renderer.render(State.scene, State.camera);
+  requestAnimationFrame(gameLoop);
 }
 
-window.addEventListener('resize', ()=>{
-  if(S.cam && S.ren) {
-    const cv=$('c'); cv.width=innerWidth; cv.height=innerHeight;
-    S.cam.aspect=innerWidth/innerHeight; S.cam.updateProjectionMatrix();
-    S.ren.setSize(innerWidth, innerHeight);
+// ===== УТИЛИТЫ =====
+function addChatMessage(name, message) {
+  const div = document.createElement('div');
+  div.className = 'msg';
+  if (name === 'sys') {
+    div.classList.add('sys');
+    div.textContent = message;
+  } else {
+    div.innerHTML = `<span class="n">${name}:</span> ${message}`;
+  }
+  DOM.chatMessages.appendChild(div);
+  DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
+  
+  if (DOM.chatMessages.children.length > 50) {
+    DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
+  }
+}
+
+// ===== ЗАПУСК =====
+window.addEventListener('resize', () => {
+  if (State.camera && State.renderer) {
+    const cv = DOM.canvas;
+    cv.width = window.innerWidth;
+    cv.height = window.innerHeight;
+    State.camera.aspect = window.innerWidth / window.innerHeight;
+    State.camera.updateProjectionMatrix();
+    State.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 });
+
+initRegistration();
 </script>
 </body>
 </html>
