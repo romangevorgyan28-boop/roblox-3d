@@ -268,7 +268,9 @@ const State = {
     renderer: null,
     playerMesh: null,
     keys: {},
-    isMobile: /Android|iPhone|iPad/i.test(navigator.userAgent)
+    isMobile: /Android|iPhone|iPad/i.test(navigator.userAgent),
+    shootSound: null,
+    audioContext: null
 };
 
 // ===== DOM ЭЛЕМЕНТЫ =====
@@ -335,8 +337,46 @@ function startGame(gameId) {
     DOM.gameUI.style.display = 'block';
     document.body.style.overflow = 'hidden';
     
+    // Инициализация аудио для Team Shooter
+    if (gameId === 'shooter' && !State.shootSound) {
+        initAudio();
+    }
+    
     init3D();
     connect();
+}
+
+// ===== ИНИЦИАЛИЗАЦИЯ АУДИО =====
+function initAudio() {
+    try {
+        State.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Загружаем звук выстрела
+        fetch('shoot.mp3')
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => State.audioContext.decodeAudioData(arrayBuffer))
+            .then(audioBuffer => {
+                State.shootSound = audioBuffer;
+                console.log('✅ Shoot sound loaded');
+            })
+            .catch(err => console.error('❌ Failed to load shoot sound:', err));
+    } catch(e) {
+        console.error('Audio not supported:', e);
+    }
+}
+
+// ===== ВОСПРОИЗВЕДЕНИЕ ЗВУКА ВЫСТРЕЛА =====
+function playShootSound() {
+    if (State.shootSound && State.audioContext) {
+        try {
+            const source = State.audioContext.createBufferSource();
+            source.buffer = State.shootSound;
+            source.connect(State.audioContext.destination);
+            source.start(0);
+        } catch(e) {
+            console.error('Failed to play shoot sound:', e);
+        }
+    }
 }
 
 window.exitGame = function() {
@@ -602,6 +642,14 @@ function connect() {
                     scorePanel.style.display = 'flex';
                     scoreValue.textContent = `${data.scores.red}-${data.scores.blue}`;
                 }
+            }
+            // Звук выстрела для Team Shooter
+            if (data.type === 'shoot' && State.currentGame === 'shooter') {
+                playShootSound();
+            }
+            // Звук попадания
+            if (data.type === 'hit' && State.currentGame === 'shooter') {
+                playShootSound();
             }
         } catch(err) {
             console.error('WS Parse Error:', err);

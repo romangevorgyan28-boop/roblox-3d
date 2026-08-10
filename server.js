@@ -1,7 +1,8 @@
 /**
- * 🧱 ROBLOX 3D ULTIMATE SERVER v4.0
+ * 🧱 ROBLOX 3D ULTIMATE SERVER v5.0
  * Оптимизирован под Render (512MB RAM / 0.1 CPU)
  * Поддержка: Brookhaven RP, Team Shooter, Brainrot, Cheese Horror
+ * Улучшенная обработка ошибок и звуковые эффекты
  */
 
 const express = require('express');
@@ -12,7 +13,12 @@ const path = require('path');
 // ===== ИНИЦИАЛИЗАЦИЯ =====
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, maxPayload: 64 * 1024, perMessageDeflate: false });
+const wss = new WebSocketServer({ 
+  server, 
+  maxPayload: 64 * 1024, 
+  perMessageDeflate: false,
+  clientTracking: true
+});
 const PORT = process.env.PORT || 3000;
 
 // Раздаём все файлы из корня (плоская структура)
@@ -28,7 +34,9 @@ const CONFIG = {
   RATE_LIMIT_MS: 1500,
   MAX_NAME_LEN: 16,
   MIN_NAME_LEN: 2,
-  NAME_REGEX: /^[a-zA-Z0-9_а-яА-ЯёЁ]+$/
+  NAME_REGEX: /^[a-zA-Z0-9_а-яА-ЯёЁ]+$/,
+  HEARTBEAT_INTERVAL: 20000,
+  CLEANUP_INTERVAL: 60000
 };
 
 const players = new Map();
@@ -135,10 +143,14 @@ wss.on('connection', (ws) => {
                 other.z = (Math.random() - 0.5) * 10;
                 gameStates.shooter[p.team]++;
                 broadcast({ type: 'kill', killer: p.name, victim: other.name, scores: { red: gameStates.shooter.red, blue: gameStates.shooter.blue } });
+              } else {
+                // Отправляем информацию о попадании для звука
+                other.ws.send(JSON.stringify({ type: 'hit', shooter: p.name }));
               }
             }
           });
-          ws.send(JSON.stringify({ type: 'shoot', hit }));
+          // Отправляем звук выстрела всем игрокам в игре
+          broadcast({ type: 'shoot', shooter: pid, hit }, pid, 'shooter');
         }
 
         if (p.game === 'brainrot' && !gameStates.brainrot.artifact.collected) {
@@ -230,8 +242,52 @@ function broadcast(data, excludeId = null, targetGame = null) {
 }
 
 // Запуск сервера
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ SERVER RUNNING :${PORT}`));
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ SERVER RUNNING ON PORT ${PORT}`);
+  console.log(`🌐 Local: http://localhost:${PORT}`);
+  console.log(`🌐 Network: http://0.0.0.0:${PORT}`);
+});
 
 //Graceful shutdown
 process.on('SIGINT', () => { console.log('\n🛑 Shutting down...'); process.exit(0); });
 process.on('SIGTERM', () => process.exit(0));
+
+// Обработка ошибок WebSocket для стабильности
+wss.on('error', (err) => {
+  console.error('WebSocket server error:', err);
+});
+
+server.on('error', (err) => {
+  console.error('HTTP server error:', err);
+});
+
+// Graceful shutdown с очисткой ресурсов
+process.on('SIGINT', () => { 
+  console.log('\n🛑 Shutting down...');
+  players.forEach(p => {
+    try { p.ws.close(1001, 'Server shutting down'); } catch(e) {}
+  });
+  wss.close();
+  server.close(() => process.exit(0));
+});
+
+process.on('SIGTERM', () => {
+  players.forEach(p => {
+    try { p.ws.close(1001, 'Server terminating'); } catch(e) {}
+  });
+  wss.close();
+  server.close(() => process.exit(0));
+});
+
+// Очистка неактивных игроков
+setInterval(() => {
+  const now = Date.now();
+  players.forEach((p, pid) => {
+    if (now - p.lastAction > CONFIG.CLEANUP_INTERVAL) {
+      console.log(`Cleaning up inactive player: ${p.name}`);
+      if (p.game !== 'menu') gameStates[p.game].players.delete(pid);
+      players.delete(pid);
+      try { p.ws.close(1000, 'Inactive'); } catch(e) {}
+    }
+  });
+}, CONFIG.CLEANUP_INTERVAL);
