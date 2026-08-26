@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
- a<head>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Roblox 3D Ultimate</title>
@@ -44,6 +44,17 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 .msg { margin: 4px 0; padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 6px; }
 .msg .n { font-weight: bold; color: #00d9ff; }
 .msg.sys { color: #2ed573; font-style: italic; }
+
+/* СТУДИЯ */
+#studio-panel { position: fixed; right: 20px; top: 120px; width: 340px; background: linear-gradient(135deg, #16213e, #1a1a2e); border: 2px solid #00d9ff; border-radius: 12px; padding: 16px; z-index: 50; display: none; max-height: 65vh; overflow-y: auto; }
+#studio-panel.active { display: block; }
+.studio-title { font-size: 18px; font-weight: 700; color: #00d9ff; margin-bottom: 12px; }
+.studio-btn { width: 100%; padding: 10px; margin: 6px 0; background: linear-gradient(90deg, #00d9ff, #7b2cbf); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.studio-btn:hover { transform: scale(1.02); }
+.studio-textarea { width: 100%; height: 100px; margin: 8px 0; background: rgba(0,0,0,0.4); border: 2px solid #00d9ff; color: #fff; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 12px; resize: vertical; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #00d9ff, #7b2cbf); border-radius: 5px; }
 </style>
 </head>
 <body>
@@ -65,11 +76,11 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 <div class="container">
   <aside class="sidebar">
     <div class="sidebar-item active"><span>🏠 Главная</span></div>
-    <div class="sidebar-item"><span>🛠️ Studio</span></div>
+    <div class="sidebar-item" onclick="toggleStudio()"><span>🛠️ Studio</span></div>
   </aside>
 
   <main class="main-content">
-    <h2 class="section-title">🔥 Популярные игры</h2>
+    <h2 class="section-title"> Популярные игры</h2>
     <div class="games-grid">
       <div class="game-card" data-game="shooter">
         <div class="game-thumb" style="background: linear-gradient(135deg, #ff4757, #ff6b81)">🔫</div>
@@ -84,7 +95,7 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
         <div class="game-info"><div class="game-title">Horror of Cheese</div><div class="game-meta">👍 96% • 👥 45K</div></div>
       </div>
       <div class="game-card" data-game="airplane">
-        <div class="game-thumb" style="background: linear-gradient(135deg, #3742fa, #5352ed)">✈️</div>
+        <div class="game-thumb" style="background: linear-gradient(135deg, #3742fa, #5352ed)">️</div>
         <div class="game-info"><div class="game-title">Airplane Simulator</div><div class="game-meta">👍 94% • 👥 52K</div></div>
       </div>
       <div class="game-card" data-game="racing">
@@ -95,9 +106,28 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
   </main>
 </div>
 
+<div id="studio-panel">
+  <div class="studio-title">🛠️ Roblox Studio</div>
+  <button class="studio-btn" onclick="spawnCube()">📦 Спавн куба</button>
+  <button class="studio-btn" onclick="spawnSphere()"> Спавн сферы</button>
+  <button class="studio-btn" onclick="changeColor()"> Случайный цвет</button>
+  <button class="studio-btn" onclick="clearObjects()">🗑️ Очистить</button>
+  <div style="margin:12px 0;font-size:12px;color:#aaa">Объекты: <span id="obj-count">0</span></div>
+  <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
+    <div style="font-size:13px;color:#00d9ff;margin-bottom:6px">💻 Код (Lua/C++/Java):</div>
+    <textarea id="code-editor" class="studio-textarea" placeholder="-- Напиши код здесь..."></textarea>
+    <button class="studio-btn" onclick="runCode()">▶️ Запустить код</button>
+  </div>
+  <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
+    <div style="font-size:13px;color:#00d9ff;margin-bottom:6px">📤 Загрузить модель:</div>
+    <input type="file" id="model-upload" accept=".glb,.gltf" style="width:100%;margin:6px 0">
+    <button class="studio-btn" onclick="uploadModel()">Загрузить</button>
+  </div>
+</div>
+
 <div id="game-ui">
   <canvas id="game-canvas"></canvas>
-  <button id="exit-game" onclick="exitGame()">🏠 В меню</button>
+  <button id="exit-game" onclick="exitGame()"> В меню</button>
   <div id="hud-info">Игроков: <span id="player-count">1</span></div>
   <div id="chat-box">
     <div id="chat-messages"></div>
@@ -111,12 +141,14 @@ import { EffectComposer } from 'https://unpkg.com/three@0.160.0/examples/jsm/pos
 import { RenderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'https://unpkg.com/three@0.160.0/examples/jsm/shaders/FXAAShader.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768;
 const State = {
   ws: null, playerId: null, playerName: '', currentGame: null,
   scene: null, camera: null, renderer: null, composer: null, playerMesh: null,
-  otherPlayers: new Map(), keys: {}, yaw: 0, pitch: 0, chatInitialized: false
+  otherPlayers: new Map(), keys: {}, yaw: 0, pitch: 0, chatInitialized: false,
+  studioObjects: [], airplaneState: null, racingKarts: [], cheeseWalls: []
 };
 
 const DOM = {
@@ -128,10 +160,12 @@ const DOM = {
   canvas: document.getElementById('game-canvas'),
   chatMessages: document.getElementById('chat-messages'),
   chatInput: document.getElementById('chat-input'),
-  playerCount: document.getElementById('player-count')
+  playerCount: document.getElementById('player-count'),
+  studioPanel: document.getElementById('studio-panel'),
+  objCount: document.getElementById('obj-count')
 };
 
-// ===== 100% РАБОЧАЯ РЕГИСТРАЦИЯ =====
+// ===== РЕГИСТРАЦИЯ =====
 function initRegistration() {
   const saved = localStorage.getItem('r3d_name');
   if (saved && saved.length >= 2 && saved.length <= 16) {
@@ -151,21 +185,17 @@ function initRegistration() {
     }
   });
 
-  // Прямое назначение события клика без конфликтов
   DOM.regBtn.onclick = () => {
     const name = DOM.regInput.value.trim();
     if (name.length >= 2 && name.length <= 16) {
       State.playerName = name;
       localStorage.setItem('r3d_name', name);
       DOM.regModal.style.display = 'none';
-      console.log("Игрок зарегистрирован:", State.playerName);
     }
   };
   
   DOM.regInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !DOM.regBtn.disabled) {
-      DOM.regBtn.onclick();
-    }
+    if (e.key === 'Enter' && !DOM.regBtn.disabled) DOM.regBtn.onclick();
   });
   
   setTimeout(() => DOM.regInput.focus(), 100);
@@ -180,7 +210,11 @@ document.querySelectorAll('.game-card').forEach(card => {
 function startGame(gameId) {
   State.currentGame = gameId;
   DOM.gameUI.style.display = 'block';
-  init3D(gameId);
+  
+  if (gameId === 'airplane') initAirplaneGame();
+  else if (gameId === 'racing') initRacingGame();
+  else init3D(gameId);
+  
   connectToServer();
 }
 
@@ -200,20 +234,82 @@ window.exitGame = function() {
   State.otherPlayers.clear();
   State.playerMesh = null;
   State.chatInitialized = false;
+  State.studioObjects = [];
+  State.airplaneState = null;
+  State.racingKarts = [];
+  State.cheeseWalls = [];
   DOM.gameUI.style.display = 'none';
   DOM.chatMessages.innerHTML = '';
+  DOM.studioPanel.classList.remove('active');
   State.currentGame = null;
 };
+
+window.toggleStudio = () => DOM.studioPanel.classList.toggle('active');
+
+window.spawnCube = () => {
+  if (!State.scene) return;
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 2, 2),
+    new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff })
+  );
+  mesh.position.set(State.playerMesh ? State.playerMesh.position.x + (Math.random()-0.5)*10 : 0, 1, State.playerMesh ? State.playerMesh.position.z + (Math.random()-0.5)*10 : 0);
+  mesh.castShadow = true;
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
+};
+
+window.spawnSphere = () => {
+  if (!State.scene) return;
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.5, 32, 32),
+    new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff })
+  );
+  mesh.position.set(State.playerMesh ? State.playerMesh.position.x + (Math.random()-0.5)*10 : 0, 1.5, State.playerMesh ? State.playerMesh.position.z + (Math.random()-0.5)*10 : 0);
+  mesh.castShadow = true;
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
+};
+
+window.changeColor = () => State.studioObjects.forEach(obj => obj.material.color.setHex(Math.random() * 0xffffff));
+window.clearObjects = () => { State.studioObjects.forEach(obj => State.scene.remove(obj)); State.studioObjects = []; DOM.objCount.textContent = '0'; };
+
+window.runCode = () => {
+  try { eval(document.getElementById('code-editor').value); showToast('✅ Код выполнен!'); }
+  catch (e) { showToast('❌ Ошибка: ' + e.message); }
+};
+
+window.uploadModel = () => {
+  const input = document.getElementById('model-upload');
+  if (!input.files[0]) { showToast('❌ Выберите файл'); return; }
+  const loader = new GLTFLoader();
+  const url = URL.createObjectURL(input.files[0]);
+  loader.load(url, (gltf) => {
+    const model = gltf.scene;
+    model.position.set(State.playerMesh ? State.playerMesh.position.x : 0, 0, State.playerMesh ? State.playerMesh.position.z : 0);
+    State.scene.add(model);
+    State.studioObjects.push(model);
+    DOM.objCount.textContent = State.studioObjects.length;
+    showToast('✅ Модель загружена!');
+    URL.revokeObjectURL(url);
+  }, undefined, () => { showToast('❌ Ошибка'); URL.revokeObjectURL(url); });
+};
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.textContent = msg;
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;z-index:1000;';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
 
 function connectToServer() {
   if (State.ws && State.ws.readyState === 1) return;
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   State.ws = new WebSocket(`${proto}//${location.host}`);
 
-  State.ws.onopen = () => {
-    State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
-  };
-
+  State.ws.onopen = () => State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
   State.ws.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data);
@@ -228,8 +324,7 @@ function connectToServer() {
           if (!State.otherPlayers.has(p.id)) {
             const geo = new THREE.CapsuleGeometry(0.5, 1.5, 4, 8);
             const color = p.team === 'red' ? 0xff4757 : (p.team === 'blue' ? 0x3742fa : 0x2ed573);
-            const mat = new THREE.MeshStandardMaterial({ color, metalness: 0.3, roughness: 0.4 });
-            const m = new THREE.Mesh(geo, mat);
+            const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color }));
             m.position.set(p.x, 1.25, p.z);
             m.rotation.y = -p.yaw;
             m.castShadow = true;
@@ -245,10 +340,7 @@ function connectToServer() {
       if (d.type === 'chat') addChat(d.name, d.msg);
     } catch (err) { console.error('WS:', err); }
   };
-
-  State.ws.onclose = () => {
-    setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
-  };
+  State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
 }
 
 function init3D(gameId) {
@@ -259,93 +351,134 @@ function init3D(gameId) {
   State.scene = new THREE.Scene();
   const skyColor = gameId === 'shooter' ? 0x2d3436 : (gameId === 'cheese' ? 0x1a1a2e : 0x74b9ff);
   State.scene.background = new THREE.Color(skyColor);
-  
-  // ТУМАН ДЛЯ ГЛУБИНЫ (Премиум эффект)
   State.scene.fog = new THREE.Fog(skyColor, 15, 70);
 
   State.camera = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 200);
-  
-  // ВКЛЮЧЕНИЕ СГЛАЖИВАНИЯ И ВЫСОКОЙ ПРОИЗВОДИТЕЛЬНОСТИ
-  State.renderer = new THREE.WebGLRenderer({ 
-    canvas: cv, 
-    antialias: true, 
-    powerPreference: "high-performance" 
-  });
+  State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: "high-performance" });
   State.renderer.setSize(cv.width, cv.height);
-  State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Ограничиваем до 2x для производительности
+  State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   State.renderer.shadowMap.enabled = true;
-  State.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // МЯГКИЕ ТЕНИ
+  State.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   State.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
   const sun = new THREE.DirectionalLight(0xffffff, 1.2);
   sun.position.set(20, 30, 20);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far = 100;
-  sun.shadow.camera.left = -50;
-  sun.shadow.camera.right = 50;
-  sun.shadow.camera.top = 50;
-  sun.shadow.camera.bottom = -50;
   State.scene.add(sun);
 
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(100, 100),
-    new THREE.MeshStandardMaterial({ color: gameId === 'shooter' ? 0x636e72 : 0x4caf50, roughness: 0.8, metalness: 0.1 })
-  );
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: gameId === 'shooter' ? 0x636e72 : 0x4caf50 }));
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   State.scene.add(floor);
 
-  const grid = new THREE.GridHelper(100, 20, 0x00d9ff, 0x00d9ff);
+  const grid = new THREE.GridHelper(100, 20, 0x00d9ff);
   grid.position.y = 0.01;
   State.scene.add(grid);
 
-  const playerGeo = new THREE.CapsuleGeometry(0.5, 1.5, 4, 8);
-  const playerMat = new THREE.MeshStandardMaterial({ color: 0x00d9ff, metalness: 0.3, roughness: 0.4 });
-  State.playerMesh = new THREE.Mesh(playerGeo, playerMat);
+  if (gameId === 'shooter') createShooterMap();
+  if (gameId === 'cheese') createCheeseMaze();
+  if (gameId === 'brookhaven') createBrookhaven();
+
+  State.playerMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.5, 4, 8), new THREE.MeshStandardMaterial({ color: 0x00d9ff }));
   State.playerMesh.position.y = 1.25;
   State.playerMesh.castShadow = true;
   State.scene.add(State.playerMesh);
 
   setupInput();
   
-  // ===== НАСТРОЙКА FXAA (СГЛАЖИВАНИЕ) =====
   State.composer = new EffectComposer(State.renderer);
   State.composer.addPass(new RenderPass(State.scene, State.camera));
-  
   const fxaaPass = new ShaderPass(FXAAShader);
-  const pixelRatio = State.renderer.getPixelRatio();
-  fxaaPass.material.uniforms['resolution'].value.x = 1 / (cv.width * pixelRatio);
-  fxaaPass.material.uniforms['resolution'].value.y = 1 / (cv.height * pixelRatio);
+  fxaaPass.material.uniforms['resolution'].value.set(1 / (cv.width * State.renderer.getPixelRatio()), 1 / (cv.height * State.renderer.getPixelRatio()));
   State.composer.addPass(fxaaPass);
 
   gameLoop();
 }
 
-function setupInput() {
-  document.addEventListener('keydown', e => { 
-    State.keys[e.code] = true;
-    if (e.code === 'Enter' && e.target === DOM.chatInput) e.preventDefault();
+function createShooterMap() {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x636e72 });
+  [[-45,0,2,92],[45,0,2,92],[0,-45,92,2],[0,45,92,2]].forEach(([x,z,w,d]) => {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(w,6,d), mat);
+    wall.position.set(x,3,z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    State.scene.add(wall);
   });
+  for(let i=0;i<8;i++) {
+    const cover = new THREE.Mesh(new THREE.BoxGeometry(4,2,4), mat);
+    cover.position.set((Math.random()-0.5)*70, 1, (Math.random()-0.5)*70);
+    cover.castShadow = true;
+    State.scene.add(cover);
+  }
+}
+
+function createCheeseMaze() {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+  State.cheeseWalls = [];
+  const maze = [[1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0,0,0,0,1],[1,0,1,0,1,0,1,1,1,1,0,1],[1,0,1,0,0,0,0,0,0,1,0,1],[1,0,1,1,1,1,0,1,0,1,0,1],[1,0,0,0,0,1,0,1,0,0,0,1],[1,1,1,1,0,1,0,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1]];
+  const cell = 7;
+  for(let r=0;r<maze.length;r++) for(let c=0;c<maze[r].length;c++) if(maze[r][c]===1) {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(cell,5,cell), mat);
+    wall.position.set((c-6)*cell, 2.5, (r-4.5)*cell);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    State.scene.add(wall);
+    State.cheeseWalls.push({x:wall.position.x, z:wall.position.z, w:cell, d:cell});
+  }
+  for(let i=0;i<9;i++) {
+    const cheese = new THREE.Group();
+    const base = new THREE.Mesh(new THREE.ConeGeometry(1.2,2.5,8), new THREE.MeshStandardMaterial({color:0xFFD700,emissive:0xFFA500,emissiveIntensity:0.3}));
+    base.position.y=1.25; base.castShadow=true; cheese.add(base);
+    for(let j=0;j<3;j++) {
+      const hole = new THREE.Mesh(new THREE.SphereGeometry(0.3,8,8), new THREE.MeshStandardMaterial({color:0xFFA500}));
+      hole.position.set((Math.random()-0.5)*1.5, 0.8+Math.random()*0.8, (Math.random()-0.5)*1.5);
+      cheese.add(hole);
+    }
+    let placed=false;
+    while(!placed) {
+      const x=(Math.random()-0.5)*60, z=(Math.random()-0.5)*60;
+      let inWall=false;
+      for(const w of State.cheeseWalls) if(Math.abs(x-w.x)<w.w/2+1 && Math.abs(z-w.z)<w.d/2+1) {inWall=true;break;}
+      if(!inWall) {cheese.position.set(x,0,z);placed=true;}
+    }
+    State.scene.add(cheese);
+  }
+}
+
+function createBrookhaven() {
+  for(let i=0;i<12;i++) {
+    const house = new THREE.Group();
+    const walls = new THREE.Mesh(new THREE.BoxGeometry(12,6,10), new THREE.MeshStandardMaterial({color:0xf8f9fa}));
+    walls.position.y=3; walls.castShadow=true; house.add(walls);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(9,4,4), new THREE.MeshStandardMaterial({color:0xe74c3c}));
+    roof.position.y=8; roof.rotation.y=Math.PI/4; roof.castShadow=true; house.add(roof);
+    house.position.set((Math.random()-0.5)*80, 0, (Math.random()-0.5)*80);
+    State.scene.add(house);
+  }
+  for(let i=0;i<20;i++) {
+    const tree = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.8,3,8), new THREE.MeshStandardMaterial({color:0x8B4513}));
+    trunk.position.y=1.5; trunk.castShadow=true; tree.add(trunk);
+    const leaves = new THREE.Mesh(new THREE.SphereGeometry(3,8,8), new THREE.MeshStandardMaterial({color:0x27ae60}));
+    leaves.position.y=4.5; leaves.castShadow=true; tree.add(leaves);
+    tree.position.set((Math.random()-0.5)*90, 0, (Math.random()-0.5)*90);
+    State.scene.add(tree);
+  }
+}
+
+function setupInput() {
+  document.addEventListener('keydown', e => { State.keys[e.code] = true; if(e.code==='Enter'&&e.target===DOM.chatInput) e.preventDefault(); });
   document.addEventListener('keyup', e => { State.keys[e.code] = false; });
   document.addEventListener('mousemove', e => {
-    if (document.pointerLockElement) {
-      State.yaw -= e.movementX * 0.002;
-      State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY * 0.002));
-    }
+    if(document.pointerLockElement) { State.yaw -= e.movementX*0.002; State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY*0.002)); }
   });
-  document.addEventListener('click', () => {
-    if (!document.pointerLockElement && State.renderer?.domElement) {
-      State.renderer.domElement.requestPointerLock();
-    }
-  });
-
-  if (!State.chatInitialized) {
+  document.addEventListener('click', () => { if(!document.pointerLockElement && State.renderer?.domElement) State.renderer.domElement.requestPointerLock(); });
+  if(!State.chatInitialized) {
     DOM.chatInput.addEventListener('keypress', e => {
-      if (e.key === 'Enter' && e.target.value.trim() && State.ws?.readyState === 1) {
-        State.ws.send(JSON.stringify({ type: 'chat', msg: e.target.value.trim() }));
-        e.target.value = '';
+      if(e.key==='Enter' && e.target.value.trim() && State.ws?.readyState===1) {
+        State.ws.send(JSON.stringify({type:'chat',msg:e.target.value.trim()}));
+        e.target.value='';
       }
     });
     State.chatInitialized = true;
@@ -354,74 +487,225 @@ function setupInput() {
 
 let lastTime = 0;
 function gameLoop(t) {
-  if (!State.playerMesh) { requestAnimationFrame(gameLoop); return; }
-  const dt = Math.min((t - lastTime) / 1000, 0.1);
+  if(!State.playerMesh || State.currentGame==='airplane' || State.currentGame==='racing') { requestAnimationFrame(gameLoop); return; }
+  const dt = Math.min((t-lastTime)/1000, 0.1);
   lastTime = t;
 
-  const f = (State.keys['KeyW'] ? 1 : 0) - (State.keys['KeyS'] ? 1 : 0);
-  const r = (State.keys['KeyD'] ? 1 : 0) - (State.keys['KeyA'] ? 1 : 0);
+  const f = (State.keys['KeyW']?1:0) - (State.keys['KeyS']?1:0);
+  const r = (State.keys['KeyD']?1:0) - (State.keys['KeyA']?1:0);
   const speed = 0.2;
 
-  const newX = State.playerMesh.position.x + (f * Math.sin(State.yaw) + r * Math.cos(State.yaw)) * speed;
-  const newZ = State.playerMesh.position.z + (f * Math.cos(State.yaw) - r * Math.sin(State.yaw)) * speed;
+  const newX = State.playerMesh.position.x + (f*Math.sin(State.yaw) + r*Math.cos(State.yaw)) * speed;
+  const newZ = State.playerMesh.position.z + (f*Math.cos(State.yaw) - r*Math.sin(State.yaw)) * speed;
   
-  State.playerMesh.position.x = Math.max(-48, Math.min(48, newX));
-  State.playerMesh.position.z = Math.max(-48, Math.min(48, newZ));
-
-  if (State.keys['Space'] && State.playerMesh.position.y <= 1.3) {
-    State.playerMesh.position.y = 3.5;
-    State.keys['Space'] = false;
+  if(State.currentGame==='cheese' && State.cheeseWalls) {
+    let col=false;
+    for(const w of State.cheeseWalls) if(Math.abs(newX-w.x)<w.w/2+0.5 && Math.abs(newZ-w.z)<w.d/2+0.5) {col=true;break;}
+    if(!col) { State.playerMesh.position.x=newX; State.playerMesh.position.z=newZ; }
+  } else {
+    State.playerMesh.position.x = Math.max(-48, Math.min(48, newX));
+    State.playerMesh.position.z = Math.max(-48, Math.min(48, newZ));
   }
-  if (State.playerMesh.position.y > 1.25) State.playerMesh.position.y -= 0.25;
-  if (State.playerMesh.position.y < 1.25) State.playerMesh.position.y = 1.25;
+
+  if(State.keys['Space'] && State.playerMesh.position.y<=1.3) { State.playerMesh.position.y=3.5; State.keys['Space']=false; }
+  if(State.playerMesh.position.y>1.25) State.playerMesh.position.y-=0.25;
+  if(State.playerMesh.position.y<1.25) State.playerMesh.position.y=1.25;
 
   State.playerMesh.rotation.y = State.yaw;
 
-  const cd = 7, ch = 4;
-  State.camera.position.set(
-    State.playerMesh.position.x + Math.sin(State.yaw) * cd,
-    State.playerMesh.position.y + ch + Math.sin(State.pitch) * 1.5,
-    State.playerMesh.position.z + Math.cos(State.yaw) * cd
-  );
-  State.camera.lookAt(State.playerMesh.position.x, State.playerMesh.position.y + 1.5, State.playerMesh.position.z);
+  State.camera.position.set(State.playerMesh.position.x+Math.sin(State.yaw)*7, State.playerMesh.position.y+4+Math.sin(State.pitch)*1.5, State.playerMesh.position.z+Math.cos(State.yaw)*7);
+  State.camera.lookAt(State.playerMesh.position.x, State.playerMesh.position.y+1.5, State.playerMesh.position.z);
 
-  if (State.ws && State.ws.readyState === 1) {
-    State.ws.send(JSON.stringify({ type: 'input', f: f, r: r, jump: State.keys['Space'], yaw: State.yaw }));
-    State.keys['Space'] = false;
+  if(State.ws && State.ws.readyState===1) {
+    State.ws.send(JSON.stringify({type:'input',f:f,r:r,jump:State.keys['Space'],yaw:State.yaw}));
+    State.keys['Space']=false;
   }
 
-  // ИСПОЛЬЗУЕМ COMPOSER ВМЕСТО ОБЫЧНОГО RENDER ДЛЯ FXAA
   State.composer.render();
   requestAnimationFrame(gameLoop);
+}
+
+function initAirplaneGame() {
+  const cv = DOM.canvas;
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+
+  State.scene = new THREE.Scene();
+  State.scene.background = new THREE.Color(0x87CEEB);
+  State.scene.fog = new THREE.Fog(0x87CEEB, 100, 1000);
+
+  State.camera = new THREE.PerspectiveCamera(60, cv.width/cv.height, 0.1, 3000);
+  State.renderer = new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  State.renderer.setSize(cv.width, cv.height);
+  State.renderer.shadowMap.enabled = true;
+
+  State.scene.add(new THREE.HemisphereLight(0xcfe8ff,0x6f9a54,0.9));
+  const sun = new THREE.DirectionalLight(0xfff1cf,1.15);
+  sun.position.set(90,140,50); sun.castShadow=true;
+  State.scene.add(sun);
+
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2400,2400), new THREE.MeshStandardMaterial({color:0x5f9c4a}));
+  floor.rotation.x=-Math.PI/2; floor.receiveShadow=true;
+  State.scene.add(floor);
+
+  const airplane = createAirplane();
+  airplane.position.set(0,12,140);
+  State.scene.add(airplane);
+  State.playerMesh = airplane;
+  State.airplaneState = {speed:24,pitch:0,yaw:0,roll:0};
+
+  for(let i=0;i<40;i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(10+Math.random()*15,20+Math.random()*60,10+Math.random()*15), new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(Math.random(),0.4,0.6)}));
+    b.position.set((Math.random()-0.5)*900, b.geometry.parameters.height/2, (Math.random()-0.5)*900);
+    b.castShadow=true;
+    State.scene.add(b);
+  }
+
+  setupAirplaneControls();
+  airplaneLoop();
+}
+
+function createAirplane() {
+  const g = new THREE.Group();
+  const matRed = new THREE.MeshStandardMaterial({color:0xd84332});
+  const matWhite = new THREE.MeshStandardMaterial({color:0xf4f1e8});
+  const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.55,4.2,14), matRed);
+  fuselage.rotation.x=Math.PI/2; fuselage.castShadow=true; g.add(fuselage);
+  const wings = new THREE.Mesh(new THREE.BoxGeometry(6.6,0.14,1.5), matWhite);
+  wings.position.set(0,0.12,-0.15); wings.castShadow=true; g.add(wings);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(2.7,0.12,0.95), matWhite);
+  tail.position.set(0,0.28,1.95); tail.castShadow=true; g.add(tail);
+  const prop = new THREE.Group();
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,0.4,10), new THREE.MeshStandardMaterial({color:0x2f3640}));
+  hub.rotation.x=Math.PI/2; prop.add(hub);
+  [0,Math.PI/2].forEach(a => { const b = new THREE.Mesh(new THREE.BoxGeometry(0.22,2.5,0.09), new THREE.MeshStandardMaterial({color:0x22262b})); b.rotation.z=a; prop.add(b); });
+  prop.position.z=-3.05; g.add(prop); g.userData.propeller=prop;
+  return g;
+}
+
+function setupAirplaneControls() {
+  State.airplaneState = {speed:24,pitch:0,yaw:0,roll:0};
+  if(!isMobile) {
+    document.addEventListener('keydown', e => { State.keys[e.code]=true; });
+    document.addEventListener('keyup', e => { State.keys[e.code]=false; });
+  }
+}
+
+function airplaneLoop() {
+  if(!State.playerMesh || State.currentGame!=='airplane') { requestAnimationFrame(airplaneLoop); return; }
+  const dt=0.016;
+  const plane = State.playerMesh;
+  const s = State.airplaneState;
+  const turn = (State.keys['KeyA']||State.keys['ArrowLeft']?1:0) - (State.keys['KeyD']||State.keys['ArrowRight']?1:0);
+  const pitch = (State.keys['KeyW']||State.keys['ArrowUp']?1:0) - (State.keys['KeyS']||State.keys['ArrowDown']?1:0);
+  const acc = State.keys['Space']?1:0;
+  s.yaw += turn*1.35*dt;
+  s.pitch = THREE.MathUtils.clamp(s.pitch+pitch*1.05*dt, -1.15, 1.15);
+  s.roll += (turn*0.5-s.roll)*Math.min(1,dt*4.5);
+  s.speed = THREE.MathUtils.clamp(s.speed+acc*26*dt, 10, 62);
+  plane.rotation.set(s.pitch, s.yaw, s.roll);
+  const fwd = new THREE.Vector3(0,0,-1).applyQuaternion(plane.quaternion);
+  plane.position.addScaledVector(fwd, s.speed*dt);
+  plane.position.y = THREE.MathUtils.clamp(plane.position.y, 1.5, 420);
+  if(plane.userData.propeller) plane.userData.propeller.rotation.z -= (12+s.speed*1.6)*dt;
+  const camOff = new THREE.Vector3(0,4.6,13.5).applyQuaternion(plane.quaternion).add(plane.position);
+  State.camera.position.lerp(camOff, 0.1);
+  State.camera.lookAt(plane.position);
+  State.renderer.render(State.scene, State.camera);
+  requestAnimationFrame(airplaneLoop);
+}
+
+function initRacingGame() {
+  const cv = DOM.canvas;
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+
+  State.scene = new THREE.Scene();
+  State.scene.background = new THREE.Color(0x8fd3ff);
+  State.scene.fog = new THREE.Fog(0x8fd3ff, 130, 430);
+
+  State.camera = new THREE.PerspectiveCamera(62, cv.width/cv.height, 0.1, 700);
+  State.renderer = new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  State.renderer.setSize(cv.width, cv.height);
+  State.renderer.shadowMap.enabled = true;
+
+  State.scene.add(new THREE.AmbientLight(0xffffff,0.85));
+  const dir = new THREE.DirectionalLight(0xffffff,1.7);
+  dir.position.set(80,120,50);
+  State.scene.add(dir);
+
+  const track = new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshStandardMaterial({color:0x484e59}));
+  track.rotation.x=-Math.PI/2; track.receiveShadow=true;
+  State.scene.add(track);
+  
+  for(let i=0;i<4;i++) {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(200,2,2), new THREE.MeshStandardMaterial({color:0xe53935}));
+    wall.position.set(i<2?(i===0?-100:100):0, 1, i<2?0:(i===2?-100:100));
+    wall.rotation.y = i%2===0?0:Math.PI/2;
+    State.scene.add(wall);
+  }
+
+  const kart = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.5,0.42,2.5), new THREE.MeshStandardMaterial({color:0xe53935}));
+  body.position.y=0.5; kart.add(body);
+  const wheelGeo = new THREE.CylinderGeometry(0.42,0.42,0.34,12);
+  wheelGeo.rotateZ(Math.PI/2);
+  [[0.85,0.95],[-0.85,0.95],[0.88,-0.92],[-0.88,-0.92]].forEach(([x,z]) => {
+    const w = new THREE.Mesh(wheelGeo, new THREE.MeshStandardMaterial({color:0x22252a}));
+    w.position.set(x,0.42,z); kart.add(w);
+  });
+  kart.position.set(0,0,0); kart.castShadow=true;
+  State.scene.add(kart);
+  State.playerMesh = kart;
+
+  setupRacingControls();
+  racingLoop();
+}
+
+function setupRacingControls() {
+  if(!isMobile) {
+    document.addEventListener('keydown', e => { State.keys[e.code]=true; });
+    document.addEventListener('keyup', e => { State.keys[e.code]=false; });
+  }
+}
+
+function racingLoop() {
+  if(!State.playerMesh || State.currentGame!=='racing') { requestAnimationFrame(racingLoop); return; }
+  const kart = State.playerMesh;
+  const speed = 0.3;
+  if(State.keys['KeyW']||State.keys['ArrowUp']) kart.position.z -= speed;
+  if(State.keys['KeyS']||State.keys['ArrowDown']) kart.position.z += speed;
+  if(State.keys['KeyA']||State.keys['ArrowLeft']) { kart.position.x -= speed; kart.rotation.y = 0.05; }
+  if(State.keys['KeyD']||State.keys['ArrowRight']) { kart.position.x += speed; kart.rotation.y = -0.05; }
+  kart.position.x = Math.max(-95, Math.min(95, kart.position.x));
+  kart.position.z = Math.max(-95, Math.min(95, kart.position.z));
+  State.camera.position.set(kart.position.x, 8, kart.position.z+15);
+  State.camera.lookAt(kart.position);
+  State.renderer.render(State.scene, State.camera);
+  requestAnimationFrame(racingLoop);
 }
 
 function addChat(name, msg) {
   const d = document.createElement('div');
   d.className = 'msg';
-  if (name === 'sys') {
-    d.classList.add('sys');
-    d.textContent = msg;
-  } else {
-    d.innerHTML = `<span class="n">${name}:</span> ${msg}`;
-  }
+  if(name==='sys') { d.classList.add('sys'); d.textContent=msg; }
+  else d.innerHTML = `<span class="n">${name}:</span> ${msg}`;
   DOM.chatMessages.appendChild(d);
   DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
-  if (DOM.chatMessages.children.length > 50) DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
+  if(DOM.chatMessages.children.length>50) DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
 }
 
 window.addEventListener('resize', () => {
-  if (State.camera && State.renderer) {
+  if(State.camera && State.renderer) {
     const cv = DOM.canvas;
     cv.width = window.innerWidth;
     cv.height = window.innerHeight;
-    State.camera.aspect = window.innerWidth / window.innerHeight;
+    State.camera.aspect = window.innerWidth/window.innerHeight;
     State.camera.updateProjectionMatrix();
     State.renderer.setSize(window.innerWidth, window.innerHeight);
-    if (State.composer) {
+    if(State.composer) {
       State.composer.setSize(window.innerWidth, window.innerHeight);
-      const pixelRatio = State.renderer.getPixelRatio();
-      State.composer.passes[1].material.uniforms['resolution'].value.x = 1 / (cv.width * pixelRatio);
-      State.composer.passes[1].material.uniforms['resolution'].value.y = 1 / (cv.height * pixelRatio);
+      State.composer.passes[1].material.uniforms['resolution'].value.set(1/(cv.width*State.renderer.getPixelRatio()), 1/(cv.height*State.renderer.getPixelRatio()));
     }
   }
 });
