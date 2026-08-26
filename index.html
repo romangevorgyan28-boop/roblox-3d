@@ -6,58 +6,66 @@
 <title>Roblox 3D Ultimate</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-body { background: #fff; color: #191919; overflow-x: hidden; }
-.navbar { display: flex; align-items: center; padding: 10px 20px; background: #fff; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 100; }
-.logo { font-size: 22px; font-weight: 800; margin-right: 30px; }
+body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
+.navbar { display: flex; align-items: center; padding: 12px 24px; background: linear-gradient(135deg, #16213e, #1a1a2e); border-bottom: 2px solid #00d9ff; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 15px rgba(0,217,255,0.3); }
+.logo { font-size: 26px; font-weight: 800; margin-right: 30px; background: linear-gradient(90deg, #00d9ff, #7b2cbf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .search-bar { flex: 1; max-width: 400px; }
-.search-bar input { width: 100%; padding: 8px 14px; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; outline: none; }
-.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-.user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #00e5ff, #a855f7); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; cursor: pointer; }
-.container { display: flex; min-height: calc(100vh - 57px); }
-.sidebar { width: 220px; padding: 20px 0; background: #fff; border-right: 1px solid #eee; }
-.sidebar-item { padding: 10px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s; color: #333; }
-.sidebar-item:hover { background: #f5f5f5; }
-.sidebar-item.active { background: #e8f4f8; font-weight: 600; border-left: 3px solid #00e5ff; }
-.main-content { flex: 1; padding: 24px; overflow-y: auto; }
-.section-title { font-size: 20px; font-weight: 700; margin: 20px 0 14px; }
-.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
-.game-card { cursor: pointer; transition: transform 0.2s; }
-.game-card:hover { transform: translateY(-4px); }
-.game-thumb { width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 48px; }
-.game-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.game-meta { font-size: 12px; color: #737373; }
-#reg-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.reg-box { background: #fff; padding: 32px; border-radius: 12px; text-align: center; max-width: 380px; width: 90%; }
-.reg-box h2 { margin-bottom: 12px; font-size: 24px; }
-.reg-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; }
-.reg-input:focus { border-color: #00e5ff; }
-.reg-btn { width: 100%; padding: 12px; margin-top: 10px; background: #00e5ff; color: #000; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
-.reg-btn:disabled { background: #ccc; cursor: not-allowed; }
-.reg-error { color: #f44; font-size: 13px; min-height: 18px; margin-top: 6px; }
+.search-bar input { width: 100%; padding: 10px 18px; border: 2px solid #00d9ff; border-radius: 25px; font-size: 14px; outline: none; background: rgba(0,217,255,0.1); color: #fff; }
+.nav-right { display: flex; align-items: center; gap: 15px; margin-left: auto; }
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00d9ff, #7b2cbf); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; cursor: pointer; border: 2px solid #fff; }
+.container { display: flex; min-height: calc(100vh - 65px); }
+.sidebar { width: 240px; padding: 24px 0; background: linear-gradient(180deg, #16213e, #1a1a2e); border-right: 2px solid #00d9ff; }
+.sidebar-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.3s; color: #fff; margin: 4px 12px; border-radius: 10px; }
+.sidebar-item:hover { background: rgba(0,217,255,0.2); transform: translateX(5px); }
+.sidebar-item.active { background: linear-gradient(90deg, #00d9ff, #7b2cbf); font-weight: 700; box-shadow: 0 4px 10px rgba(0,217,255,0.4); }
+.main-content { flex: 1; padding: 28px; overflow-y: auto; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+.section-title { font-size: 24px; font-weight: 700; margin: 24px 0 18px; color: #00d9ff; text-shadow: 0 0 10px rgba(0,217,255,0.5); }
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.game-card { cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; background: linear-gradient(135deg, #16213e, #1a1a2e); border-radius: 15px; overflow: hidden; border: 2px solid #00d9ff; }
+.game-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 10px 30px rgba(0,217,255,0.5); }
+.game-thumb { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; font-size: 56px; position: relative; overflow: hidden; }
+.game-thumb::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,217,255,0.2), rgba(123,44,191,0.2)); }
+.game-info { padding: 14px; }
+.game-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #fff; }
+.game-meta { font-size: 12px; color: #00d9ff; }
+#reg-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+.reg-box { background: linear-gradient(135deg, #16213e, #1a1a2e); padding: 36px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%; border: 2px solid #00d9ff; box-shadow: 0 0 30px rgba(0,217,255,0.4); }
+.reg-box h2 { margin-bottom: 16px; font-size: 28px; color: #00d9ff; }
+.reg-input { width: 100%; padding: 14px; margin: 12px 0; border: 2px solid #00d9ff; border-radius: 10px; font-size: 16px; outline: none; background: rgba(0,217,255,0.1); color: #fff; }
+.reg-btn { width: 100%; padding: 14px; margin-top: 12px; background: linear-gradient(90deg, #00d9ff, #7b2cbf); color: #fff; border: none; border-radius: 10px; font-weight: 700; font-size: 17px; cursor: pointer; transition: 0.3s; }
+.reg-btn:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(0,217,255,0.5); }
+.reg-btn:disabled { background: #555; cursor: not-allowed; transform: none; }
+.reg-error { color: #ff6b6b; font-size: 14px; min-height: 20px; margin-top: 8px; }
 #game-ui { position: fixed; inset: 0; display: none; background: #000; z-index: 2000; }
 #game-canvas { width: 100%; height: 100%; display: block; }
-#exit-game { position: fixed; top: 16px; left: 16px; padding: 10px 18px; background: rgba(0,0,0,0.7); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; z-index: 10; }
-#hud-info { position: fixed; top: 16px; right: 16px; background: rgba(0,0,0,0.7); color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 14px; z-index: 10; }
-#chat-box { position: fixed; bottom: 16px; left: 16px; width: 280px; max-height: 150px; overflow-y: auto; background: rgba(0,0,0,0.6); border-radius: 8px; padding: 8px; font-size: 12px; color: #fff; z-index: 10; }
-#chat-input { width: 100%; padding: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px; margin-top: 4px; outline: none; }
-.msg { margin: 3px 0; }
-.msg .n { font-weight: bold; color: #a78bfa; }
-.msg.sys { color: #34d399; font-style: italic; }
+#exit-game { position: fixed; top: 20px; left: 20px; padding: 12px 22px; background: linear-gradient(90deg, #ff4757, #ff6b81); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; z-index: 10; font-weight: 700; box-shadow: 0 4px 15px rgba(255,71,87,0.4); }
+#hud-info { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #00d9ff; padding: 10px 18px; border-radius: 10px; font-size: 15px; z-index: 10; border: 2px solid #00d9ff; }
+#chat-box { position: fixed; bottom: 20px; left: 20px; width: 300px; max-height: 180px; overflow-y: auto; background: rgba(22,33,62,0.9); border-radius: 12px; padding: 12px; font-size: 13px; color: #fff; z-index: 10; border: 2px solid #00d9ff; }
+#chat-input { width: 100%; padding: 8px; background: rgba(0,217,255,0.1); border: 2px solid #00d9ff; color: #fff; border-radius: 6px; margin-top: 8px; outline: none; }
+.msg { margin: 4px 0; padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 6px; }
+.msg .n { font-weight: bold; color: #00d9ff; }
+.msg.sys { color: #2ed573; font-style: italic; }
 #mobile-controls { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 30; }
-#joy-zone { position: absolute; bottom: 30px; left: 30px; width: 110px; height: 110px; background: rgba(255,255,255,0.15); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); pointer-events: auto; }
-#joy-knob { position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; background: rgba(0,229,255,0.8); border-radius: 50%; transform: translate(-50%, -50%); }
-#jump-btn { position: absolute; bottom: 40px; right: 40px; width: 64px; height: 64px; background: rgba(0,229,255,0.3); border: 2px solid rgba(0,229,255,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; pointer-events: auto; }
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
-::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+#joy-zone { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; background: rgba(0,217,255,0.2); border-radius: 50%; border: 3px solid #00d9ff; pointer-events: auto; }
+#joy-knob { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: linear-gradient(135deg, #00d9ff, #7b2cbf); border-radius: 50%; transform: translate(-50%, -50%); border: 3px solid #fff; }
+#jump-btn { position: absolute; bottom: 40px; right: 40px; width: 70px; height: 70px; background: linear-gradient(135deg, #00d9ff, #7b2cbf); border: 3px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,217,255,0.5); }
+/* СТУДИЯ */
+#studio-panel { position: fixed; right: 20px; top: 70px; width: 320px; background: linear-gradient(135deg, #16213e, #1a1a2e); border: 2px solid #00d9ff; border-radius: 12px; padding: 16px; z-index: 50; display: none; max-height: 70vh; overflow-y: auto; }
+#studio-panel.active { display: block; }
+.studio-title { font-size: 18px; font-weight: 700; color: #00d9ff; margin-bottom: 12px; }
+.studio-btn { width: 100%; padding: 10px; margin: 6px 0; background: linear-gradient(90deg, #00d9ff, #7b2cbf); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.studio-btn:hover { transform: scale(1.02); }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #00d9ff, #7b2cbf); border-radius: 5px; }
 </style>
 </head>
 <body>
 
 <div id="reg-modal">
   <div class="reg-box">
-    <h2>👋 Добро пожаловать!</h2>
-    <p style="color:#666;margin-bottom:16px">Введите никнейм для входа</p>
+    <h2>🎮 Добро пожаловать!</h2>
+    <p style="color:#aaa;margin-bottom:16px">Введите никнейм для входа</p>
     <input type="text" id="reg-input" class="reg-input" placeholder="Никнейм" maxlength="16" autocomplete="off">
     <div id="reg-error" class="reg-error"></div>
     <button id="reg-btn" class="reg-btn" disabled>Играть</button>
@@ -65,8 +73,8 @@ body { background: #fff; color: #191919; overflow-x: hidden; }
 </div>
 
 <nav class="navbar">
-  <div class="logo">🧱 ROBLOX</div>
-  <div class="search-bar"><input type="text" placeholder="Поиск игр..."></div>
+  <div class="logo">🧱 ROBLOX 3D</div>
+  <div class="search-bar"><input type="text" placeholder="🔍 Поиск игр..."></div>
   <div class="nav-right">
     <div class="user-avatar" id="user-avatar">?</div>
   </div>
@@ -74,42 +82,55 @@ body { background: #fff; color: #191919; overflow-x: hidden; }
 
 <div class="container">
   <aside class="sidebar">
-    <div class="sidebar-item active"><span>🏠 Home</span></div>
-    <div class="sidebar-item"><span>📊 Charts</span></div>
-    <div class="sidebar-item"><span> Avatar</span></div>
-    <div class="sidebar-item"><span>🎉 Party</span></div>
+    <div class="sidebar-item active"><span>🏠 Главная</span></div>
+    <div class="sidebar-item"><span>📊 Топ игр</span></div>
+    <div class="sidebar-item"><span> Профиль</span></div>
+    <div class="sidebar-item"><span>🎉 Вечеринка</span></div>
+    <div class="sidebar-item" onclick="toggleStudio()"><span>🛠️ Studio</span></div>
   </aside>
 
   <main class="main-content">
-    <h2 class="section-title">Рекомендации для тебя</h2>
+    <h2 class="section-title">🔥 Популярные игры</h2>
     <div class="games-grid">
       <div class="game-card" data-game="shooter">
-        <div class="game-thumb" style="background:#FF6B6B">🔫</div>
-        <div class="game-title">Team Shooter</div>
-        <div class="game-meta">👍 95% • 👥 89K</div>
+        <div class="game-thumb" style="background: linear-gradient(135deg, #ff4757, #ff6b81)">🔫</div>
+        <div class="game-info">
+          <div class="game-title">Team Shooter</div>
+          <div class="game-meta"> 95% • 👥 89K</div>
+        </div>
       </div>
       <div class="game-card" data-game="brookhaven">
-        <div class="game-thumb" style="background:#90EE90">🏡</div>
-        <div class="game-title">Brookhaven RP</div>
-        <div class="game-meta"> 98% • 👥 125K</div>
-      </div>
-      <div class="game-card" data-game="brainrot">
-        <div class="game-thumb" style="background:#A855F7">🧠</div>
-        <div class="game-title">Steal a Brainrot</div>
-        <div class="game-meta">👍 92% • 👥 67K</div>
+        <div class="game-thumb" style="background: linear-gradient(135deg, #2ed573, #7bed9f)">🏡</div>
+        <div class="game-info">
+          <div class="game-title">Brookhaven RP</div>
+          <div class="game-meta">👍 98% • 👥 125K</div>
+        </div>
       </div>
       <div class="game-card" data-game="cheese">
-        <div class="game-thumb" style="background:#FBBF24">🧀</div>
-        <div class="game-title">Horror of Cheese</div>
-        <div class="game-meta">👍 96% • 👥 45K</div>
+        <div class="game-thumb" style="background: linear-gradient(135deg, #ffa502, #ffcc00)">🧀</div>
+        <div class="game-info">
+          <div class="game-title">Horror of Cheese</div>
+          <div class="game-meta">👍 96% • 👥 45K</div>
+        </div>
       </div>
       <div class="game-card" data-game="airplane">
-        <div class="game-thumb" style="background:#87CEEB">🛩️</div>
-        <div class="game-title">Airplane Simulator</div>
-        <div class="game-meta">👍 94% • 👥 52K</div>
+        <div class="game-thumb" style="background: linear-gradient(135deg, #3742fa, #5352ed)">️</div>
+        <div class="game-info">
+          <div class="game-title">Airplane Simulator</div>
+          <div class="game-meta">👍 94% • 👥 52K</div>
+        </div>
       </div>
     </div>
   </main>
+</div>
+
+<div id="studio-panel">
+  <div class="studio-title">🛠️ Roblox Studio</div>
+  <button class="studio-btn" onclick="spawnCube()">📦 Спавн куба</button>
+  <button class="studio-btn" onclick="spawnSphere()"> Спавн сферы</button>
+  <button class="studio-btn" onclick="changeColor()">🎨 Случайный цвет</button>
+  <button class="studio-btn" onclick="clearObjects()">🗑️ Очистить</button>
+  <div style="margin-top:12px;font-size:12px;color:#aaa">Объекты: <span id="obj-count">0</span></div>
 </div>
 
 <div id="game-ui">
@@ -135,7 +156,8 @@ const State = {
   scene: null, camera: null, renderer: null, playerMesh: null,
   otherPlayers: new Map(),
   keys: {}, joystick: { x: 0, y: 0, active: false },
-  yaw: 0, pitch: 0, chatInitialized: false
+  yaw: 0, pitch: 0, chatInitialized: false,
+  studioObjects: [], airplanePlayers: []
 };
 
 const DOM = {
@@ -152,7 +174,9 @@ const DOM = {
   mobileControls: document.getElementById('mobile-controls'),
   joyZone: document.getElementById('joy-zone'),
   joyKnob: document.getElementById('joy-knob'),
-  jumpBtn: document.getElementById('jump-btn')
+  jumpBtn: document.getElementById('jump-btn'),
+  studioPanel: document.getElementById('studio-panel'),
+  objCount: document.getElementById('obj-count')
 };
 
 function initRegistration() {
@@ -234,10 +258,61 @@ window.exitGame = function() {
   State.otherPlayers.clear();
   State.playerMesh = null;
   State.chatInitialized = false;
+  State.studioObjects = [];
+  State.airplanePlayers = [];
   DOM.gameUI.style.display = 'none';
   DOM.mobileControls.style.display = 'none';
   DOM.chatMessages.innerHTML = '';
+  DOM.studioPanel.classList.remove('active');
   State.currentGame = null;
+};
+
+window.toggleStudio = function() {
+  DOM.studioPanel.classList.toggle('active');
+};
+
+window.spawnCube = function() {
+  if (!State.scene) return;
+  const geo = new THREE.BoxGeometry(2, 2, 2);
+  const mat = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(
+    (Math.random() - 0.5) * 20,
+    1,
+    (Math.random() - 0.5) * 20
+  );
+  mesh.castShadow = true;
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
+};
+
+window.spawnSphere = function() {
+  if (!State.scene) return;
+  const geo = new THREE.SphereGeometry(1.5, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(
+    (Math.random() - 0.5) * 20,
+    1.5,
+    (Math.random() - 0.5) * 20
+  );
+  mesh.castShadow = true;
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
+};
+
+window.changeColor = function() {
+  State.studioObjects.forEach(obj => {
+    obj.material.color.setHex(Math.random() * 0xffffff);
+  });
+};
+
+window.clearObjects = function() {
+  State.studioObjects.forEach(obj => State.scene.remove(obj));
+  State.studioObjects = [];
+  DOM.objCount.textContent = '0';
 };
 
 function connectToServer() {
@@ -289,47 +364,70 @@ function init3D(gameId) {
   cv.height = window.innerHeight;
 
   State.scene = new THREE.Scene();
-  State.scene.background = new THREE.Color(gameId === 'shooter' ? 0x1a1a24 : 0x87CEEB);
-  State.scene.fog = new THREE.Fog(State.scene.background, 15, 60);
+  
+  // Красочное небо
+  const skyColor = gameId === 'shooter' ? 0x2d3436 : (gameId === 'cheese' ? 0x1a1a2e : 0x74b9ff);
+  State.scene.background = new THREE.Color(skyColor);
+  State.scene.fog = new THREE.Fog(skyColor, 20, 80);
 
   State.camera = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 200);
   State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
   State.renderer.setSize(cv.width, cv.height);
   State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  State.renderer.shadowMap.enabled = true;
+  State.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  State.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-  sun.position.set(15, 25, 15);
+  // Улучшенное освещение
+  State.scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const sun = new THREE.DirectionalLight(0xffffff, 1);
+  sun.position.set(20, 30, 20);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
   State.scene.add(sun);
 
-  const floorColor = gameId === 'shooter' ? 0x444455 : 0x4caf50;
+  // Красочный пол
+  const floorColor = gameId === 'shooter' ? 0x636e72 : (gameId === 'cheese' ? 0x2d3436 : 0x55efc4);
   const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(80, 80),
-    new THREE.MeshStandardMaterial({ color: floorColor })
+    new THREE.PlaneGeometry(100, 100),
+    new THREE.MeshStandardMaterial({ 
+      color: floorColor,
+      roughness: 0.8,
+      metalness: 0.2
+    })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   State.scene.add(floor);
 
+  // Сетка на полу
+  const grid = new THREE.GridHelper(100, 20, 0x00d9ff, 0x00d9ff);
+  grid.position.y = 0.01;
+  State.scene.add(grid);
+
+  // Team Shooter - стены и укрытия
   if (gameId === 'shooter') {
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x666677 });
-    [[-38, 0, 2, 78], [38, 0, 2, 78], [0, -38, 78, 2], [0, 38, 78, 2]].forEach(([x, z, w, d]) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 6, d), wallMat);
-      m.position.set(x, 3, z);
-      State.scene.add(m);
-    });
+    createShooterMap();
   }
 
+  // Cheese - лабиринт с коллизиями
   if (gameId === 'cheese') {
-    // Создаём лабиринт для Cheese
     createCheeseMaze();
   }
 
-  State.playerMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 2, 1),
-    new THREE.MeshStandardMaterial({ color: 0xff3333 })
-  );
-  State.playerMesh.position.y = 1;
+  // Brookhaven - дома и деревья
+  if (gameId === 'brookhaven') {
+    createBrookhaven();
+  }
+
+  // Игрок - КАПСУЛА (вместо куба)
+  const playerGeo = new THREE.CapsuleGeometry(0.5, 1.5, 4, 8);
+  const playerMat = new THREE.MeshStandardMaterial({ 
+    color: 0x00d9ff,
+    metalness: 0.3,
+    roughness: 0.4
+  });
+  State.playerMesh = new THREE.Mesh(playerGeo, playerMat);
+  State.playerMesh.position.y = 1.25;
   State.playerMesh.castShadow = true;
   State.scene.add(State.playerMesh);
 
@@ -337,21 +435,70 @@ function init3D(gameId) {
   gameLoop();
 }
 
-function createCheeseMaze() {
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-  const maze = [
-    [1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,1,0,0,0,0,1],
-    [1,0,1,0,1,0,1,1,0,1],
-    [1,0,1,0,0,0,0,1,0,1],
-    [1,0,1,1,1,1,0,1,0,1],
-    [1,0,0,0,0,0,0,1,0,1],
-    [1,1,1,0,1,1,0,1,0,1],
-    [1,0,0,0,1,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1]
+function createShooterMap() {
+  const wallMat = new THREE.MeshStandardMaterial({ 
+    color: 0x636e72,
+    roughness: 0.7,
+    metalness: 0.3
+  });
+  
+  // Границы карты
+  const walls = [
+    { x: -45, z: 0, w: 2, d: 92 },
+    { x: 45, z: 0, w: 2, d: 92 },
+    { x: 0, z: -45, w: 92, d: 2 },
+    { x: 0, z: 45, w: 92, d: 2 }
   ];
   
-  const cellSize = 8;
+  walls.forEach(w => {
+    const wall = new THREE.Mesh(
+      new THREE.BoxGeometry(w.w, 6, w.d),
+      wallMat
+    );
+    wall.position.set(w.x, 3, w.z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    State.scene.add(wall);
+  });
+  
+  // Укрытия
+  for (let i = 0; i < 8; i++) {
+    const cover = new THREE.Mesh(
+      new THREE.BoxGeometry(4, 2, 4),
+      wallMat
+    );
+    cover.position.set(
+      (Math.random() - 0.5) * 70,
+      1,
+      (Math.random() - 0.5) * 70
+    );
+    cover.castShadow = true;
+    cover.receiveShadow = true;
+    State.scene.add(cover);
+  }
+}
+
+function createCheeseMaze() {
+  const wallMat = new THREE.MeshStandardMaterial({ 
+    color: 0x8B4513,
+    roughness: 0.9
+  });
+  
+  State.cheeseWalls = []; // Для коллизий
+  
+  const maze = [
+    [1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,1,0,0,0,0,0,0,1],
+    [1,0,1,0,1,0,1,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,1,0,1],
+    [1,0,1,1,1,1,0,1,0,1,0,1],
+    [1,0,0,0,0,1,0,1,0,0,0,1],
+    [1,1,1,1,0,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1]
+  ];
+  
+  const cellSize = 7;
   for (let row = 0; row < maze.length; row++) {
     for (let col = 0; col < maze[row].length; col++) {
       if (maze[row][col] === 1) {
@@ -364,33 +511,151 @@ function createCheeseMaze() {
           2.5,
           (row - maze.length/2) * cellSize
         );
+        wall.castShadow = true;
+        wall.receiveShadow = true;
         State.scene.add(wall);
+        
+        // Сохраняем для коллизий
+        State.cheeseWalls.push({
+          x: wall.position.x,
+          z: wall.position.z,
+          w: cellSize,
+          d: cellSize
+        });
       }
     }
   }
   
-  // Добавляем сыр
-  for (let i = 0; i < 5; i++) {
-    const cheese = new THREE.Mesh(
-      new THREE.ConeGeometry(1, 2, 8),
-      new THREE.MeshStandardMaterial({ color: 0xFFD700 })
+  // Сыр с текстурами
+  for (let i = 0; i < 9; i++) {
+    const cheese = new THREE.Group();
+    
+    // Основа сыра
+    const base = new THREE.Mesh(
+      new THREE.ConeGeometry(1.2, 2.5, 8),
+      new THREE.MeshStandardMaterial({ 
+        color: 0xFFD700,
+        emissive: 0xFFA500,
+        emissiveIntensity: 0.3
+      })
     );
-    cheese.position.set(
-      (Math.random() - 0.5) * 60,
-      1,
-      (Math.random() - 0.5) * 60
-    );
+    base.position.y = 1.25;
+    base.castShadow = true;
+    cheese.add(base);
+    
+    // Дырки в сыре
+    for (let j = 0; j < 3; j++) {
+      const hole = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0xFFA500 })
+      );
+      hole.position.set(
+        (Math.random() - 0.5) * 1.5,
+        0.8 + Math.random() * 0.8,
+        (Math.random() - 0.5) * 1.5
+      );
+      cheese.add(hole);
+    }
+    
+    // Размещаем сыр в свободных местах
+    let placed = false;
+    while (!placed) {
+      const x = (Math.random() - 0.5) * 60;
+      const z = (Math.random() - 0.5) * 60;
+      
+      // Проверяем, не в стене ли
+      let inWall = false;
+      for (const wall of State.cheeseWalls) {
+        if (Math.abs(x - wall.x) < wall.w/2 + 1 && Math.abs(z - wall.z) < wall.d/2 + 1) {
+          inWall = true;
+          break;
+        }
+      }
+      
+      if (!inWall) {
+        cheese.position.set(x, 0, z);
+        placed = true;
+      }
+    }
+    
     State.scene.add(cheese);
   }
 }
 
+function createBrookhaven() {
+  // Дома
+  for (let i = 0; i < 12; i++) {
+    const house = new THREE.Group();
+    
+    // Стены
+    const walls = new THREE.Mesh(
+      new THREE.BoxGeometry(12, 6, 10),
+      new THREE.MeshStandardMaterial({ color: 0xf8f9fa })
+    );
+    walls.position.y = 3;
+    walls.castShadow = true;
+    house.add(walls);
+    
+    // Крыша
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(9, 4, 4),
+      new THREE.MeshStandardMaterial({ color: 0xe74c3c })
+    );
+    roof.position.y = 8;
+    roof.rotation.y = Math.PI / 4;
+    roof.castShadow = true;
+    house.add(roof);
+    
+    house.position.set(
+      (Math.random() - 0.5) * 80,
+      0,
+      (Math.random() - 0.5) * 80
+    );
+    
+    State.scene.add(house);
+  }
+  
+  // Деревья
+  for (let i = 0; i < 20; i++) {
+    const tree = new THREE.Group();
+    
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.5, 0.8, 3, 8),
+      new THREE.MeshStandardMaterial({ color: 0x8B4513 })
+    );
+    trunk.position.y = 1.5;
+    trunk.castShadow = true;
+    tree.add(trunk);
+    
+    const leaves = new THREE.Mesh(
+      new THREE.SphereGeometry(3, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0x27ae60 })
+    );
+    leaves.position.y = 4.5;
+    leaves.castShadow = true;
+    tree.add(leaves);
+    
+    tree.position.set(
+      (Math.random() - 0.5) * 90,
+      0,
+      (Math.random() - 0.5) * 90
+    );
+    
+    State.scene.add(tree);
+  }
+}
+
 function spawnOther(p) {
-  const color = p.team === 'red' ? 0xff2222 : (p.team === 'blue' ? 0x2266ff : 0x888888);
-  const m = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 2, 1),
-    new THREE.MeshStandardMaterial({ color })
-  );
-  m.position.set(p.x, p.y, p.z);
+  // КАПСУЛА для других игроков
+  const geo = new THREE.CapsuleGeometry(0.5, 1.5, 4, 8);
+  const color = p.team === 'red' ? 0xff4757 : (p.team === 'blue' ? 0x3742fa : 0x2ed573);
+  const mat = new THREE.MeshStandardMaterial({ 
+    color,
+    metalness: 0.3,
+    roughness: 0.4
+  });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(p.x, 1.25, p.z);
   m.rotation.y = -p.yaw;
   m.castShadow = true;
   State.scene.add(m);
@@ -447,7 +712,6 @@ function setupInput() {
     DOM.jumpBtn.addEventListener('touchend', () => State.keys['Space'] = false);
   }
 
-  // ИСПРАВЛЕНИЕ: чат инициализируется только один раз
   if (!State.chatInitialized) {
     DOM.chatInput.addEventListener('keypress', e => {
       if (e.key === 'Enter' && e.target.value.trim() && State.ws?.readyState === 1) {
@@ -469,27 +733,43 @@ function gameLoop(t) {
   const dt = Math.min((t - lastTime) / 1000, 0.1);
   lastTime = t;
 
-  // ИСПРАВЛЕНИЕ: W теперь идёт вперёд (исправлена инверсия)
+  // ИСПРАВЛЕНО: W = вперёд, S = назад
   const f = isMobile ? -State.joystick.y : ((State.keys['KeyW'] ? 1 : 0) - (State.keys['KeyS'] ? 1 : 0));
   const r = isMobile ? State.joystick.x : ((State.keys['KeyD'] ? 1 : 0) - (State.keys['KeyA'] ? 1 : 0));
-  const speed = 0.18;
+  const speed = 0.2;
 
-  State.playerMesh.position.x += (f * Math.sin(State.yaw) + r * Math.cos(State.yaw)) * speed;
-  State.playerMesh.position.z += (f * Math.cos(State.yaw) - r * Math.sin(State.yaw)) * speed;
-  State.playerMesh.position.x = Math.max(-38, Math.min(38, State.playerMesh.position.x));
-  State.playerMesh.position.z = Math.max(-38, Math.min(38, State.playerMesh.position.z));
+  const newX = State.playerMesh.position.x + (f * Math.sin(State.yaw) + r * Math.cos(State.yaw)) * speed;
+  const newZ = State.playerMesh.position.z + (f * Math.cos(State.yaw) - r * Math.sin(State.yaw)) * speed;
+  
+  // КОЛЛИЗИИ для Cheese
+  if (State.currentGame === 'cheese' && State.cheeseWalls) {
+    let collision = false;
+    for (const wall of State.cheeseWalls) {
+      if (Math.abs(newX - wall.x) < wall.w/2 + 0.5 && Math.abs(newZ - wall.z) < wall.d/2 + 0.5) {
+        collision = true;
+        break;
+      }
+    }
+    if (!collision) {
+      State.playerMesh.position.x = newX;
+      State.playerMesh.position.z = newZ;
+    }
+  } else {
+    State.playerMesh.position.x = Math.max(-45, Math.min(45, newX));
+    State.playerMesh.position.z = Math.max(-45, Math.min(45, newZ));
+  }
 
-  if (State.keys['Space'] && State.playerMesh.position.y <= 1.1) {
-    State.playerMesh.position.y = 3.2;
+  if (State.keys['Space'] && State.playerMesh.position.y <= 1.3) {
+    State.playerMesh.position.y = 3.5;
     State.keys['Space'] = false;
   }
-  if (State.playerMesh.position.y > 1) State.playerMesh.position.y -= 0.22;
-  if (State.playerMesh.position.y < 1) State.playerMesh.position.y = 1;
+  if (State.playerMesh.position.y > 1.25) State.playerMesh.position.y -= 0.25;
+  if (State.playerMesh.position.y < 1.25) State.playerMesh.position.y = 1.25;
 
   State.playerMesh.rotation.y = State.yaw;
 
-  const cd = isMobile ? 4 : 6;
-  const ch = isMobile ? 2.5 : 4;
+  const cd = isMobile ? 5 : 7;
+  const ch = isMobile ? 3 : 4;
   State.camera.position.set(
     State.playerMesh.position.x + Math.sin(State.yaw) * cd,
     State.playerMesh.position.y + ch + Math.sin(State.pitch) * 1.5,
@@ -511,15 +791,14 @@ function gameLoop(t) {
   requestAnimationFrame(gameLoop);
 }
 
-// ===== ИГРА САМОЛЁТА =====
 function initAirplaneGame() {
   const cv = DOM.canvas;
   cv.width = window.innerWidth;
   cv.height = window.innerHeight;
 
   State.scene = new THREE.Scene();
-  State.scene.background = new THREE.Color(0x87b7e0);
-  State.scene.fog = new THREE.Fog(0x87b7e0, 120, 900);
+  State.scene.background = new THREE.Color(0x87CEEB);
+  State.scene.fog = new THREE.Fog(0x87CEEB, 100, 1000);
 
   State.camera = new THREE.PerspectiveCamera(60, cv.width / cv.height, 0.1, 3000);
   State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
@@ -527,15 +806,12 @@ function initAirplaneGame() {
   State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   State.renderer.shadowMap.enabled = true;
 
-  // Освещение
   State.scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x6f9a54, 0.9));
   const sun = new THREE.DirectionalLight(0xfff1cf, 1.15);
   sun.position.set(90, 140, 50);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
   State.scene.add(sun);
 
-  // Пол
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(2400, 2400),
     new THREE.MeshStandardMaterial({ color: 0x5f9c4a })
@@ -544,28 +820,29 @@ function initAirplaneGame() {
   floor.receiveShadow = true;
   State.scene.add(floor);
 
-  // Самолёт
   const airplane = createAirplane();
   airplane.position.set(0, 12, 140);
   State.scene.add(airplane);
   State.playerMesh = airplane;
+  State.airplaneState = { speed: 24, pitch: 0, yaw: 0, roll: 0 };
 
   // Город
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 40; i++) {
     const building = new THREE.Mesh(
       new THREE.BoxGeometry(
         10 + Math.random() * 15,
-        20 + Math.random() * 50,
+        20 + Math.random() * 60,
         10 + Math.random() * 15
       ),
       new THREE.MeshStandardMaterial({ 
-        color: new THREE.Color().setHSL(Math.random(), 0.3, 0.6) 
+        color: new THREE.Color().setHSL(Math.random(), 0.4, 0.6),
+        roughness: 0.7
       })
     );
     building.position.set(
-      (Math.random() - 0.5) * 800,
+      (Math.random() - 0.5) * 900,
       building.geometry.parameters.height / 2,
-      (Math.random() - 0.5) * 800
+      (Math.random() - 0.5) * 900
     );
     building.castShadow = true;
     State.scene.add(building);
@@ -578,45 +855,37 @@ function initAirplaneGame() {
 function createAirplane() {
   const group = new THREE.Group();
   
-  const matRed = new THREE.MeshStandardMaterial({ color: 0xd84332 });
-  const matWhite = new THREE.MeshStandardMaterial({ color: 0xf4f1e8 });
+  const matRed = new THREE.MeshStandardMaterial({ color: 0xd84332, roughness: 0.4 });
+  const matWhite = new THREE.MeshStandardMaterial({ color: 0xf4f1e8, roughness: 0.5 });
   
-  // Фюзеляж
   const fuselage = new THREE.Mesh(
     new THREE.CylinderGeometry(0.3, 0.55, 4.2, 14),
     matRed
   );
   fuselage.rotation.x = Math.PI / 2;
+  fuselage.castShadow = true;
   group.add(fuselage);
   
-  // Крылья
   const wings = new THREE.Mesh(
     new THREE.BoxGeometry(6.6, 0.14, 1.5),
     matWhite
   );
   wings.position.set(0, 0.12, -0.15);
+  wings.castShadow = true;
   group.add(wings);
   
-  // Хвост
   const tail = new THREE.Mesh(
     new THREE.BoxGeometry(2.7, 0.12, 0.95),
     matWhite
   );
   tail.position.set(0, 0.28, 1.95);
+  tail.castShadow = true;
   group.add(tail);
   
-  group.traverse(o => { if (o.isMesh) o.castShadow = true; });
   return group;
 }
 
 function setupAirplaneControls() {
-  const airplaneState = {
-    speed: 24,
-    pitch: 0,
-    yaw: 0,
-    roll: 0
-  };
-  
   if (!isMobile) {
     document.addEventListener('keydown', e => {
       State.keys[e.code] = true;
@@ -625,8 +894,6 @@ function setupAirplaneControls() {
       State.keys[e.code] = false;
     });
   }
-  
-  State.airplaneState = airplaneState;
 }
 
 function airplaneLoop() {
@@ -639,7 +906,6 @@ function airplaneLoop() {
   const airplane = State.playerMesh;
   const state = State.airplaneState;
   
-  // Управление
   const turn = (State.keys['KeyA'] || State.keys['ArrowLeft'] ? 1 : 0) - 
                (State.keys['KeyD'] || State.keys['ArrowRight'] ? 1 : 0);
   const pitch = (State.keys['KeyW'] || State.keys['ArrowUp'] ? 1 : 0) - 
@@ -657,7 +923,25 @@ function airplaneLoop() {
   airplane.position.addScaledVector(forward, state.speed * dt);
   airplane.position.y = THREE.MathUtils.clamp(airplane.position.y, 1.5, 420);
   
-  // Камера
+  // ОТОБРАЖЕНИЕ ДРУГИХ ИГРОКОВ в самолёте
+  State.airplanePlayers.forEach((player, index) => {
+    if (!player.mesh) {
+      const geo = new THREE.CapsuleGeometry(0.5, 1.5, 4, 8);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x2ed573 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(
+        airplane.position.x + (Math.random() - 0.5) * 50,
+        airplane.position.y + (Math.random() - 0.5) * 20,
+        airplane.position.z + (Math.random() - 0.5) * 50
+      );
+      State.scene.add(mesh);
+      player.mesh = mesh;
+    }
+    player.mesh.position.copy(airplane.position);
+    player.mesh.position.x += Math.sin(Date.now() * 0.001 + index) * 10;
+    player.mesh.position.z += Math.cos(Date.now() * 0.001 + index) * 10;
+  });
+  
   const cameraOffset = new THREE.Vector3(0, 4.6, 13.5);
   cameraOffset.applyQuaternion(airplane.quaternion);
   cameraOffset.add(airplane.position);
