@@ -1,5 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Roblox 3D Ultimate</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
+.navbar { display: flex; align-items: center; padding: 12px 24px; background: linear-gradient(135deg, #16213e, #1a1a2e); border-bottom: 2px solid #00d9ff; position: sticky; top: 0; z-index: 100; }
+.logo { font-size: 26px; font-weight: 800; margin-right: 30px; background: linear-gradient(90deg, #00d9ff, #7b2cbf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.container { display: flex; min-height: calc(100vh - 65px); }
+.sidebar { width: 240px; padding: 24px 0; background: linear-gradient(180deg, #16213e, #1a1a2e); border-right: 2px solid #00d9ff; }
+.sidebar-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.3s; color: #fff; margin: 4px 12px; border-radius: 10px; }
+.sidebar-item:hover { background: rgba(0,217,255,0.2); transform: translateX(5px); }
+.sidebar-item.active { background: linear-gradient(90deg, #00d9ff, #7b2cbf); font-weight: 700; box-shadow: 0 4px 10px rgba(0,217,255,0.4); }
+.main-content { flex: 1; padding: 28px; overflow-y: auto; }
+.section-title { font-size: 24px; font-weight: 700; margin: 24px 0 18px; color: #00d9ff; text-shadow: 0 0 10px rgba(0,217,255,0.5); }
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.game-card { cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; background: linear-gradient(135deg, #16213e, #1a1a2e); border-radius: 15px; overflow: hidden; border: 2px solid #00d9ff; }
+.game-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 10px 30px rgba(0,217,255,0.5); }
+.game-thumb { width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; font-size: 56px; position: relative; overflow: hidden; }
+.game-thumb::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,217,255,0.2), rgba(123,44,191,0.2)); }
+.game-info { padding: 14px; }
+.game-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #fff; }
+.game-meta { font-size: 12px; color: #00d9ff; }
+
+/* НАСТРОЙКИ ПРОФИЛЯ */
+#settings-panel { position: fixed; right: 20px; top: 80px; width: 320px; background: linear-gradient(135deg, #16213e, #1a1a2e); border: 2px solid #00d9ff; border-radius: 12px; padding: 20px; z-index: 50; display: none; max-height: 70vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+#settings-panel.active { display: block; }
+.settings-title { font-size: 20px; font-weight: 700; color: #00d9ff; margin-bottom: 16px; border-bottom: 2px solid #00d9ff; padding-bottom: 8px; }
+.settings-label { font-size: 13px; color: #aaa; margin-bottom: 6px; display: block; }
+.settings-input { width: 100%; padding: 10px; margin-bottom: 16px; background: rgba(0,217,255,0.1); border: 2px solid #00d9ff; border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
+.settings-btn { width: 100%; padding: 10px; margin: 6px 0; background: linear-gradient(90deg, #00d9ff, #7b2cbf); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+.settings-btn:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(0,217,255,0.4); }
+
+/* ИГРА */
+#game-ui { position: fixed; inset: 0; display: none; background: #000; z-index: 2000; }
+#game-canvas { width: 100%; height: 100%; display: block; }
+#exit-game { position: fixed; top: 20px; left: 20px; padding: 12px 22px; background: linear-gradient(90deg, #ff4757, #ff6b81); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; z-index: 10; font-weight: 700; box-shadow: 0 4px 15px rgba(255,71,87,0.4); }
+#hud-info { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: #00d9ff; padding: 10px 18px; border-radius: 10px; font-size: 15px; z-index: 10; border: 2px solid #00d9ff; }
+#chat-box { position: fixed; top: 80px; left: 20px; width: 300px; max-height: 180px; overflow-y: auto; background: rgba(22,33,62,0.9); border-radius: 12px; padding: 12px; font-size: 13px; color: #fff; z-index: 10; border: 2px solid #00d9ff; }
+#chat-input { width: 100%; padding: 8px; background: rgba(0,217,255,0.1); border: 2px solid #00d9ff; color: #fff; border-radius: 6px; margin-top: 8px; outline: none; }
+.msg { margin: 4px 0; padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 6px; }
+.msg .n { font-weight: bold; color: #00d9ff; }
+.msg.sys { color: #2ed573; font-style: italic; }
+
+/* ШУТЕР HUD */
+#shooter-hud { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 15; }
+#crosshair { position: fixed; top: 50%; left: 50%; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.8); border-radius: 50%; transform: translate(-50%, -50%); }
+#weapon-display { position: fixed; bottom: 30px; right: 30px; width: 200px; height: 120px; background: rgba(0,0,0,0.5); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 48px; border: 2px solid #00d9ff; }
+#ammo-counter { position: fixed; bottom: 30px; right: 250px; background: rgba(0,0,0,0.7); color: #00d9ff; padding: 8px 16px; border-radius: 8px; font-size: 18px; font-weight: 700; border: 2px solid #00d9ff; }
+#health-bar-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 200px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid #00d9ff; }
+#health-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4757, #2ed573); transition: width 0.3s; }
+
+/* СТУДИЯ */
+#studio-panel { position: fixed; right: 20px; top: 120px; width: 340px; background: linear-gradient(135deg, #16213e, #1a1a2e); border: 2px solid #00d9ff; border-radius: 12px; padding: 16px; z-index: 50; display: none; max-height: 65vh; overflow-y: auto; }
+#studio-panel.active { display: block; }
+.studio-title { font-size: 18px; font-weight: 700; color: #00d9ff; margin-bottom: 12px; }
+.studio-btn { width: 100%; padding: 10px; margin: 6px 0; background: linear-gradient(90deg, #00d9ff, #7b2cbf); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.studio-btn:hover { transform: scale(1.02); }
+.studio-textarea { width: 100%; height: 100px; margin: 8px 0; background: rgba(0,0,0,0.4); border: 2px solid #00d9ff; color: #fff; border-radius: 6px; padding: 8px; font-family: monospace; font-size: 12px; resize: vertical; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #1a1a2e; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #00d9ff, #7b2cbf); border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">🧱 ROBLOX 3D</div>
+</nav>
+
+<div class="container">
+  <aside class="sidebar">
+    <div class="sidebar-item active"><span>🏠 Главная</span></div>
+    <div class="sidebar-item" onclick="toggleSettings()"><span>⚙️ Настройки</span></div>
+    <div class="sidebar-item" onclick="toggleStudio()"><span>🛠️ Studio</span></div>
+  </aside>
+
+  <main class="main-content">
+    <h2 class="section-title"> Популярные игры</h2>
+    <div class="games-grid">
+      <div class="game-card" data-game="shooter">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #ff4757, #ff6b81)">🔫</div>
+        <div class="game-info"><div class="game-title">Team Shooter</div><div class="game-meta">👍 95% • 👥 89K</div></div>
+      </div>
+      <div class="game-card" data-game="brookhaven">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #2ed573, #7bed9f)">🏡</div>
+        <div class="game-info"><div class="game-title">Brookhaven RP</div><div class="game-meta">👍 98% • 👥 125K</div></div>
+      </div>
+      <div class="game-card" data-game="cheese">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #ffa502, #ffcc00)">🧀</div>
+        <div class="game-info"><div class="game-title">Horror of Cheese</div><div class="game-meta">👍 96% • 👥 45K</div></div>
+      </div>
+      <div class="game-card" data-game="airplane">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #3742fa, #5352ed)">✈️</div>
+        <div class="game-info"><div class="game-title">Airplane Simulator</div><div class="game-meta">👍 94% • 👥 52K</div></div>
+      </div>
+      <div class="game-card" data-game="racing">
+        <div class="game-thumb" style="background: linear-gradient(135deg, #ff6348, #ff4757)">🏎️</div>
+        <div class="game-info"><div class="game-title">Kart Racing</div><div class="game-meta">👍 97% • 👥 78K</div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- НАСТРОЙКИ ПРОФИЛЯ -->
+<div id="settings-panel">
+  <div class="settings-title">⚙️ Настройки профиля</div>
+  <label class="settings-label">Никнейм:</label>
+  <input type="text" id="settings-name" class="settings-input" placeholder="Введите никнейм" maxlength="16">
+  <button class="settings-btn" onclick="saveName()">💾 Сохранить имя</button>
+  <div id="settings-msg" style="margin-top:12px;font-size:13px;color:#2ed573;min-height:20px"></div>
+</div>
+
+<!-- СТУДИЯ -->
+<div id="studio-panel">
+  <div class="studio-title">🛠️ Roblox Studio</div>
+  <button class="studio-btn" onclick="spawnCube()">📦 Спавн куба</button>
+  <button class="studio-btn" onclick="spawnSphere()"> Спавн сферы</button>
+  <button class="studio-btn" onclick="changeColor()">🎨 Случайный цвет</button>
+  <button class="studio-btn" onclick="clearObjects()">🗑️ Очистить</button>
+  <div style="margin:12px 0;font-size:12px;color:#aaa">Объекты: <span id="obj-count">0</span></div>
+  <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
+    <div style="font-size:13px;color:#00d9ff;margin-bottom:6px">💻 Код (Lua/C++/Java):</div>
+    <textarea id="code-editor" class="studio-textarea" placeholder="-- Напиши код здесь..."></textarea>
+    <button class="studio-btn" onclick="runCode()">▶️ Запустить код</button>
+  </div>
+  <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
+    <div style="font-size:13px;color:#00d9ff;margin-bottom:6px">📤 Загрузить модель:</div>
+    <input type="file" id="model-upload" accept=".glb,.gltf" style="width:100%;margin:6px 0">
+    <button class="studio-btn" onclick="uploadModel()">Загрузить</button>
+  </div>
+</div>
+
+<div id="game-ui">
+  <canvas id="game-canvas"></canvas>
+  <button id="exit-game" onclick="exitGame()">🏠 В меню</button>
+  <div id="hud-info">Игроков: <span id="player-count">1</span></div>
+  <div id="chat-box">
+    <div id="chat-messages"></div>
+    <input type="text" id="chat-input" placeholder="Написать сообщение...">
+  </div>
+  
+  <!-- ШУТЕР HUD -->
+  <div id="shooter-hud">
+    <div id="crosshair"></div>
+    <div id="weapon-display">🔫</div>
+    <div id="ammo-counter">∞ / ∞</div>
+    <div id="health-bar-container"><div id="health-bar"></div></div>
+  </div>
+</div>
+
 <script type="module">
-// ===== ИСПРАВЛЕННЫЙ ИМПОРТ THREE.JS =====
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 import { EffectComposer } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
@@ -12,63 +165,55 @@ const State = {
   ws: null, playerId: null, playerName: '', currentGame: null,
   scene: null, camera: null, renderer: null, composer: null, playerMesh: null,
   otherPlayers: new Map(), keys: {}, yaw: 0, pitch: 0, chatInitialized: false,
-  studioObjects: [], airplaneState: null, racingKarts: [], cheeseWalls: []
+  studioObjects: [], airplaneState: null, racingKarts: [], cheeseWalls: [],
+  audioCtx: null, shootSound: null, weaponMesh: null, health: 100
 };
 
 const DOM = {
-  regModal: document.getElementById('reg-modal'),
-  regInput: document.getElementById('reg-input'),
-  regBtn: document.getElementById('reg-btn'),
-  regError: document.getElementById('reg-error'),
   gameUI: document.getElementById('game-ui'),
   canvas: document.getElementById('game-canvas'),
   chatMessages: document.getElementById('chat-messages'),
   chatInput: document.getElementById('chat-input'),
   playerCount: document.getElementById('player-count'),
   studioPanel: document.getElementById('studio-panel'),
-  objCount: document.getElementById('obj-count')
+  objCount: document.getElementById('obj-count'),
+  settingsPanel: document.getElementById('settings-panel'),
+  settingsName: document.getElementById('settings-name'),
+  settingsMsg: document.getElementById('settings-msg'),
+  shooterHud: document.getElementById('shooter-hud'),
+  healthBar: document.getElementById('health-bar'),
+  ammoCounter: document.getElementById('ammo-counter')
 };
 
-// ===== 100% РАБОЧАЯ РЕГИСТРАЦИЯ =====
-function initRegistration() {
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+function init() {
   const saved = localStorage.getItem('r3d_name');
-  if (saved && saved.length >= 2 && saved.length <= 16) {
+  if (saved) {
     State.playerName = saved;
-    DOM.regModal.style.display = 'none';
-    return;
+    DOM.settingsName.value = saved;
+  } else {
+    State.playerName = 'Guest';
+    DOM.settingsName.value = 'Guest';
   }
-
-  // Используем addEventListener вместо onclick для надежности в модулях
-  DOM.regInput.addEventListener('input', () => {
-    const v = DOM.regInput.value.trim();
-    const isValid = v.length >= 2 && v.length <= 16;
-    
-    DOM.regError.textContent = isValid ? '' : 
-      (v.length === 0 ? '' : (v.length < 2 ? 'Минимум 2 символа' : 'Максимум 16'));
-    DOM.regBtn.disabled = !isValid;
-  });
-
-  // Надежная обработка клика через addEventListener
-  DOM.regBtn.addEventListener('click', () => {
-    const name = DOM.regInput.value.trim();
-    if (name.length >= 2 && name.length <= 16) {
-      State.playerName = name;
-      localStorage.setItem('r3d_name', name);
-      DOM.regModal.style.display = 'none';
-      console.log("✅ Игрок зарегистрирован:", State.playerName);
-    }
-  });
-  
-  // Обработка Enter
-  DOM.regInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !DOM.regBtn.disabled) {
-      DOM.regBtn.click();
-    }
-  });
-  
-  // Автофокус на поле ввода
-  setTimeout(() => DOM.regInput.focus(), 100);
 }
+
+// ===== НАСТРОЙКИ =====
+window.toggleSettings = () => DOM.settingsPanel.classList.toggle('active');
+window.saveName = () => {
+  const name = DOM.settingsName.value.trim();
+  if (name.length >= 2 && name.length <= 16) {
+    State.playerName = name;
+    localStorage.setItem('r3d_name', name);
+    DOM.settingsMsg.textContent = '✅ Имя сохранено!';
+    setTimeout(() => DOM.settingsMsg.textContent = '', 2000);
+  } else {
+    DOM.settingsMsg.textContent = '❌ Имя должно быть от 2 до 16 символов';
+    DOM.settingsMsg.style.color = '#ff6b6b';
+    setTimeout(() => { DOM.settingsMsg.style.color = '#2ed573'; DOM.settingsMsg.textContent = ''; }, 2000);
+  }
+};
+
+window.toggleStudio = () => DOM.studioPanel.classList.toggle('active');
 
 document.querySelectorAll('.game-card').forEach(card => {
   card.addEventListener('click', () => {
@@ -78,7 +223,15 @@ document.querySelectorAll('.game-card').forEach(card => {
 
 function startGame(gameId) {
   State.currentGame = gameId;
+  State.health = 100;
   DOM.gameUI.style.display = 'block';
+  
+  if (gameId === 'shooter') {
+    DOM.shooterHud.style.display = 'block';
+    DOM.healthBar.style.width = '100%';
+  } else {
+    DOM.shooterHud.style.display = 'none';
+  }
   
   if (gameId === 'airplane') initAirplaneGame();
   else if (gameId === 'racing') initRacingGame();
@@ -102,83 +255,57 @@ window.exitGame = function() {
   }
   State.otherPlayers.clear();
   State.playerMesh = null;
+  State.weaponMesh = null;
   State.chatInitialized = false;
   State.studioObjects = [];
   State.airplaneState = null;
   State.racingKarts = [];
   State.cheeseWalls = [];
   DOM.gameUI.style.display = 'none';
+  DOM.shooterHud.style.display = 'none';
   DOM.chatMessages.innerHTML = '';
   DOM.studioPanel.classList.remove('active');
+  DOM.settingsPanel.classList.remove('active');
   State.currentGame = null;
 };
 
-window.toggleStudio = () => DOM.studioPanel.classList.toggle('active');
-
-window.spawnCube = () => {
-  if (!State.scene) return;
-  const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(2, 2, 2),
-    new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff })
-  );
-  mesh.position.set(State.playerMesh ? State.playerMesh.position.x + (Math.random()-0.5)*10 : 0, 1, State.playerMesh ? State.playerMesh.position.z + (Math.random()-0.5)*10 : 0);
-  mesh.castShadow = true;
-  State.scene.add(mesh);
-  State.studioObjects.push(mesh);
-  DOM.objCount.textContent = State.studioObjects.length;
-};
-
-window.spawnSphere = () => {
-  if (!State.scene) return;
-  const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(1.5, 32, 32),
-    new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff })
-  );
-  mesh.position.set(State.playerMesh ? State.playerMesh.position.x + (Math.random()-0.5)*10 : 0, 1.5, State.playerMesh ? State.playerMesh.position.z + (Math.random()-0.5)*10 : 0);
-  mesh.castShadow = true;
-  State.scene.add(mesh);
-  State.studioObjects.push(mesh);
-  DOM.objCount.textContent = State.studioObjects.length;
-};
-
-window.changeColor = () => State.studioObjects.forEach(obj => obj.material.color.setHex(Math.random() * 0xffffff));
-window.clearObjects = () => { State.studioObjects.forEach(obj => State.scene.remove(obj)); State.studioObjects = []; DOM.objCount.textContent = '0'; };
-
-window.runCode = () => {
-  try { eval(document.getElementById('code-editor').value); showToast('✅ Код выполнен!'); }
-  catch (e) { showToast('❌ Ошибка: ' + e.message); }
-};
-
-window.uploadModel = () => {
-  const input = document.getElementById('model-upload');
-  if (!input.files[0]) { showToast('❌ Выберите файл'); return; }
-  const loader = new GLTFLoader();
-  const url = URL.createObjectURL(input.files[0]);
-  loader.load(url, (gltf) => {
-    const model = gltf.scene;
-    model.position.set(State.playerMesh ? State.playerMesh.position.x : 0, 0, State.playerMesh ? State.playerMesh.position.z : 0);
-    State.scene.add(model);
-    State.studioObjects.push(model);
-    DOM.objCount.textContent = State.studioObjects.length;
-    showToast('✅ Модель загружена!');
-    URL.revokeObjectURL(url);
-  }, undefined, () => { showToast('❌ Ошибка'); URL.revokeObjectURL(url); });
-};
-
-function showToast(msg) {
-  const toast = document.createElement('div');
-  toast.textContent = msg;
-  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;z-index:1000;';
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2000);
+// ===== ЗВУКИ =====
+function initAudio() {
+  State.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  // Загрузка звука выстрела
+  State.shootSound = new Audio('shoot.mp3');
+  State.shootSound.volume = 0.4;
+  State.shootSound.preload = 'auto';
 }
 
+function playShootSound() {
+  if (!State.shootSound) initAudio();
+  const clone = State.shootSound.cloneNode();
+  clone.play().catch(() => {
+    // Fallback: синтезированный звук
+    if (!State.audioCtx) initAudio();
+    const osc = State.audioCtx.createOscillator();
+    const gain = State.audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(State.audioCtx.destination);
+    osc.frequency.value = 800;
+    gain.gain.value = 0.1;
+    osc.start();
+    osc.stop(State.audioCtx.currentTime + 0.1);
+  });
+}
+
+// ===== СЕТЬ =====
 function connectToServer() {
   if (State.ws && State.ws.readyState === 1) return;
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   State.ws = new WebSocket(`${proto}//${location.host}`);
 
-  State.ws.onopen = () => State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
+  State.ws.onopen = () => {
+    State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
+  };
+  
   State.ws.onmessage = (e) => {
     try {
       const d = JSON.parse(e.data);
@@ -189,6 +316,10 @@ function connectToServer() {
       }
       if (d.type === 'snapshot') {
         DOM.playerCount.textContent = d.players.length + 1;
+        if (d.health !== undefined) {
+          State.health = d.health;
+          DOM.healthBar.style.width = `${Math.max(0, d.health)}%`;
+        }
         d.players.forEach(p => {
           if (!State.otherPlayers.has(p.id)) {
             const geo = new THREE.CapsuleGeometry(0.5, 1.5, 4, 8);
@@ -207,11 +338,15 @@ function connectToServer() {
         });
       }
       if (d.type === 'chat') addChat(d.name, d.msg);
+      if (d.type === 'shoot') playShootSound();
+      if (d.type === 'kill') addChat('sys', `💀 ${d.killer} убил ${d.victim}`);
     } catch (err) { console.error('WS:', err); }
   };
+  
   State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
 }
 
+// ===== 3D ИНИЦИАЛИЗАЦИЯ =====
 function init3D(gameId) {
   const cv = DOM.canvas;
   cv.width = window.innerWidth;
@@ -249,13 +384,20 @@ function init3D(gameId) {
   if (gameId === 'cheese') createCheeseMaze();
   if (gameId === 'brookhaven') createBrookhaven();
 
+  // Игрок - КАПСУЛА
   State.playerMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.5, 4, 8), new THREE.MeshStandardMaterial({ color: 0x00d9ff }));
   State.playerMesh.position.y = 1.25;
   State.playerMesh.castShadow = true;
   State.scene.add(State.playerMesh);
 
+  // Оружие для шутера
+  if (gameId === 'shooter') {
+    loadWeapon();
+  }
+
   setupInput();
   
+  // FXAA пост-обработка
   State.composer = new EffectComposer(State.renderer);
   State.composer.addPass(new RenderPass(State.scene, State.camera));
   const fxaaPass = new ShaderPass(FXAAShader);
@@ -265,6 +407,34 @@ function init3D(gameId) {
   gameLoop();
 }
 
+// ===== ЗАГРУЗКА ОРУЖИЯ =====
+function loadWeapon() {
+  const loader = new GLTFLoader();
+  loader.load('rifle.glb.glb', (gltf) => {
+    State.weaponMesh = gltf.scene;
+    State.weaponMesh.scale.set(0.5, 0.5, 0.5);
+    State.weaponMesh.position.set(0.3, -0.3, -0.6);
+    State.weaponMesh.rotation.y = Math.PI;
+    State.camera.add(State.weaponMesh);
+    State.scene.add(State.camera);
+  }, undefined, () => {
+    // Fallback: простое оружие из примитивов
+    const gun = new THREE.Group();
+    const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x333 }));
+    barrel.position.z = -0.3;
+    gun.add(barrel);
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.08), new THREE.MeshStandardMaterial({ color: 0x555 }));
+    handle.position.set(0, -0.15, 0);
+    gun.add(handle);
+    State.weaponMesh = gun;
+    State.weaponMesh.position.set(0.3, -0.3, -0.6);
+    State.weaponMesh.rotation.y = Math.PI;
+    State.camera.add(State.weaponMesh);
+    State.scene.add(State.camera);
+  });
+}
+
+// ===== КАРТЫ =====
 function createShooterMap() {
   const mat = new THREE.MeshStandardMaterial({ color: 0x636e72 });
   [[-45,0,2,92],[45,0,2,92],[0,-45,92,2],[0,45,92,2]].forEach(([x,z,w,d]) => {
@@ -336,13 +506,26 @@ function createBrookhaven() {
   }
 }
 
+// ===== УПРАВЛЕНИЕ =====
 function setupInput() {
-  document.addEventListener('keydown', e => { State.keys[e.code] = true; if(e.code==='Enter'&&e.target===DOM.chatInput) e.preventDefault(); });
+  document.addEventListener('keydown', e => { 
+    State.keys[e.code] = true; 
+    if(e.code==='Enter'&&e.target===DOM.chatInput) e.preventDefault(); 
+  });
   document.addEventListener('keyup', e => { State.keys[e.code] = false; });
   document.addEventListener('mousemove', e => {
-    if(document.pointerLockElement) { State.yaw -= e.movementX*0.002; State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY*0.002)); }
+    if(document.pointerLockElement) { 
+      State.yaw -= e.movementX*0.002; 
+      State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY*0.002)); 
+    }
   });
-  document.addEventListener('click', () => { if(!document.pointerLockElement && State.renderer?.domElement) State.renderer.domElement.requestPointerLock(); });
+  document.addEventListener('click', () => { 
+    if(!document.pointerLockElement && State.renderer?.domElement) State.renderer.domElement.requestPointerLock();
+    // Стрельба при клике в шутере
+    if(State.currentGame === 'shooter' && document.pointerLockElement) {
+      shoot();
+    }
+  });
   if(!State.chatInitialized) {
     DOM.chatInput.addEventListener('keypress', e => {
       if(e.key==='Enter' && e.target.value.trim() && State.ws?.readyState===1) {
@@ -354,6 +537,22 @@ function setupInput() {
   }
 }
 
+function shoot() {
+  if (State.ws && State.ws.readyState === 1) {
+    State.ws.send(JSON.stringify({ type: 'action' }));
+  }
+  playShootSound();
+  
+  // Анимация отдачи оружия
+  if (State.weaponMesh) {
+    State.weaponMesh.position.z += 0.1;
+    setTimeout(() => {
+      if (State.weaponMesh) State.weaponMesh.position.z -= 0.1;
+    }, 100);
+  }
+}
+
+// ===== ИГРОВОЙ ЦИКЛ =====
 let lastTime = 0;
 function gameLoop(t) {
   if(!State.playerMesh || State.currentGame==='airplane' || State.currentGame==='racing') { requestAnimationFrame(gameLoop); return; }
@@ -394,6 +593,7 @@ function gameLoop(t) {
   requestAnimationFrame(gameLoop);
 }
 
+// ===== САМОЛЁТ =====
 function initAirplaneGame() {
   const cv = DOM.canvas;
   cv.width = window.innerWidth;
@@ -484,6 +684,7 @@ function airplaneLoop() {
   requestAnimationFrame(airplaneLoop);
 }
 
+// ===== ГОНКИ =====
 function initRacingGame() {
   const cv = DOM.canvas;
   cv.width = window.innerWidth;
@@ -554,6 +755,66 @@ function racingLoop() {
   requestAnimationFrame(racingLoop);
 }
 
+// ===== СТУДИЯ =====
+window.spawnCube = () => {
+  if (!State.scene) return;
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 2, 2),
+    new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff })
+  );
+  mesh.position.set(State.playerMesh ? State.playerMesh.position.x + (Math.random()-0.5)*10 : 0, 1, State.playerMesh ? State.playerMesh.position.z + (Math.random()-0.5)*10 : 0);
+  mesh.castShadow = true;
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
+};
+
+window.spawnSphere = () => {
+  if (!State.scene) return;
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.5, 32, 32),
+    new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff })
+  );
+  mesh.position.set(State.playerMesh ? State.playerMesh.position.x + (Math.random()-0.5)*10 : 0, 1.5, State.playerMesh ? State.playerMesh.position.z + (Math.random()-0.5)*10 : 0);
+  mesh.castShadow = true;
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
+};
+
+window.changeColor = () => State.studioObjects.forEach(obj => obj.material.color.setHex(Math.random() * 0xffffff));
+window.clearObjects = () => { State.studioObjects.forEach(obj => State.scene.remove(obj)); State.studioObjects = []; DOM.objCount.textContent = '0'; };
+
+window.runCode = () => {
+  try { eval(document.getElementById('code-editor').value); showToast('✅ Код выполнен!'); }
+  catch (e) { showToast('❌ Ошибка: ' + e.message); }
+};
+
+window.uploadModel = () => {
+  const input = document.getElementById('model-upload');
+  if (!input.files[0]) { showToast('❌ Выберите файл'); return; }
+  const loader = new GLTFLoader();
+  const url = URL.createObjectURL(input.files[0]);
+  loader.load(url, (gltf) => {
+    const model = gltf.scene;
+    model.position.set(State.playerMesh ? State.playerMesh.position.x : 0, 0, State.playerMesh ? State.playerMesh.position.z : 0);
+    State.scene.add(model);
+    State.studioObjects.push(model);
+    DOM.objCount.textContent = State.studioObjects.length;
+    showToast('✅ Модель загружена!');
+    URL.revokeObjectURL(url);
+  }, undefined, () => { showToast('❌ Ошибка'); URL.revokeObjectURL(url); });
+};
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.textContent = msg;
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;padding:12px 24px;border-radius:8px;z-index:1000;';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+// ===== ЧАТ =====
 function addChat(name, msg) {
   const d = document.createElement('div');
   d.className = 'msg';
@@ -564,6 +825,7 @@ function addChat(name, msg) {
   if(DOM.chatMessages.children.length>50) DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
 }
 
+// ===== RESIZE =====
 window.addEventListener('resize', () => {
   if(State.camera && State.renderer) {
     const cv = DOM.canvas;
@@ -579,5 +841,8 @@ window.addEventListener('resize', () => {
   }
 });
 
-initRegistration();
+// ===== ЗАПУСК =====
+init();
 </script>
+</body>
+</html>
