@@ -12,12 +12,12 @@ app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 const players = new Map();
-const gameStates = {
+const games = {
   shooter: { players: new Map(), red: 0, blue: 0 },
   brookhaven: { players: new Map() },
-  cheese: { players: new Map(), walls: [], cheeses: [], rat: { x: 0, z: 0 } },
-  brainrot: { players: new Map() },
-  airplane: { players: new Map() }
+  cheese: { players: new Map() },
+  airplane: { players: new Map() },
+  racing: { players: new Map() }
 };
 
 wss.on('connection', (ws) => {
@@ -30,18 +30,16 @@ wss.on('connection', (ws) => {
       if (d.type === 'register') {
         const name = (d.name || 'Guest').trim().slice(0, 16);
         if (name.length < 2) {
-          ws.send(JSON.stringify({ type: 'error', msg: 'Name too short' }));
+          ws.send(JSON.stringify({ type: 'error', msg: 'Короткий ник' }));
           return;
         }
         pid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         players.set(pid, {
-          ws, name, game: 'menu',
-          x: 0, y: 1, z: 0, yaw: 0,
-          health: 100, team: null,
-          input: { f: 0, r: 0, jump: false }
+          ws, name, game: 'menu', x: 0, y: 1, z: 0, yaw: 0,
+          health: 100, team: null, input: { f: 0, r: 0, jump: false }
         });
         ws.send(JSON.stringify({ type: 'registered', id: pid, name }));
-        console.log(`[+] ${name} connected (${pid})`);
+        console.log(`[+] ${name} connected`);
         return;
       }
 
@@ -57,62 +55,24 @@ wss.on('connection', (ws) => {
         if (typeof d.yaw === 'number') p.yaw = d.yaw;
       }
 
-      if (d.type === 'join' && gameStates[d.gameId]) {
-        // УДАЛИТЬ из старой игры ПЕРЕД входом в новую
-        if (p.game !== 'menu' && gameStates[p.game] && gameStates[p.game].players) {
-          gameStates[p.game].players.delete(pid);
+      if (d.type === 'join' && games[d.gameId]) {
+        if (p.game !== 'menu' && games[p.game]?.players) {
+          games[p.game].players.delete(pid);
         }
-        
         p.game = d.gameId;
         p.health = 100;
         p.x = (Math.random() - 0.5) * 10;
         p.z = (Math.random() - 0.5) * 10;
         p.y = 1;
+        if (d.gameId === 'shooter') p.team = Math.random() > 0.5 ? 'red' : 'blue';
         
-        if (d.gameId === 'shooter') {
-          p.team = Math.random() > 0.5 ? 'red' : 'blue';
-        }
-        
-        if (gameStates[d.gameId].players) {
-          gameStates[d.gameId].players.set(pid, p);
-        }
-        
-        ws.send(JSON.stringify({ 
-          type: 'gameReady', 
-          gameId: d.gameId, 
-          team: p.team,
-          spawn: { x: p.x, z: p.z }
-        }));
-        console.log(`[*] ${p.name} joined ${d.gameId}`);
+        games[d.gameId].players.set(pid, p);
+        ws.send(JSON.stringify({ type: 'gameReady', gameId: d.gameId, team: p.team }));
       }
 
       if (d.type === 'chat' && d.msg) {
         const msg = d.msg.substring(0, 120).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        // Отправляем ТОЛЬКО игрокам в той же игре
-        broadcastToGame(p.game, { type: 'chat', name: p.name, msg, gameId: p.game });
-      }
-
-      if (d.type === 'action' && p.game === 'shooter' && p.team) {
-        gameStates.shooter.players.forEach((other, oid) => {
-          if (oid === pid || other.team === p.team) return;
-          const dist = Math.hypot(other.x - p.x, other.z - p.z);
-          if (dist < 8) {
-            other.health -= 25;
-            if (other.health <= 0) {
-              other.health = 100;
-              other.x = (Math.random() - 0.5) * 10;
-              other.z = (Math.random() - 0.5) * 10;
-              gameStates.shooter[p.team]++;
-              broadcastToGame('shooter', {
-                type: 'kill',
-                killer: p.name,
-                victim: other.name,
-                scores: { red: gameStates.shooter.red, blue: gameStates.shooter.blue }
-              });
-            }
-          }
-        });
-        ws.send(JSON.stringify({ type: 'shoot' }));
+        broadcastToGame(p.game, { type: 'chat', name: p.name, msg });
       }
 
     } catch (e) { console.error('WS Error:', e); }
@@ -121,11 +81,8 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     if (pid && players.has(pid)) {
       const p = players.get(pid);
-      if (p.game !== 'menu' && gameStates[p.game] && gameStates[p.game].players) {
-        gameStates[p.game].players.delete(pid);
-      }
+      if (p.game !== 'menu' && games[p.game]?.players) games[p.game].players.delete(pid);
       players.delete(pid);
-      console.log(`[-] ${p.name} disconnected`);
     }
   });
 
@@ -133,7 +90,6 @@ wss.on('connection', (ws) => {
   ws.on('pong', () => ws.isAlive = true);
 });
 
-// ИСПРАВЛЕНИЕ: Отправка ТОЛЬКО игрокам в той же игре
 function broadcastToGame(gameId, data) {
   const msg = JSON.stringify(data);
   players.forEach(p => {
@@ -151,34 +107,23 @@ setInterval(() => {
     const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
     p.x += (p.input.f * fx + p.input.r * rx) * 0.15;
     p.z += (p.input.f * fz + p.input.r * rz) * 0.15;
-    p.x = Math.max(-40, Math.min(40, p.x));
-    p.z = Math.max(-40, Math.min(40, p.z));
+    p.x = Math.max(-50, Math.min(50, p.x));
+    p.z = Math.max(-50, Math.min(50, p.z));
 
     if (p.input.jump && p.y <= 1.1) { p.y = 3.2; p.input.jump = false; }
     if (p.y > 1) p.y -= 0.22;
     if (p.y < 1) p.y = 1;
 
-    // Отправляем ТОЛЬКО игроков из той же игры
     const nearby = [];
-    if (gameStates[p.game] && gameStates[p.game].players) {
-      gameStates[p.game].players.forEach((other, oid) => {
-        if (oid !== p.id && Math.hypot(other.x - p.x, other.z - p.z) < 50) {
-          nearby.push({
-            id: oid, name: other.name,
-            x: other.x, y: other.y, z: other.z,
-            yaw: other.yaw, team: other.team, health: other.health
-          });
+    if (games[p.game]?.players) {
+      games[p.game].players.forEach((other, oid) => {
+        if (oid !== p.id && Math.hypot(other.x - p.x, other.z - p.z) < 60) {
+          nearby.push({ id: oid, name: other.name, x: other.x, y: other.y, z: other.z, yaw: other.yaw, team: other.team });
         }
       });
     }
 
-    p.ws.send(JSON.stringify({
-      type: 'snapshot',
-      players: nearby,
-      health: p.health,
-      team: p.team,
-      scores: p.game === 'shooter' ? { red: gameStates.shooter.red, blue: gameStates.shooter.blue } : null
-    }));
+    p.ws.send(JSON.stringify({ type: 'snapshot', players: nearby, health: p.health, team: p.team }));
   });
 }, 1000 / 24);
 
