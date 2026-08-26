@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roblox 3D Ultimate</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -25,7 +25,6 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 .game-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #fff; }
 .game-meta { font-size: 12px; color: #00d9ff; }
 
-/* НАСТРОЙКИ ПРОФИЛЯ */
 #settings-panel { position: fixed; right: 20px; top: 80px; width: 320px; background: linear-gradient(135deg, #16213e, #1a1a2e); border: 2px solid #00d9ff; border-radius: 12px; padding: 20px; z-index: 50; display: none; max-height: 70vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 #settings-panel.active { display: block; }
 .settings-title { font-size: 20px; font-weight: 700; color: #00d9ff; margin-bottom: 16px; border-bottom: 2px solid #00d9ff; padding-bottom: 8px; }
@@ -34,7 +33,6 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 .settings-btn { width: 100%; padding: 10px; margin: 6px 0; background: linear-gradient(90deg, #00d9ff, #7b2cbf); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
 .settings-btn:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(0,217,255,0.4); }
 
-/* ИГРА */
 #game-ui { position: fixed; inset: 0; display: none; background: #000; z-index: 2000; }
 #game-canvas { width: 100%; height: 100%; display: block; }
 #exit-game { position: fixed; top: 20px; left: 20px; padding: 12px 22px; background: linear-gradient(90deg, #ff4757, #ff6b81); color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; z-index: 10; font-weight: 700; box-shadow: 0 4px 15px rgba(255,71,87,0.4); }
@@ -45,7 +43,6 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 .msg .n { font-weight: bold; color: #00d9ff; }
 .msg.sys { color: #2ed573; font-style: italic; }
 
-/* ШУТЕР HUD */
 #shooter-hud { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 15; }
 #crosshair { position: fixed; top: 50%; left: 50%; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.8); border-radius: 50%; transform: translate(-50%, -50%); }
 #weapon-display { position: fixed; bottom: 30px; right: 30px; width: 200px; height: 120px; background: rgba(0,0,0,0.5); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 48px; border: 2px solid #00d9ff; }
@@ -53,7 +50,6 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 #health-bar-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 200px; height: 20px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 2px solid #00d9ff; }
 #health-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4757, #2ed573); transition: width 0.3s; }
 
-/* СТУДИЯ */
 #studio-panel { position: fixed; right: 20px; top: 120px; width: 340px; background: linear-gradient(135deg, #16213e, #1a1a2e); border: 2px solid #00d9ff; border-radius: 12px; padding: 16px; z-index: 50; display: none; max-height: 65vh; overflow-y: auto; }
 #studio-panel.active { display: block; }
 .studio-title { font-size: 18px; font-weight: 700; color: #00d9ff; margin-bottom: 12px; }
@@ -74,12 +70,12 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 <div class="container">
   <aside class="sidebar">
     <div class="sidebar-item active"><span> Главная</span></div>
-    <div class="sidebar-item" id="btn-settings"><span>⚙️ Настройки</span></div>
+    <div class="sidebar-item" id="btn-settings"><span>️ Настройки</span></div>
     <div class="sidebar-item" id="btn-studio"><span>🛠️ Studio</span></div>
   </aside>
 
   <main class="main-content">
-    <h2 class="section-title"> Популярные игры</h2>
+    <h2 class="section-title">🔥 Популярные игры</h2>
     <div class="games-grid">
       <div class="game-card" data-game="shooter">
         <div class="game-thumb" style="background: linear-gradient(135deg, #ff4757, #ff6b81)">🔫</div>
@@ -91,7 +87,7 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
       </div>
       <div class="game-card" data-game="cheese">
         <div class="game-thumb" style="background: linear-gradient(135deg, #ffa502, #ffcc00)">🧀</div>
-        <div class="game-info"><div class="game-title">Horror of Cheese</div><div class="game-meta">👍 96% • 👥 45K</div></div>
+        <div class="game-info"><div class="game-title">Horror of Cheese</div><div class="game-meta">👍 96% •  45K</div></div>
       </div>
       <div class="game-card" data-game="airplane">
         <div class="game-thumb" style="background: linear-gradient(135deg, #3742fa, #5352ed)">✈️</div>
@@ -99,22 +95,20 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
       </div>
       <div class="game-card" data-game="racing">
         <div class="game-thumb" style="background: linear-gradient(135deg, #ff6348, #ff4757)">🏎️</div>
-        <div class="game-info"><div class="game-title">Kart Racing</div><div class="game-meta">👍 97% • 👥 78K</div></div>
+        <div class="game-info"><div class="game-title">Kart Racing</div><div class="game-meta">👍 97% •  78K</div></div>
       </div>
     </div>
   </main>
 </div>
 
-<!-- НАСТРОЙКИ ПРОФИЛЯ -->
 <div id="settings-panel">
-  <div class="settings-title">⚙️ Настройки профиля</div>
+  <div class="settings-title">️ Настройки профиля</div>
   <label class="settings-label">Никнейм:</label>
   <input type="text" id="settings-name" class="settings-input" placeholder="Введите никнейм" maxlength="16">
-  <button class="settings-btn" id="btn-save-name"> Сохранить имя</button>
+  <button class="settings-btn" id="btn-save-name">💾 Сохранить имя</button>
   <div id="settings-msg" style="margin-top:12px;font-size:13px;color:#2ed573;min-height:20px"></div>
 </div>
 
-<!-- СТУДИЯ -->
 <div id="studio-panel">
   <div class="studio-title">🛠️ Roblox Studio</div>
   <button class="studio-btn" id="btn-spawn-cube"> Спавн куба</button>
@@ -128,7 +122,7 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
     <button class="studio-btn" id="btn-run-code">▶️ Запустить код</button>
   </div>
   <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
-    <div style="font-size:13px;color:#00d9ff;margin-bottom:6px">📤 Загрузить модель:</div>
+    <div style="font-size:13px;color:#00d9ff;margin-bottom:6px"> Загрузить модель:</div>
     <input type="file" id="model-upload" accept=".glb,.gltf" style="width:100%;margin:6px 0">
     <button class="studio-btn" id="btn-upload-model">📤 Загрузить</button>
   </div>
@@ -136,14 +130,13 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 
 <div id="game-ui">
   <canvas id="game-canvas"></canvas>
-  <button id="exit-game">🏠 В меню</button>
+  <button id="exit-game"> В меню</button>
   <div id="hud-info">Игроков: <span id="player-count">1</span></div>
   <div id="chat-box">
     <div id="chat-messages"></div>
     <input type="text" id="chat-input" placeholder="Написать сообщение...">
   </div>
   
-  <!-- ШУТЕР HUD -->
   <div id="shooter-hud">
     <div id="crosshair"></div>
     <div id="weapon-display">🔫</div>
@@ -185,7 +178,6 @@ const DOM = {
   ammoCounter: document.getElementById('ammo-counter')
 };
 
-// ===== ИНИЦИАЛИЗАЦИЯ =====
 function init() {
   const saved = localStorage.getItem('r3d_name');
   if (saved) {
@@ -198,9 +190,7 @@ function init() {
   setupEventListeners();
 }
 
-// ===== ПРИВЯЗКА СОБЫТИЙ (ИСПРАВЛЕНИЕ ReferenceError) =====
 function setupEventListeners() {
-  // Кнопки сайдбара
   document.getElementById('btn-settings').addEventListener('click', () => {
     DOM.settingsPanel.classList.toggle('active');
     DOM.studioPanel.classList.remove('active');
@@ -211,20 +201,14 @@ function setupEventListeners() {
     DOM.settingsPanel.classList.remove('active');
   });
 
-  // Карточки игр
   document.querySelectorAll('.game-card').forEach(card => {
     card.addEventListener('click', () => {
       if (card.dataset.game) startGame(card.dataset.game);
     });
   });
 
-  // Кнопка выхода из игры
   document.getElementById('exit-game').addEventListener('click', exitGame);
-
-  // Кнопки настроек
   document.getElementById('btn-save-name').addEventListener('click', saveName);
-
-  // Кнопки студии
   document.getElementById('btn-spawn-cube').addEventListener('click', spawnCube);
   document.getElementById('btn-spawn-sphere').addEventListener('click', spawnSphere);
   document.getElementById('btn-change-color').addEventListener('click', changeColor);
@@ -233,7 +217,6 @@ function setupEventListeners() {
   document.getElementById('btn-upload-model').addEventListener('click', uploadModel);
 }
 
-// ===== НАСТРОЙКИ =====
 function saveName() {
   const name = DOM.settingsName.value.trim();
   if (name.length >= 2 && name.length <= 16) {
@@ -297,7 +280,6 @@ function exitGame() {
   State.currentGame = null;
 }
 
-// ===== ЗВУКИ =====
 function initAudio() {
   State.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   State.shootSound = new Audio('shoot.mp3');
@@ -321,7 +303,6 @@ function playShootSound() {
   });
 }
 
-// ===== СЕТЬ =====
 function connectToServer() {
   if (State.ws && State.ws.readyState === 1) return;
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -364,14 +345,13 @@ function connectToServer() {
       }
       if (d.type === 'chat') addChat(d.name, d.msg);
       if (d.type === 'shoot') playShootSound();
-      if (d.type === 'kill') addChat('sys', `💀 ${d.killer} убил ${d.victim}`);
+      if (d.type === 'kill') addChat('sys', ` ${d.killer} убил ${d.victim}`);
     } catch (err) { console.error('WS:', err); }
   };
   
   State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
 }
 
-// ===== 3D ИНИЦИАЛИЗАЦИЯ =====
 function init3D(gameId) {
   const cv = DOM.canvas;
   cv.width = window.innerWidth;
@@ -427,7 +407,6 @@ function init3D(gameId) {
   gameLoop();
 }
 
-// ===== ЗАГРУЗКА ОРУЖИЯ =====
 function loadWeapon() {
   const loader = new GLTFLoader();
   loader.load('rifle.glb.glb', (gltf) => {
@@ -453,7 +432,6 @@ function loadWeapon() {
   });
 }
 
-// ===== КАРТЫ =====
 function createShooterMap() {
   const mat = new THREE.MeshStandardMaterial({ color: 0x636e72 });
   [[-45,0,2,92],[45,0,2,92],[0,-45,92,2],[0,45,92,2]].forEach(([x,z,w,d]) => {
@@ -525,7 +503,6 @@ function createBrookhaven() {
   }
 }
 
-// ===== УПРАВЛЕНИЕ =====
 function setupInput() {
   document.addEventListener('keydown', e => { 
     State.keys[e.code] = true; 
@@ -564,7 +541,6 @@ function shoot() {
   }
 }
 
-// ===== ИГРОВОЙ ЦИКЛ =====
 let lastTime = 0;
 function gameLoop(t) {
   if(!State.playerMesh || State.currentGame==='airplane' || State.currentGame==='racing') { requestAnimationFrame(gameLoop); return; }
@@ -605,7 +581,6 @@ function gameLoop(t) {
   requestAnimationFrame(gameLoop);
 }
 
-// ===== САМОЛЁТ =====
 function initAirplaneGame() {
   const cv = DOM.canvas;
   cv.width = window.innerWidth;
@@ -696,7 +671,6 @@ function airplaneLoop() {
   requestAnimationFrame(airplaneLoop);
 }
 
-// ===== ГОНКИ =====
 function initRacingGame() {
   const cv = DOM.canvas;
   cv.width = window.innerWidth;
@@ -767,7 +741,6 @@ function racingLoop() {
   requestAnimationFrame(racingLoop);
 }
 
-// ===== СТУДИЯ =====
 function spawnCube() {
   if (!State.scene) return;
   const mesh = new THREE.Mesh(
@@ -811,7 +784,7 @@ function runCode() {
 
 function uploadModel() {
   const input = document.getElementById('model-upload');
-  if (!input.files[0]) { showToast(' Выберите файл'); return; }
+  if (!input.files[0]) { showToast('❌ Выберите файл'); return; }
   const loader = new GLTFLoader();
   const url = URL.createObjectURL(input.files[0]);
   loader.load(url, (gltf) => {
@@ -833,7 +806,6 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 2000);
 }
 
-// ===== ЧАТ =====
 function addChat(name, msg) {
   const d = document.createElement('div');
   d.className = 'msg';
@@ -844,7 +816,6 @@ function addChat(name, msg) {
   if(DOM.chatMessages.children.length>50) DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
 }
 
-// ===== RESIZE =====
 window.addEventListener('resize', () => {
   if(State.camera && State.renderer) {
     const cv = DOM.canvas;
@@ -860,7 +831,6 @@ window.addEventListener('resize', () => {
   }
 });
 
-// ===== ЗАПУСК =====
 init();
 </script>
 </body>
