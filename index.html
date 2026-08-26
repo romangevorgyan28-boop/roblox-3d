@@ -73,9 +73,9 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 
 <div class="container">
   <aside class="sidebar">
-    <div class="sidebar-item active"><span>🏠 Главная</span></div>
-    <div class="sidebar-item" onclick="toggleSettings()"><span>⚙️ Настройки</span></div>
-    <div class="sidebar-item" onclick="toggleStudio()"><span>🛠️ Studio</span></div>
+    <div class="sidebar-item active"><span> Главная</span></div>
+    <div class="sidebar-item" id="btn-settings"><span>⚙️ Настройки</span></div>
+    <div class="sidebar-item" id="btn-studio"><span>🛠️ Studio</span></div>
   </aside>
 
   <main class="main-content">
@@ -86,7 +86,7 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
         <div class="game-info"><div class="game-title">Team Shooter</div><div class="game-meta">👍 95% • 👥 89K</div></div>
       </div>
       <div class="game-card" data-game="brookhaven">
-        <div class="game-thumb" style="background: linear-gradient(135deg, #2ed573, #7bed9f)"></div>
+        <div class="game-thumb" style="background: linear-gradient(135deg, #2ed573, #7bed9f)">🏡</div>
         <div class="game-info"><div class="game-title">Brookhaven RP</div><div class="game-meta">👍 98% • 👥 125K</div></div>
       </div>
       <div class="game-card" data-game="cheese">
@@ -107,36 +107,36 @@ body { background: #1a1a2e; color: #fff; overflow-x: hidden; }
 
 <!-- НАСТРОЙКИ ПРОФИЛЯ -->
 <div id="settings-panel">
-  <div class="settings-title">️ Настройки профиля</div>
+  <div class="settings-title">⚙️ Настройки профиля</div>
   <label class="settings-label">Никнейм:</label>
   <input type="text" id="settings-name" class="settings-input" placeholder="Введите никнейм" maxlength="16">
-  <button class="settings-btn" onclick="saveName()"> Сохранить имя</button>
+  <button class="settings-btn" id="btn-save-name"> Сохранить имя</button>
   <div id="settings-msg" style="margin-top:12px;font-size:13px;color:#2ed573;min-height:20px"></div>
 </div>
 
 <!-- СТУДИЯ -->
 <div id="studio-panel">
   <div class="studio-title">🛠️ Roblox Studio</div>
-  <button class="studio-btn" onclick="spawnCube()">📦 Спавн куба</button>
-  <button class="studio-btn" onclick="spawnSphere()"> Спавн сферы</button>
-  <button class="studio-btn" onclick="changeColor()">🎨 Случайный цвет</button>
-  <button class="studio-btn" onclick="clearObjects()">🗑️ Очистить</button>
+  <button class="studio-btn" id="btn-spawn-cube"> Спавн куба</button>
+  <button class="studio-btn" id="btn-spawn-sphere">🔵 Спавн сферы</button>
+  <button class="studio-btn" id="btn-change-color">🎨 Случайный цвет</button>
+  <button class="studio-btn" id="btn-clear-objects">🗑️ Очистить</button>
   <div style="margin:12px 0;font-size:12px;color:#aaa">Объекты: <span id="obj-count">0</span></div>
   <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
     <div style="font-size:13px;color:#00d9ff;margin-bottom:6px">💻 Код (Lua/C++/Java):</div>
     <textarea id="code-editor" class="studio-textarea" placeholder="-- Напиши код здесь..."></textarea>
-    <button class="studio-btn" onclick="runCode()">▶️ Запустить код</button>
+    <button class="studio-btn" id="btn-run-code">▶️ Запустить код</button>
   </div>
   <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
     <div style="font-size:13px;color:#00d9ff;margin-bottom:6px">📤 Загрузить модель:</div>
     <input type="file" id="model-upload" accept=".glb,.gltf" style="width:100%;margin:6px 0">
-    <button class="studio-btn" onclick="uploadModel()">Загрузить</button>
+    <button class="studio-btn" id="btn-upload-model">📤 Загрузить</button>
   </div>
 </div>
 
 <div id="game-ui">
   <canvas id="game-canvas"></canvas>
-  <button id="exit-game" onclick="exitGame()">🏠 В меню</button>
+  <button id="exit-game">🏠 В меню</button>
   <div id="hud-info">Игроков: <span id="player-count">1</span></div>
   <div id="chat-box">
     <div id="chat-messages"></div>
@@ -195,31 +195,59 @@ function init() {
     State.playerName = 'Guest';
     DOM.settingsName.value = 'Guest';
   }
+  setupEventListeners();
+}
+
+// ===== ПРИВЯЗКА СОБЫТИЙ (ИСПРАВЛЕНИЕ ReferenceError) =====
+function setupEventListeners() {
+  // Кнопки сайдбара
+  document.getElementById('btn-settings').addEventListener('click', () => {
+    DOM.settingsPanel.classList.toggle('active');
+    DOM.studioPanel.classList.remove('active');
+  });
+  
+  document.getElementById('btn-studio').addEventListener('click', () => {
+    DOM.studioPanel.classList.toggle('active');
+    DOM.settingsPanel.classList.remove('active');
+  });
+
+  // Карточки игр
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.addEventListener('click', () => {
+      if (card.dataset.game) startGame(card.dataset.game);
+    });
+  });
+
+  // Кнопка выхода из игры
+  document.getElementById('exit-game').addEventListener('click', exitGame);
+
+  // Кнопки настроек
+  document.getElementById('btn-save-name').addEventListener('click', saveName);
+
+  // Кнопки студии
+  document.getElementById('btn-spawn-cube').addEventListener('click', spawnCube);
+  document.getElementById('btn-spawn-sphere').addEventListener('click', spawnSphere);
+  document.getElementById('btn-change-color').addEventListener('click', changeColor);
+  document.getElementById('btn-clear-objects').addEventListener('click', clearObjects);
+  document.getElementById('btn-run-code').addEventListener('click', runCode);
+  document.getElementById('btn-upload-model').addEventListener('click', uploadModel);
 }
 
 // ===== НАСТРОЙКИ =====
-window.toggleSettings = () => DOM.settingsPanel.classList.toggle('active');
-window.saveName = () => {
+function saveName() {
   const name = DOM.settingsName.value.trim();
   if (name.length >= 2 && name.length <= 16) {
     State.playerName = name;
     localStorage.setItem('r3d_name', name);
     DOM.settingsMsg.textContent = '✅ Имя сохранено!';
+    DOM.settingsMsg.style.color = '#2ed573';
     setTimeout(() => DOM.settingsMsg.textContent = '', 2000);
   } else {
     DOM.settingsMsg.textContent = '❌ Имя должно быть от 2 до 16 символов';
     DOM.settingsMsg.style.color = '#ff6b6b';
     setTimeout(() => { DOM.settingsMsg.style.color = '#2ed573'; DOM.settingsMsg.textContent = ''; }, 2000);
   }
-};
-
-window.toggleStudio = () => DOM.studioPanel.classList.toggle('active');
-
-document.querySelectorAll('.game-card').forEach(card => {
-  card.addEventListener('click', () => {
-    if (card.dataset.game) startGame(card.dataset.game);
-  });
-});
+}
 
 function startGame(gameId) {
   State.currentGame = gameId;
@@ -240,7 +268,7 @@ function startGame(gameId) {
   connectToServer();
 }
 
-window.exitGame = function() {
+function exitGame() {
   if (State.ws) { State.ws.close(); State.ws = null; }
   if (State.renderer) { State.renderer.dispose(); State.renderer = null; }
   if (State.scene) {
@@ -267,13 +295,11 @@ window.exitGame = function() {
   DOM.studioPanel.classList.remove('active');
   DOM.settingsPanel.classList.remove('active');
   State.currentGame = null;
-};
+}
 
 // ===== ЗВУКИ =====
 function initAudio() {
   State.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  
-  // Загрузка звука выстрела
   State.shootSound = new Audio('shoot.mp3');
   State.shootSound.volume = 0.4;
   State.shootSound.preload = 'auto';
@@ -283,7 +309,6 @@ function playShootSound() {
   if (!State.shootSound) initAudio();
   const clone = State.shootSound.cloneNode();
   clone.play().catch(() => {
-    // Fallback: синтезированный звук
     if (!State.audioCtx) initAudio();
     const osc = State.audioCtx.createOscillator();
     const gain = State.audioCtx.createGain();
@@ -384,20 +409,15 @@ function init3D(gameId) {
   if (gameId === 'cheese') createCheeseMaze();
   if (gameId === 'brookhaven') createBrookhaven();
 
-  // Игрок - КАПСУЛА
   State.playerMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.5, 4, 8), new THREE.MeshStandardMaterial({ color: 0x00d9ff }));
   State.playerMesh.position.y = 1.25;
   State.playerMesh.castShadow = true;
   State.scene.add(State.playerMesh);
 
-  // Оружие для шутера
-  if (gameId === 'shooter') {
-    loadWeapon();
-  }
+  if (gameId === 'shooter') loadWeapon();
 
   setupInput();
   
-  // FXAA пост-обработка
   State.composer = new EffectComposer(State.renderer);
   State.composer.addPass(new RenderPass(State.scene, State.camera));
   const fxaaPass = new ShaderPass(FXAAShader);
@@ -418,7 +438,6 @@ function loadWeapon() {
     State.camera.add(State.weaponMesh);
     State.scene.add(State.camera);
   }, undefined, () => {
-    // Fallback: простое оружие из примитивов
     const gun = new THREE.Group();
     const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x333 }));
     barrel.position.z = -0.3;
@@ -521,10 +540,7 @@ function setupInput() {
   });
   document.addEventListener('click', () => { 
     if(!document.pointerLockElement && State.renderer?.domElement) State.renderer.domElement.requestPointerLock();
-    // Стрельба при клике в шутере
-    if(State.currentGame === 'shooter' && document.pointerLockElement) {
-      shoot();
-    }
+    if(State.currentGame === 'shooter' && document.pointerLockElement) shoot();
   });
   if(!State.chatInitialized) {
     DOM.chatInput.addEventListener('keypress', e => {
@@ -542,13 +558,9 @@ function shoot() {
     State.ws.send(JSON.stringify({ type: 'action' }));
   }
   playShootSound();
-  
-  // Анимация отдачи оружия
   if (State.weaponMesh) {
     State.weaponMesh.position.z += 0.1;
-    setTimeout(() => {
-      if (State.weaponMesh) State.weaponMesh.position.z -= 0.1;
-    }, 100);
+    setTimeout(() => { if (State.weaponMesh) State.weaponMesh.position.z -= 0.1; }, 100);
   }
 }
 
@@ -756,7 +768,7 @@ function racingLoop() {
 }
 
 // ===== СТУДИЯ =====
-window.spawnCube = () => {
+function spawnCube() {
   if (!State.scene) return;
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(2, 2, 2),
@@ -767,9 +779,9 @@ window.spawnCube = () => {
   State.scene.add(mesh);
   State.studioObjects.push(mesh);
   DOM.objCount.textContent = State.studioObjects.length;
-};
+}
 
-window.spawnSphere = () => {
+function spawnSphere() {
   if (!State.scene) return;
   const mesh = new THREE.Mesh(
     new THREE.SphereGeometry(1.5, 32, 32),
@@ -780,19 +792,26 @@ window.spawnSphere = () => {
   State.scene.add(mesh);
   State.studioObjects.push(mesh);
   DOM.objCount.textContent = State.studioObjects.length;
-};
+}
 
-window.changeColor = () => State.studioObjects.forEach(obj => obj.material.color.setHex(Math.random() * 0xffffff));
-window.clearObjects = () => { State.studioObjects.forEach(obj => State.scene.remove(obj)); State.studioObjects = []; DOM.objCount.textContent = '0'; };
+function changeColor() {
+  State.studioObjects.forEach(obj => obj.material.color.setHex(Math.random() * 0xffffff));
+}
 
-window.runCode = () => {
+function clearObjects() {
+  State.studioObjects.forEach(obj => State.scene.remove(obj));
+  State.studioObjects = [];
+  DOM.objCount.textContent = '0';
+}
+
+function runCode() {
   try { eval(document.getElementById('code-editor').value); showToast('✅ Код выполнен!'); }
   catch (e) { showToast('❌ Ошибка: ' + e.message); }
-};
+}
 
-window.uploadModel = () => {
+function uploadModel() {
   const input = document.getElementById('model-upload');
-  if (!input.files[0]) { showToast('❌ Выберите файл'); return; }
+  if (!input.files[0]) { showToast(' Выберите файл'); return; }
   const loader = new GLTFLoader();
   const url = URL.createObjectURL(input.files[0]);
   loader.load(url, (gltf) => {
@@ -804,7 +823,7 @@ window.uploadModel = () => {
     showToast('✅ Модель загружена!');
     URL.revokeObjectURL(url);
   }, undefined, () => { showToast('❌ Ошибка'); URL.revokeObjectURL(url); });
-};
+}
 
 function showToast(msg) {
   const toast = document.createElement('div');
