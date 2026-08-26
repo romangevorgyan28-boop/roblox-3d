@@ -65,7 +65,6 @@ wss.on('connection', (ws) => {
         p.z = (Math.random() - 0.5) * 10;
         p.y = 1;
         if (d.gameId === 'shooter') p.team = Math.random() > 0.5 ? 'red' : 'blue';
-        
         games[d.gameId].players.set(pid, p);
         ws.send(JSON.stringify({ type: 'gameReady', gameId: d.gameId, team: p.team }));
       }
@@ -75,7 +74,6 @@ wss.on('connection', (ws) => {
         broadcastToGame(p.game, { type: 'chat', name: p.name, msg });
       }
 
-      // Обработка стрельбы в Team Shooter
       if (d.type === 'action' && p.game === 'shooter' && p.team) {
         games.shooter.players.forEach((other, oid) => {
           if (oid === pid || other.team === p.team) return;
@@ -88,9 +86,7 @@ wss.on('connection', (ws) => {
               other.z = (Math.random() - 0.5) * 10;
               games.shooter[p.team]++;
               broadcastToGame('shooter', {
-                type: 'kill',
-                killer: p.name,
-                victim: other.name,
+                type: 'kill', killer: p.name, victim: other.name,
                 scores: { red: games.shooter.red, blue: games.shooter.blue }
               });
             }
@@ -98,7 +94,6 @@ wss.on('connection', (ws) => {
         });
         ws.send(JSON.stringify({ type: 'shoot' }));
       }
-
     } catch (e) { console.error('WS Error:', e); }
   });
 
@@ -126,14 +121,12 @@ function broadcastToGame(gameId, data) {
 setInterval(() => {
   players.forEach(p => {
     if (p.ws.readyState !== 1 || p.game === 'menu') return;
-
     const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
     const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
     p.x += (p.input.f * fx + p.input.r * rx) * 0.15;
     p.z += (p.input.f * fz + p.input.r * rz) * 0.15;
     p.x = Math.max(-50, Math.min(50, p.x));
     p.z = Math.max(-50, Math.min(50, p.z));
-
     if (p.input.jump && p.y <= 1.1) { p.y = 3.2; p.input.jump = false; }
     if (p.y > 1) p.y -= 0.22;
     if (p.y < 1) p.y = 1;
@@ -142,23 +135,11 @@ setInterval(() => {
     if (games[p.game]?.players) {
       games[p.game].players.forEach((other, oid) => {
         if (oid !== p.id && Math.hypot(other.x - p.x, other.z - p.z) < 60) {
-          nearby.push({ 
-            id: oid, name: other.name, 
-            x: other.x, y: other.y, z: other.z, 
-            yaw: other.yaw, team: other.team,
-            health: other.health
-          });
+          nearby.push({ id: oid, name: other.name, x: other.x, y: other.y, z: other.z, yaw: other.yaw, team: other.team, health: other.health });
         }
       });
     }
-
-    p.ws.send(JSON.stringify({ 
-      type: 'snapshot', 
-      players: nearby, 
-      health: p.health, 
-      team: p.team,
-      scores: p.game === 'shooter' ? { red: games.shooter.red, blue: games.shooter.blue } : null
-    }));
+    p.ws.send(JSON.stringify({ type: 'snapshot', players: nearby, health: p.health, team: p.team, scores: p.game === 'shooter' ? { red: games.shooter.red, blue: games.shooter.blue } : null }));
   });
 }, 1000 / 24);
 
