@@ -16,7 +16,8 @@
         .search-bar input { width: 100%; padding: 9px 16px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 14px; background: #f5f6f8; outline: none; transition: border .2s; }
         .search-bar input:focus { border-color: #00a2ff; background: #fff; }
         .nav-right { display: flex; align-items: center; gap: 12px; }
-        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#00a2ff,#a855f7); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; cursor: pointer; flex-shrink: 0; }
+        .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#00a2ff,#a855f7); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; cursor: pointer; flex-shrink: 0; overflow: hidden; }
+        .user-avatar canvas { width: 100%; height: 100%; object-fit: cover; }
 
         /* ===== КОНТЕЙНЕР ===== */
         .container { display: flex; min-height: calc(100vh - 51px); }
@@ -150,6 +151,39 @@
             #minimap { width: 92px; height: 92px; }
             #btn-chat { bottom: calc(150px + env(safe-area-inset-bottom)); }
         }
+        /* ===== РЕДАКТОР АВАТАРА ===== */
+        #avatar-editor { position: fixed; inset: 0; z-index: 1500; display: none; background: linear-gradient(160deg,#141826,#1d2438 60%,#251b3a); color: #fff; }
+        #ae-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+        #ae-topbar { position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
+        #ae-topbar > * { pointer-events: auto; }
+        .ae-title { font-size: clamp(16px, 4vw, 22px); font-weight: 900; text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+        .ae-close { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.45); color: #fff; font-size: 20px; cursor: pointer; }
+        #ae-panel { position: absolute; right: 0; bottom: 0; width: min(360px, 100%); max-height: 52vh; overflow-y: auto; background: rgba(12,15,24,.86); backdrop-filter: blur(10px); border-top-left-radius: 18px; border-top: 1px solid rgba(255,255,255,.15); padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); z-index: 4; }
+        @media (min-width: 900px) and (pointer: fine) {
+            #ae-panel { top: 64px; right: 14px; bottom: auto; max-height: calc(100vh - 90px); width: 340px; border-radius: 18px; border: 1px solid rgba(255,255,255,.15); }
+        }
+        .ae-sec { margin-bottom: 12px; }
+        .ae-sec h5 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; opacity: .75; margin: 0 0 7px; }
+        .ae-swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+        .ae-sw { width: 34px; height: 34px; border-radius: 10px; cursor: pointer; border: 2px solid rgba(255,255,255,.25); transition: transform .12s; }
+        .ae-sw:hover { transform: scale(1.12); }
+        .ae-sw.on { border-color: #ffd45e; box-shadow: 0 0 0 2px #ffd45e55; }
+        .ae-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 7px 0; font-size: 13px; }
+        .ae-row input[type=range] { flex: 1; accent-color: #00a2ff; max-width: 170px; }
+        .ae-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .ae-chip { padding: 6px 11px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); color: #fff; font-size: 12px; cursor: pointer; white-space: nowrap; }
+        .ae-chip.on { background: #00a2ff; border-color: #00a2ff; font-weight: 700; }
+        .ae-btns { display: flex; gap: 8px; margin-top: 10px; }
+        .ae-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 800; font-size: 14px; cursor: pointer; }
+        .ae-btn.save { background: linear-gradient(135deg,#00c853,#00a2ff); color: #fff; }
+        .ae-btn.rand { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+        #ae-hint { position: absolute; bottom: calc(54vh + 8px); left: 50%; transform: translateX(-50%); font-size: 12px; opacity: .7; pointer-events: none; z-index: 3; text-shadow: 0 1px 4px #000; white-space: nowrap; }
+        @media (min-width: 900px) and (pointer: fine) { #ae-hint { bottom: 16px; } }
+        #avatar-preview-menu { position: fixed; inset: 0; z-index: 1600; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.72); backdrop-filter: blur(6px); }
+        .apm-box { background: #fff; color: #191919; border-radius: 18px; padding: 22px; width: min(340px, 92vw); text-align: center; }
+        .apm-box canvas { width: 190px; height: 230px; border-radius: 12px; background: linear-gradient(#dfeafc,#b8d4f0); }
+        /* ===== Аватар: кнопка в настройках игры ===== */
+        #ae-open-ingame { position: fixed; top: calc(56px + env(safe-area-inset-top)); right: 12px; z-index: 36; width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.55); color: #fff; font-size: 19px; cursor: pointer; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #aaa; border-radius: 4px; }
@@ -164,7 +198,48 @@
         <p style="color:#666;margin-bottom:12px">Введите никнейм для входа</p>
         <input type="text" id="reg-input" class="reg-input" placeholder="Никнейм" maxlength="16" autocomplete="off">
         <div id="reg-error" style="color:#e33;margin:6px 0;font-size:13px;min-height:16px"></div>
+        <button id="reg-avatar" class="reg-btn" style="background:#7c3aed;margin-top:8px">👕 Создать аватар</button>
         <button id="reg-btn" class="reg-btn" disabled>Играть</button>
+    </div>
+</div>
+
+<!-- РЕДАКТОР АВАТАРА -->
+<div id="avatar-editor">
+    <canvas id="ae-canvas"></canvas>
+    <div id="ae-topbar">
+        <div class="ae-title">👕 Редактор аватара</div>
+        <button class="ae-close" id="ae-close">✕</button>
+    </div>
+    <div id="ae-hint">☝️ Вращай модель пальцем / мышью · колесо — зум</div>
+    <div id="ae-panel">
+        <div class="ae-sec"><h5>🎨 Цвет футболки</h5><div class="ae-swatches" id="ae-shirt"></div></div>
+        <div class="ae-sec"><h5>👖 Цвет штанов</h5><div class="ae-swatches" id="ae-pants"></div></div>
+        <div class="ae-sec"><h5>🖐️ Цвет кожи</h5><div class="ae-swatches" id="ae-skin"></div></div>
+        <div class="ae-sec"><h5>💇 Причёска</h5><div class="ae-chips" id="ae-hair"></div></div>
+        <div class="ae-sec"><h5>Цвет волос</h5><div class="ae-swatches" id="ae-haircol"></div></div>
+        <div class="ae-sec"><h5>😀 Лицо</h5><div class="ae-chips" id="ae-face"></div></div>
+        <div class="ae-sec"><h5>🧢 Шляпа</h5><div class="ae-chips" id="ae-hat"></div></div>
+        <div class="ae-sec"><h5>📏 Рост: <b id="ae-height-val">1.0×</b></h5>
+            <div class="ae-row"><span>Малыш</span><input type="range" id="ae-height" min="80" max="125" value="100"><span>Богатырь</span></div></div>
+        <div class="ae-sec"><h5>🏋️ Телосложение: <b id="ae-build-val">1.0×</b></h5>
+            <div class="ae-row"><span>Худыш</span><input type="range" id="ae-build" min="80" max="130" value="100"><span>Крепыш</span></div></div>
+        <div class="ae-btns">
+            <button class="ae-btn rand" id="ae-rand">🎲 Случайно</button>
+            <button class="ae-btn save" id="ae-save">✅ Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<!-- ПРЕВЬЮ АВАТАРА В МЕНЮ -->
+<div id="avatar-preview-menu">
+    <div class="apm-box">
+        <h3 style="margin:0 0 4px">Твой аватар</h3>
+        <p id="apm-name" style="color:#666;font-size:13px;margin-bottom:10px"></p>
+        <canvas id="apm-canvas"></canvas>
+        <div style="display:flex;gap:8px;margin-top:14px">
+            <button class="reg-btn" id="apm-edit" style="background:#7c3aed;margin:0">👕 Изменить</button>
+            <button class="reg-btn" id="apm-close" style="background:#555;margin:0">Закрыть</button>
+        </div>
     </div>
 </div>
 
@@ -172,7 +247,10 @@
 <nav class="navbar">
     <div class="logo">🧱 <span class="txt">ROBLOX</span></div>
     <div class="search-bar"><input type="text" id="search-input" placeholder="Поиск игр"></div>
-    <div class="nav-right"><div class="user-avatar" id="user-avatar">?</div></div>
+    <div class="nav-right">
+        <button id="btn-avatar-menu" title="Мой аватар" style="width:34px;height:34px;border-radius:50%;border:2px solid rgba(0,0,0,.12);background:#fff;font-size:17px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0">🙂</button>
+        <div class="user-avatar" id="user-avatar">?</div>
+    </div>
 </nav>
 
 <div class="container">
@@ -230,7 +308,10 @@
     <div id="chat-log"></div>
     <div id="crosshair"></div>
     <div id="toast"></div>
+    <div id="killfeed" style="position:fixed;top:calc(70px + env(safe-area-inset-top));right:12px;z-index:25;pointer-events:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px"></div>
+    <div id="respawn-timer" style="display:none;position:fixed;top:38%;left:50%;transform:translateX(-50%);z-index:28;pointer-events:none;color:#fff;font-size:clamp(16px,4vw,24px);font-weight:900;text-shadow:0 2px 10px #000;background:rgba(0,0,0,.45);padding:8px 18px;border-radius:12px"></div>
     <button id="btn-settings" title="Настройки">⚙️</button>
+    <button id="ae-open-ingame" title="Мой аватар">👕</button>
     <div id="settings-panel">
         <h4>⚙️ Настройки</h4>
         <div class="set-row"><label>Графика</label>
@@ -262,11 +343,12 @@
 
 <script type="module">
 // ============================================================
-//  ROBLOX 3D ULTIMATE — клиент v5.0
+//  ROBLOX 3D ULTIMATE — клиент v7.0
 //  Three.js: теневой рендеринг, туман, PBR-окружение,
 //  покачивание оружия, вспышки, тряска камеры, звук.
 //  Управление: ПК (WASD + PointerLock + мышь) и телефон
 //  (виртуальный джойстик + свайп обзора + кнопки).
+//  v7: редактор аватара + улучшенная модель персонажа.
 // ============================================================
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
@@ -281,12 +363,34 @@ const State = {
     lastShotFx: 0, shake: 0, hp: 100, team: null, dead: false, escaped: false,
     audioCtx: null, shootSoundBuf: null,
     isMobile: matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent),
-    quality: 1, fpsHistory: [], sens: 1.0, autoQuality: true, showFps: false, lastSnapT: 0, netPing: 0
+    quality: 1, fpsHistory: [], sens: 1.0, autoQuality: true, showFps: false, lastSnapT: 0, netPing: 0,
+    avatar: null, pendingAvatarOpen: false
 };
+
+// ================= АВАТАР: КОНФИГ И ПАЛИТРЫ =================
+const AVATAR_DEFAULT = { shirt: '#dd3b3b', pants: '#2b3a55', skin: '#f2b48c', hair: 'box', hairColor: '#2c1b0e', face: 'smile', hat: 'none', height: 1.0, build: 1.0 };
+const PAL_SHIRT = ['#dd3b3b','#2e6fd0','#2ecc71','#9b59b6','#f39c12','#1abc9c','#e84393','#ecf0f1','#34495e','#e67e22','#00cec9','#fd79a8'];
+const PAL_PANTS = ['#2b3a55','#22252b','#5d4037','#37474f','#4527a0','#00695c','#bf360c','#546e7a','#1b1b2f','#33691e'];
+const PAL_SKIN  = ['#ffe0bd','#f2b48c','#dba173','#c68642','#8d5524','#ffcc99','#e8beac','#a06a3e'];
+const PAL_HAIRC = ['#2c1b0e','#000000','#6b3e26','#c98a3b','#e8d8b0','#b71540','#6a4c93','#2e86de','#10ac84','#f368e0','#dfe6e9'];
+const HAIR_STYLES = [['box','Ёжик'],['flat','Каре'],['long','Длинные'],['bald','Лысый'],['spiky','Ирокез']];
+const FACE_STYLES = [['smile','Улыбка'],['cool','😎 Очки'],['wink','Подмигнуть'],['surprised','О!'],['angry','Злой']];
+const HAT_STYLES  = [['none','Без шляпы'],['cap','🧢 Кепка'],['top','🎩 Цилиндр'],['beanie','🪶 Шапка'],['crown','👑 Корона']];
+
+function loadAvatar() {
+    try {
+        const a = JSON.parse(localStorage.getItem('r3d_avatar'));
+        if (a && typeof a === 'object') return Object.assign({}, AVATAR_DEFAULT, a);
+    } catch (e) {}
+    return Object.assign({}, AVATAR_DEFAULT);
+}
+function saveAvatar(a) { localStorage.setItem('r3d_avatar', JSON.stringify(a)); }
+State.avatar = loadAvatar();
 
 const DOM = {
     regModal: document.getElementById('reg-modal'), regInput: document.getElementById('reg-input'),
     regBtn: document.getElementById('reg-btn'), regError: document.getElementById('reg-error'),
+    regAvatarBtn: document.getElementById('reg-avatar'),
     userAvatar: document.getElementById('user-avatar'), gameUI: document.getElementById('game-ui'),
     canvas: document.getElementById('game-canvas'), friendsList: document.getElementById('friends-list'),
     continueGames: document.getElementById('continue-games'), scores: document.getElementById('scores'),
@@ -298,7 +402,15 @@ const DOM = {
     lockHint: document.getElementById('lock-hint'), actionBtn: document.getElementById('btn-action'),
     btnSettings: document.getElementById('btn-settings'), settingsPanel: document.getElementById('settings-panel'),
     minimap: document.getElementById('minimap'), minimapCanvas: document.getElementById('minimap-canvas'),
-    deadOverlay: document.getElementById('dead-overlay'), fpsBadge: null
+    deadOverlay: document.getElementById('dead-overlay'), fpsBadge: null,
+    avatarEditor: document.getElementById('avatar-editor'), aeCanvas: document.getElementById('ae-canvas'),
+    aeClose: document.getElementById('ae-close'), aeRand: document.getElementById('ae-rand'), aeSave: document.getElementById('ae-save'),
+    aeHeight: document.getElementById('ae-height'), aeBuild: document.getElementById('ae-build'),
+    aeHeightVal: document.getElementById('ae-height-val'), aeBuildVal: document.getElementById('ae-build-val'),
+    btnAvatarMenu: document.getElementById('btn-avatar-menu'),
+    apm: document.getElementById('avatar-preview-menu'), apmName: document.getElementById('apm-name'),
+    apmCanvas: document.getElementById('apm-canvas'), apmEdit: document.getElementById('apm-edit'), apmClose: document.getElementById('apm-close'),
+    aeOpenIngame: document.getElementById('ae-open-ingame')
 };
 
 const GAME_INFO = {
@@ -311,13 +423,17 @@ const GAME_INFO = {
 // ================= МЕНЮ =================
 function initMenu() {
     const saved = localStorage.getItem('r3d_name');
-    if (saved) { State.playerName = saved; DOM.regModal.style.display = 'none'; DOM.userAvatar.textContent = saved.charAt(0).toUpperCase(); }
+    if (saved) { State.playerName = saved; DOM.regModal.style.display = 'none'; updateAvatarBadge(); }
     else {
         DOM.regInput.addEventListener('input', checkName);
         DOM.regBtn.addEventListener('click', register);
         DOM.regInput.addEventListener('keypress', e => { if (e.key === 'Enter' && !DOM.regBtn.disabled) register(); });
         setTimeout(() => DOM.regInput.focus(), 300);
     }
+    DOM.regAvatarBtn.addEventListener('click', () => openAvatarEditor(true));
+    DOM.btnAvatarMenu.addEventListener('click', openAvatarPreview);
+    DOM.apmClose.addEventListener('click', () => DOM.apm.style.display = 'none');
+    DOM.apmEdit.addEventListener('click', () => { DOM.apm.style.display = 'none'; openAvatarEditor(false); });
 
     // поиск
     document.getElementById('search-input').addEventListener('input', e => {
@@ -365,7 +481,14 @@ function register() {
     State.playerName = name;
     localStorage.setItem('r3d_name', name);
     DOM.regModal.style.display = 'none';
-    DOM.userAvatar.textContent = name.charAt(0).toUpperCase();
+    updateAvatarBadge();
+}
+
+// Бейдж аватара в шапке — рисуем мини-превью персонажа
+function updateAvatarBadge() {
+    DOM.userAvatar.textContent = '';
+    try { renderAvatarSnapshot(DOM.userAvatar, 68, State.avatar); }
+    catch (e) { DOM.userAvatar.textContent = (State.playerName || '?').charAt(0).toUpperCase(); }
 }
 
 // ================= ЗАПУСК ИГРЫ =================
@@ -506,32 +629,207 @@ function labelSprite(text, color = '#fff') {
     return sp;
 }
 
-// Блочная «роблокс»-фигура персонажа
-function buildCharacter(color, accent) {
+// Блочный «роблокс»-персонаж v7 — строится из конфига аватара.
+// cfg: { shirt, pants, skin, hair, hairColor, face, hat, height, build }
+function buildCharacter(cfg) {
+    cfg = Object.assign({}, AVATAR_DEFAULT, cfg || {});
+    const H = Math.max(.8, Math.min(1.25, +cfg.height || 1));   // рост
+    const B = Math.max(.8, Math.min(1.3, +cfg.build || 1));     // телосложение
     const g = new THREE.Group();
-    const skin = 0xf5cba7;
-    const matBody = new THREE.MeshStandardMaterial({ color, roughness: .8 });
-    const matSkin = new THREE.MeshStandardMaterial({ color: skin, roughness: .9 });
-    const matPants = new THREE.MeshStandardMaterial({ color: accent, roughness: .85 });
-
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(1, 1.0, .55), matBody); torso.position.y = 1.55;
-    const hips = new THREE.Mesh(new THREE.BoxGeometry(1, .3, .55), matPants); hips.position.y = .95;
-    const legL = new THREE.Mesh(new THREE.BoxGeometry(.42, .85, .48), matPants); legL.position.set(-.25, .45, 0);
-    const legR = new THREE.Mesh(new THREE.BoxGeometry(.42, .85, .48), matPants); legR.position.set(.25, .45, 0);
-    const armL = new THREE.Mesh(new THREE.BoxGeometry(.32, .95, .32), matBody); armL.position.set(-.68, 1.55, 0);
-    const armR = new THREE.Mesh(new THREE.BoxGeometry(.32, .95, .32), matBody); armR.position.set(.68, 1.55, 0);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(.75, .7, .7), matSkin); head.position.y = 2.45;
-    const hair = new THREE.Mesh(new THREE.BoxGeometry(.8, .25, .75), new THREE.MeshStandardMaterial({ color: 0x2c1b0e, roughness: 1 })); hair.position.y = 2.85;
-
+    const matBody = new THREE.MeshStandardMaterial({ color: cfg.shirt, roughness: .8 });
+    const matSkin = new THREE.MeshStandardMaterial({ color: cfg.skin, roughness: .9 });
+    const matPants = new THREE.MeshStandardMaterial({ color: cfg.pants, roughness: .85 });
+    const matShoe = new THREE.MeshStandardMaterial({ color: 0x1c1e24, roughness: .6 });
+    const matHair = new THREE.MeshStandardMaterial({ color: cfg.hairColor, roughness: 1 });
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-    const eL = new THREE.Mesh(new THREE.BoxGeometry(.1, .12, .04), eyeMat); eL.position.set(-.16, 2.5, .36);
-    const eR = new THREE.Mesh(new THREE.BoxGeometry(.1, .12, .04), eyeMat); eR.position.set(.16, 2.5, .36);
-    const smile = new THREE.Mesh(new THREE.BoxGeometry(.3, .05, .04), eyeMat); smile.position.set(0, 2.32, .36);
 
-    [torso, hips, legL, legR, armL, armR, head, hair].forEach(m => { m.castShadow = true; m.receiveShadow = true; });
-    g.add(torso, hips, legL, legR, armL, armR, head, hair, eL, eR, smile);
-    g.userData.parts = { legL, legR, armL, armR, torso, head };
+    const torsoW = 1 * B, torsoD = .55 * B;
+    const legH = .85, armW = .3 * Math.max(1, B * .92);
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(torsoW, 1.0, torsoD), matBody); torso.position.y = 1.55;
+    const collar = new THREE.Mesh(new THREE.BoxGeometry(torsoW * .55, .09, torsoD * .75), matSkin); collar.position.y = 2.06;
+    const hips = new THREE.Mesh(new THREE.BoxGeometry(torsoW, .3, torsoD), matPants); hips.position.y = .95;
+    const legL = new THREE.Group(); legL.position.set(-.25, .9, 0);
+    const legR = new THREE.Group(); legR.position.set(.25, .9, 0);
+    const mkLeg = grp => {
+        const l = new THREE.Mesh(new THREE.BoxGeometry(.42, legH, .48), matPants); l.position.y = -legH / 2;
+        const shoe = new THREE.Mesh(new THREE.BoxGeometry(.46, .18, .58), matShoe); shoe.position.set(0, -legH + .09, .06);
+        grp.add(l, shoe); return grp;
+    };
+    mkLeg(legL); mkLeg(legR);
+    const armL = new THREE.Group(); armL.position.set(-(torsoW / 2 + armW / 2 - .04), 2.02, 0);
+    const armR = new THREE.Group(); armR.position.set(torsoW / 2 + armW / 2 - .04, 2.02, 0);
+    const mkArm = (grp, sleeve) => {
+        const a = new THREE.Mesh(new THREE.BoxGeometry(armW, .95, armW), sleeve ? matBody : matBody); a.position.y = -.475;
+        const hand = new THREE.Mesh(new THREE.BoxGeometry(armW * .92, .18, armW * .92), matSkin); hand.position.y = -1.0;
+        grp.add(a, hand); return grp;
+    };
+    mkArm(armL, true); mkArm(armR, true);
+
+    // голова на «шее» — группа для покачивания
+    const headGrp = new THREE.Group(); headGrp.position.y = 2.45;
+    const neck = new THREE.Mesh(new THREE.BoxGeometry(.22, .18, .22), matSkin); neck.position.y = -.44;
+    const head = new THREE.Mesh(new THREE.BoxGeometry(.75, .7, .7), matSkin);
+    const earL = new THREE.Mesh(new THREE.BoxGeometry(.09, .18, .1), matSkin); earL.position.set(-.4, 0, 0);
+    const earR = new THREE.Mesh(new THREE.BoxGeometry(.09, .18, .1), matSkin); earR.position.set(.4, 0, 0);
+    headGrp.add(neck, head, earL, earR);
+
+    // ---- лицо (глаза/брови/рот по стилю) ----
+    const FZ = .355;
+    const mkEye = (x, closed) => {
+        const e = new THREE.Mesh(new THREE.BoxGeometry(.11, closed ? .03 : .13, .04), eyeMat);
+        e.position.set(x, .05, FZ); return e;
+    };
+    const faceItems = [];
+    const face = cfg.face;
+    if (face === 'wink') { faceItems.push(mkEye(-.16, false), mkEye(.16, true)); }
+    else if (face === 'surprised') {
+        const o = new THREE.Mesh(new THREE.CircleGeometry(.06, 10), eyeMat); o.position.set(-.16, .05, FZ + .005);
+        const o2 = new THREE.Mesh(new THREE.CircleGeometry(.06, 10), eyeMat); o2.position.set(.16, .05, FZ + .005);
+        const mo = new THREE.Mesh(new THREE.CircleGeometry(.07, 10), eyeMat); mo.position.set(0, -.19, FZ + .005);
+        faceItems.push(o, o2, mo);
+    }
+    else { faceItems.push(mkEye(-.16, false), mkEye(.16, false)); }
+    if (face === 'angry') {
+        const b1 = new THREE.Mesh(new THREE.BoxGeometry(.14, .04, .04), eyeMat); b1.position.set(-.16, .17, FZ); b1.rotation.z = .35;
+        const b2 = new THREE.Mesh(new THREE.BoxGeometry(.14, .04, .04), eyeMat); b2.position.set(.16, .17, FZ); b2.rotation.z = -.35;
+        faceItems.push(b1, b2);
+    }
+    if (face !== 'surprised') {
+        const mouthGeo = face === 'smile' ? new THREE.TorusGeometry(.11, .022, 6, 12, Math.PI)
+                        : face === 'angry' ? new THREE.BoxGeometry(.2, .04, .04)
+                        : new THREE.BoxGeometry(.22, .05, .04);
+        const mouth = new THREE.Mesh(mouthGeo, eyeMat);
+        mouth.position.set(0, -.17, FZ);
+        if (face === 'smile') mouth.rotation.z = Math.PI;           // дуга вверх = улыбка
+        if (face === 'angry') mouth.rotation.z = -.12;
+        faceItems.push(mouth);
+    }
+    if (face === 'cool') {
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: .15, metalness: .6 });
+        const gl = new THREE.Mesh(new THREE.BoxGeometry(.2, .12, .05), glassMat); gl.position.set(-.15, .05, FZ);
+        const gr = new THREE.Mesh(new THREE.BoxGeometry(.2, .12, .05), glassMat); gr.position.set(.15, .05, FZ);
+        const bridge = new THREE.Mesh(new THREE.BoxGeometry(.08, .03, .05), glassMat); bridge.position.set(0, .07, FZ);
+        faceItems.push(gl, gr, bridge);
+    }
+    faceItems.forEach(m => headGrp.add(m));
+
+    // ---- причёски ----
+    const hairStyle = cfg.hair;
+    if (hairStyle === 'box') {
+        const hair = new THREE.Mesh(new THREE.BoxGeometry(.8, .22, .75), matHair); hair.position.y = .44; headGrp.add(hair);
+    } else if (hairStyle === 'flat') {
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(.82, .3, .78), matHair); cap.position.y = .32;
+        const fringe = new THREE.Mesh(new THREE.BoxGeometry(.78, .16, .1), matHair); fringe.position.set(0, .12, .36);
+        headGrp.add(cap, fringe);
+    } else if (hairStyle === 'long') {
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(.82, .26, .78), matHair); cap.position.y = .36;
+        const back = new THREE.Mesh(new THREE.BoxGeometry(.74, .8, .16), matHair); back.position.set(0, -.05, -.36);
+        const sL = new THREE.Mesh(new THREE.BoxGeometry(.14, .6, .16), matHair); sL.position.set(-.36, -.1, .18);
+        const sR = new THREE.Mesh(new THREE.BoxGeometry(.14, .6, .16), matHair); sR.position.set(.36, -.1, .18);
+        headGrp.add(cap, back, sL, sR);
+    } else if (hairStyle === 'spiky') {
+        for (let i = 0; i < 5; i++) {
+            const sp = new THREE.Mesh(new THREE.ConeGeometry(.09, .3, 5), matHair);
+            sp.position.set(-.28 + i * .14, .5, (i % 2 ? .1 : -.1));
+            sp.rotation.z = (i - 2) * .12;
+            headGrp.add(sp);
+        }
+    } // bald — без волос
+
+    // ---- шляпы ----
+    const hat = cfg.hat;
+    if (hat === 'cap') {
+        const crownM = new THREE.Mesh(new THREE.CylinderGeometry(.42, .44, .22, 10), matBody.clone()); crownM.material.color.set(cfg.shirt).offsetHSL(0, 0, -.08);
+        crownM.position.y = .5;
+        const brim = new THREE.Mesh(new THREE.BoxGeometry(.5, .05, .34), crownM.material); brim.position.set(0, .4, .5);
+        const btn = new THREE.Mesh(new THREE.SphereGeometry(.05, 6, 6), crownM.material); btn.position.y = .62;
+        headGrp.add(crownM, brim, btn);
+    } else if (hat === 'top') {
+        const hmat = new THREE.MeshStandardMaterial({ color: 0x15151a, roughness: .4 });
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .05, 12), hmat); base.position.y = .42;
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .55, 12), hmat); tube.position.y = .72;
+        const band = new THREE.Mesh(new THREE.CylinderGeometry(.35, .35, .1, 12), new THREE.MeshStandardMaterial({ color: cfg.shirt, roughness: .6 })); band.position.y = .5;
+        headGrp.add(base, tube, band);
+    } else if (hat === 'beanie') {
+        const bmat = new THREE.MeshStandardMaterial({ color: 0x8e44ad, roughness: 1 });
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(.42, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), bmat); dome.position.y = .34;
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(.44, .44, .12, 12), new THREE.MeshStandardMaterial({ color: 0xa56bd6, roughness: 1 })); rim.position.y = .34;
+        const pom = new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 })); pom.position.y = .78;
+        headGrp.add(dome, rim, pom);
+    } else if (hat === 'crown') {
+        const cmat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: .85, roughness: .25, emissive: 0x554400, emissiveIntensity: .35 });
+        const ring = new THREE.Mesh(new THREE.CylinderGeometry(.4, .44, .2, 8, 1, true), cmat); ring.position.y = .52;
+        headGrp.add(ring);
+        for (let i = 0; i < 4; i++) {
+            const spike = new THREE.Mesh(new THREE.ConeGeometry(.08, .22, 4), cmat);
+            const a = i * Math.PI / 2 + Math.PI / 4;
+            spike.position.set(Math.cos(a) * .34, .72, Math.sin(a) * .34);
+            headGrp.add(spike);
+        }
+        const gem = new THREE.Mesh(new THREE.OctahedronGeometry(.07), new THREE.MeshStandardMaterial({ color: 0xff2255, emissive: 0xaa0033, emissiveIntensity: .9, roughness: .2 }));
+        gem.position.set(0, .62, .44); headGrp.add(gem);
+    }
+
+    [torso, collar, hips, head, earL, earR].forEach(m => { m.castShadow = true; m.receiveShadow = true; });
+    headGrp.traverse(m => { if (m.isMesh) { m.castShadow = true; } });
+    legL.traverse(m => { if (m.isMesh) m.castShadow = true; });
+    legR.traverse(m => { if (m.isMesh) m.castShadow = true; });
+    armL.traverse(m => { if (m.isMesh) m.castShadow = true; });
+    armR.traverse(m => { if (m.isMesh) m.castShadow = true; });
+
+    g.add(torso, hips, legL, legR, armL, armR, headGrp);
+    g.scale.set(B, H, B);   // рост и телосложение
+    g.userData.parts = { legL, legR, armL, armR, torso, head: headGrp };
+    g.userData.avatarCfg = cfg;
     return g;
+}
+
+// Перекраска торса/рукавов в цвет команды (шутер)
+function tintTeam(mesh, team) {
+    const parts = mesh?.userData?.parts;
+    if (!parts) return;
+    const col = team === 'red' ? '#d03030' : '#2e6fd0';
+    parts.torso.material.color.set(col);
+    if (parts.armL.children[0]) parts.armL.children[0].material.color.set(col);
+    if (parts.armR.children[0]) parts.armR.children[0].material.color.set(col);
+}
+
+// ---------- оффскрин-рендер превью аватара ----------
+const _snap = { renderer: null, scene: null, camera: null, light: null };
+function renderAvatarSnapshot(container, px, cfg) {
+    if (!_snap.renderer) {
+        _snap.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+        _snap.scene = new THREE.Scene();
+        _snap.camera = new THREE.PerspectiveCamera(35, 1, .1, 20);
+        _snap.camera.position.set(0, 2.2, 5.6);
+        _snap.camera.lookAt(0, 1.5, 0);
+        _snap.scene.add(new THREE.HemisphereLight(0xdfefff, 0x606050, 1.1));
+        _snap.light = new THREE.DirectionalLight(0xffffff, 1.6); _snap.light.position.set(2, 4, 3);
+        _snap.scene.add(_snap.light);
+    }
+    // чистим старые модели
+    for (let i = _snap.scene.children.length - 1; i >= 0; i--) {
+        const c = _snap.scene.children[i];
+        if (c.type === 'Group') { _snap.scene.remove(c); disposeObject(c); }
+    }
+    const model = buildCharacter(cfg);
+    model.rotation.y = -.5;
+    _snap.scene.add(model);
+    _snap.renderer.setSize(px, Math.round(px * 1.25), false);
+    _snap.renderer.render(_snap.scene, _snap.camera);
+    let cv = container.querySelector('canvas');
+    if (!cv) { cv = document.createElement('canvas'); container.appendChild(cv); }
+    cv.width = _snap.renderer.domElement.width; cv.height = _snap.renderer.domElement.height;
+    cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+    cv.getContext('2d').drawImage(_snap.renderer.domElement, 0, 0);
+}
+
+function disposeObject(obj) {
+    obj.traverse(o => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose());
+    });
 }
 
 function attachRifle(group) {
@@ -841,10 +1139,10 @@ function init3D() {
     if (State.currentGame === 'brainrot') buildBrainrotMap(State.scene);
     if (State.currentGame === 'cheese') buildCheeseMap(State.scene);
 
-    // персонаж от 3-го лица
-    const bodyColor = State.currentGame === 'shooter' ? (State.team === 'red' ? 0xd03030 : 0x2e6fd0) : 0xdd3b3b;
-    State.playerMesh = buildCharacter(bodyColor, 0x2b3a55);
+    // персонаж от 3-го лица — из аватара игрока
+    State.playerMesh = buildCharacter(State.avatar);
     State.scene.add(State.playerMesh);
+    if (State.currentGame === 'shooter' && State.team) tintTeam(State.playerMesh, State.team);
 
     // оружие в руке игрока (видно в 3rd person) + своё на камере (для FPS-режима шутера)
     State.weaponGroup = attachRifle(State.playerMesh);
@@ -1165,7 +1463,7 @@ function doAction() {
         vibrate(25);
     } else {
         // brookhaven / brainrot — взмах руки-приветствия
-        if (State.playerMesh) animateWalk(State.playerMesh, performance.now() / 1000 + 100, true);
+        waveHand();
         State.ws.send(JSON.stringify({ type: 'action', what: 'wave' }));
     }
 }
@@ -1267,11 +1565,7 @@ function handleNet(d) {
         case 'error': toast('⚠️ ' + d.msg); break;
         case 'gameReady':
             State.team = d.team;
-            if (d.team && State.playerMesh) {
-                // перекрасить торс в цвет команды
-                const torso = State.playerMesh.userData.parts?.torso;
-                if (torso) { torso.material = torso.material.clone(); torso.material.color.set(d.team === 'red' ? 0xd03030 : 0x2e6fd0); }
-            }
+            if (d.team && State.playerMesh) tintTeam(State.playerMesh, d.team);
             applyWorld(d.world);
             toast(GAME_INFO[d.gameId].title);
             break;
@@ -1289,7 +1583,13 @@ function handleNet(d) {
             if (d.scores) { DOM.scoreRed.textContent = d.scores.red; DOM.scoreBlue.textContent = d.scores.blue; }
             break;
         case 'shootFired': break;
-        case 'shootResult': if (d.hit) { playHitmarker(); State.shake = Math.min(.4, State.shake + .06); } break;
+        case 'shootResult':
+            if (d.hit) {
+                playHitmarker(); State.shake = Math.min(.4, State.shake + .06);
+                showHitmarker(d.killed);
+                if (d.killed) addKillfeed(d.killer || State.playerName, d.victim || 'враг');
+            }
+            break;
         case 'hit':
             State.shake = Math.min(.5, State.shake + .2);
             flashDamage();
@@ -1297,6 +1597,7 @@ function handleNet(d) {
             break;
         case 'kill':
             toast(`💀 ${d.killer} убил ${d.victim}`);
+            addKillfeed(d.killer, d.victim);
             break;
         case 'artifactStolen': toast(`🧠 ${d.name} украл брейнрот!`); break;
         case 'brainrotWin': toast(`🏆 ${d.name} донёс брейнрот до базы!`); break;
@@ -1367,10 +1668,24 @@ function syncRemotePlayers(list) {
         seen.add(rp.id);
         let mesh = State.remoteMeshes.get(rp.id);
         if (!mesh) {
-            const color = rp.team === 'red' ? 0xd03030 : rp.team === 'blue' ? 0x2e6fd0 : (rp.isBot ? 0x888899 : 0x33aa55);
-            mesh = buildCharacter(color, 0x2b3a55);
+            // удалённый игрок: его аватар из сети, либо случайный/бот-раскраска
+            let cfg;
+            if (rp.avatar) cfg = Object.assign({}, AVATAR_DEFAULT, rp.avatar);
+            else {
+                const pal = rp.team === 'red' ? PAL_SHIRT.filter((_, i) => i < 6) : rp.team === 'blue' ? PAL_SHIRT.slice(4) : ['#33aa55', '#2ecc71', '#27ae60', '#1abc9c'];
+                cfg = Object.assign({}, AVATAR_DEFAULT, {
+                    shirt: pal[Math.floor(Math.random() * pal.length)],
+                    skin: PAL_SKIN[Math.floor(Math.random() * PAL_SKIN.length)],
+                    hair: HAIR_STYLES[Math.floor(Math.random() * (HAIR_STYLES.length - 1))][0],
+                    hairColor: PAL_HAIRC[Math.floor(Math.random() * 5)],
+                    face: FACE_STYLES[Math.floor(Math.random() * FACE_STYLES.length)][0],
+                    height: .88 + Math.random() * .3, build: .88 + Math.random() * .3
+                });
+            }
+            mesh = buildCharacter(cfg);
+            if (rp.team) tintTeam(mesh, rp.team);
             const label = labelSprite(rp.name + (rp.isBot ? ' 🤖' : ''), rp.team === 'red' ? '#ff8a8a' : rp.team === 'blue' ? '#8ab8ff' : '#ffffff');
-            label.position.y = 3.3;
+            label.position.y = 3.5;
             mesh.add(label);
             mesh.userData.label = label;
             State.scene.add(mesh);
@@ -1679,10 +1994,32 @@ function animateWalk(mesh, t, moving) {
         parts.armL.rotation.x = -s * .55;
         parts.armR.rotation.x = s * .55;
         parts.torso.position.y = 1.55 + Math.abs(Math.sin(t * 10)) * .05;
+        if (parts.head) {
+            parts.head.rotation.y = Math.sin(t * 5) * .06;          // лёгкое покачивание головы
+            parts.head.position.y = 2.45 + Math.abs(Math.sin(t * 10)) * .03;
+        }
     } else {
         parts.legL.rotation.x *= .8; parts.legR.rotation.x *= .8;
         parts.armL.rotation.x *= .8; parts.armR.rotation.x *= .8;
+        if (parts.head) { parts.head.rotation.y *= .85; parts.head.position.y += (2.45 - parts.head.position.y) * .2; }
+        // дыхание в покое
+        parts.torso.position.y = 1.55 + Math.sin(t * 2.2) * .012;
     }
+}
+
+// «Привет» — взмах правой рукой
+function waveHand() {
+    const p = State.playerMesh?.userData?.parts;
+    if (!p) return;
+    const start = performance.now();
+    State._waving = true;
+    (function step() {
+        const e = (performance.now() - start) / 1000;
+        if (e > 1 || !State.playerMesh) { p.armR.rotation.z = 0; p.armR.rotation.x = 0; State._waving = false; return; }
+        p.armR.rotation.z = -2.2;
+        p.armR.rotation.x = Math.sin(e * 12) * .5;
+        requestAnimationFrame(step);
+    })();
 }
 
 function teardown3D() {
