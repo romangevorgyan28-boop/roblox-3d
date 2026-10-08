@@ -96,7 +96,7 @@ function damageEntity(t, dmg, attacker) {
   if (t.escaped || t.health <= 0) return;
   t.health -= dmg;
   sendTo(t, { type: 'hit', dmg });
-  if (attacker) sendTo(attacker, { type: 'shootResult', hit: true });
+  if (attacker) sendTo(attacker, { type: 'shootResult', hit: true, killed: t.health <= 0 && t.game === 'shooter', killer: attacker.name, victim: t.name });
   if (t.health <= 0) {
     if (t.game === 'shooter') {
       const winTeam = attacker?.team || (t.team === 'red' ? 'blue' : 'red');
