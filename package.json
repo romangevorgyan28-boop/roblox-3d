@@ -1,6 +1,7 @@
 {
-  "name": "roblox-3d",
-  "version": "1.0.0",
+  "name": "roblox-3d-ultimate",
+  "version": "2.0.0",
+  "description": "Roblox 3D Ultimate - Multiplayer Game",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -8,5 +9,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
