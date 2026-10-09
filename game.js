@@ -227,7 +227,8 @@ function handleNet(d) {
       State.playerId = d.id;
       State.authenticated = !!d.authenticated;
       if (State.authenticated) { State.playerName = d.name; localStorage.setItem('r3d_name', d.name); }
-      send({ type: 'join', gameId: State.currentGame });
+      updateUserChip();
+      if (State.currentGame) send({ type: 'join', gameId: State.currentGame });
       addChat('sys', `Добро пожаловать, ${d.name}! 🎮`);
       break;
     case 'stats':
@@ -238,6 +239,17 @@ function handleNet(d) {
       if (e && e.applyAvatar) e.applyAvatar(d.avatar);
       break;
     }
+    case 'authOk': {
+      State.token = d.token; State.playerName = d.username; State.authenticated = true;
+      State.avatar = d.avatar || null;
+      localStorage.setItem('r3d_token', d.token);
+      localStorage.setItem('r3d_name', d.username);
+      send({ type: 'register', name: d.username, token: d.token });
+      break;
+    }
+    case 'authFail':
+      setAuthMsg('❌ ' + (d.msg || 'Ошибка входа'), '#ff4757');
+      break;
     case 'error':
       showToast('❌ ' + d.msg, '#ff4757'); break;
     case 'gameReady':
@@ -2411,12 +2423,246 @@ window.addEventListener('resize', () => {
 // studio physics inside loops: hook into particle update
 // studio physics runs inside updateParticles
 
+// ===================== REAL ONLINE STATS (menu) =====================
+function applyStats(online, perGame) {
+  const el = document.getElementById('online-count');
+  if (el && online !== undefined) el.textContent = online + ' онлайн';
+  document.querySelectorAll('.gpc').forEach(s => {
+    const g = s.dataset.g;
+    if (perGame && perGame[g] !== undefined) s.textContent = perGame[g];
+  });
+}
+window.addEventListener('message', () => {}); // no-op guard
+document.addEventListener('r3d-stats', e => {
+  if (e.detail) applyStats(e.detail.online, e.detail.perGame);
+});
+
+// ===================== AUTH (login / register modal) =====================
+function setAuthMsg(txt, color) {
+  const m = DOM.authMsg || document.getElementById('auth-msg');
+  if (m) { m.textContent = txt; if (color) m.style.color = color; }
+}
+function updateUserChip() {
+  const chip = DOM.userChip || document.getElementById('user-chip');
+  const btnAv = DOM.btnAvatar || document.getElementById('btn-avatar');
+  const logout = DOM.btnLogout || document.getElementById('btn-logout');
+  if (!State.authenticated) {
+    if (chip) chip.style.display = 'none';
+    if (btnAv) btnAv.style.display = 'none';
+    if (logout) logout.style.display = 'none';
+    return;
+  }
+  const nameEl = document.getElementById('uc-name');
+  const avaEl = document.getElementById('uc-ava');
+  if (chip) chip.style.display = 'flex';
+  if (nameEl) nameEl.textContent = State.playerName;
+  if (avaEl) avaEl.style.background = (State.avatar && State.avatar.shirt) || '#00d9ff';
+  if (btnAv) btnAv.style.display = '';
+  if (logout) logout.style.display = '';
+}
+async function apiCall(path, body) {
+  try {
+    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    return await r.json();
+  } catch (e) { return { ok: false, msg: 'Сервер недоступен' }; }
+}
+function afterLogin(token, username, avatar) {
+  State.token = token; State.playerName = username; State.authenticated = true;
+  State.avatar = avatar || null;
+  localStorage.setItem('r3d_token', token);
+  localStorage.setItem('r3d_name', username);
+  DOM.authModal.classList.add('hidden');
+  updateUserChip();
+  buildAvatarPanel();
+  showToast(`👤 Добро пожаловать, ${username}!`, '#7b2cbf');
+  connectToServer(); // re-register with the new token so other players see your avatar
+}
+function initAuth() {
+  const modal = DOM.authModal || document.getElementById('auth-modal');
+  if (!modal) return;
+  let mode = 'login';
+  const tabLogin = document.getElementById('tab-login');
+  const tabRegister = document.getElementById('tab-register');
+  const submit = document.getElementById('auth-submit');
+  const guest = document.getElementById('auth-guest');
+  const setUserMode = (m) => {
+    mode = m;
+    tabLogin.classList.toggle('active', m === 'login');
+    tabRegister.classList.toggle('active', m === 'register');
+    submit.textContent = m === 'login' ? '▶ ВОЙТИ' : '✳ ЗАРЕГИСТРИРОВАТЬСЯ';
+    setAuthMsg('');
+  };
+  tabLogin.onclick = () => setUserMode('login');
+  tabRegister.onclick = () => setUserMode('register');
+  submit.onclick = async () => {
+    const u = (document.getElementById('auth-user').value || '').trim();
+    const p = document.getElementById('auth-pass').value || '';
+    if (u.length < 2) return setAuthMsg('❌ Ник: минимум 2 символа', '#ff4757');
+    if (p.length < 4) return setAuthMsg('❌ Пароль: минимум 4 символа', '#ff4757');
+    submit.disabled = true; submit.textContent = '⏳ ...';
+    const res = await apiCall(mode === 'login' ? '/api/login' : '/api/register', { username: u, password: p });
+    submit.disabled = false; setUserMode(mode);
+    if (res.ok) afterLogin(res.token, res.username, res.avatar);
+    else setAuthMsg('❌ ' + (res.msg || 'Ошибка'), '#ff4757');
+  };
+  [document.getElementById('auth-user'), document.getElementById('auth-pass')].forEach(inp => {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit.click(); });
+  });
+  guest.onclick = () => {
+    modal.classList.add('hidden');
+    showToast('🎮 Гостевой режим — прогресс не сохраняется', '#ffa502');
+  };
+  // restore session if we have a token
+  if (State.token) {
+    apiCall('/api/me', { token: State.token }).then(res => {
+      if (res.ok) {
+        State.playerName = res.username; State.authenticated = true; State.avatar = res.avatar || null;
+        modal.classList.add('hidden');
+        updateUserChip();
+        buildAvatarPanel();
+      } else {
+        localStorage.removeItem('r3d_token'); State.token = null;
+      }
+    });
+  }
+  // logout
+  const logout = DOM.btnLogout || document.getElementById('btn-logout');
+  if (logout) logout.onclick = async () => {
+    if (State.token) await apiCall('/api/logout', { token: State.token });
+    localStorage.removeItem('r3d_token');
+    State.token = null; State.authenticated = false; State.avatar = null;
+    updateUserChip();
+    modal.classList.remove('hidden');
+    showToast('🚪 Вы вышли из аккаунта', '#ffa502');
+  };
+  // user chip opens avatar panel
+  const chip = DOM.userChip || document.getElementById('user-chip');
+  const btnAv = DOM.btnAvatar || document.getElementById('btn-avatar');
+  const openAv = () => {
+    DOM.avatarPanel.classList.toggle('active');
+    DOM.settingsPanel.classList.remove('active');
+    DOM.studioPanel.classList.remove('active');
+  };
+  if (chip) chip.onclick = openAv;
+  if (btnAv) btnAv.onclick = openAv;
+}
+
+// ===================== AVATAR EDITOR =====================
+const AVA_SKINS  = ['#f1c27d', '#ffd9a0', '#e0ac69', '#c68642', '#8d5524', '#5c3a21', '#fceabb', '#a3e4d7'];
+const AVA_SHIRTS = ['#00d9ff', '#ff4757', '#2ed573', '#ffa502', '#7b2cbf', '#ff4d9d', '#f8f9fa', '#2f3542'];
+const AVA_PANTS  = ['#2f3542', '#37415b', '#6b4226', '#8e44ad', '#c0392b', '#16a085', '#f1c40f', '#ecf0f1'];
+let avDraft = null;
+function buildAvatarPanel() {
+  const panel = DOM.avatarPanel || document.getElementById('avatar-panel');
+  if (!panel) return;
+  avDraft = Object.assign({ skin: '#f1c27d', shirt: '#00d9ff', pants: '#2f3542', face: 0, hair: 0, hat: 0 }, State.avatar || {});
+  const mkGrid = (id, colors, key) => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    box.innerHTML = '';
+    colors.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'ava-opt swatch';
+      b.style.cssText = `width:30px;height:30px;border-radius:8px;background:${c};border:2px solid ${avDraft[key] === c ? '#fff' : 'transparent'};padding:0;cursor:pointer`;
+      b.onclick = () => { avDraft[key] = c; buildAvatarPanel(); drawAvatarPreview(); };
+      box.appendChild(b);
+    });
+  };
+  mkGrid('av-skin', AVA_SKINS, 'skin');
+  mkGrid('av-shirt', AVA_SHIRTS, 'shirt');
+  mkGrid('av-pants', AVA_PANTS, 'pants');
+  const mkRow = (id, labels, key) => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    box.innerHTML = '';
+    labels.forEach((L, i) => {
+      const b = document.createElement('button');
+      b.className = 'ava-opt' + (avDraft[key] === i ? ' sel' : '');
+      b.textContent = L;
+      b.onclick = () => { avDraft[key] = i; buildAvatarPanel(); drawAvatarPreview(); };
+      box.appendChild(b);
+    });
+  };
+  mkRow('av-face', FACE_STYLES, 'face');
+  mkRow('av-hair', HAIR_STYLES, 'hair');
+  mkRow('av-hat', HAT_STYLES, 'hat');
+  const saveBtn = document.getElementById('btn-avatar-save');
+  if (saveBtn && !saveBtn._bound) {
+    saveBtn._bound = true;
+    saveBtn.onclick = async () => {
+      const msg = document.getElementById('avatar-msg');
+      if (!State.authenticated) {
+        if (msg) { msg.textContent = '❌ Аватар сохраняется только для зарегистрированных'; msg.style.color = '#ff4757'; }
+        return;
+      }
+      const res = await apiCall('/api/avatar', { token: State.token, ...avDraft });
+      if (res.ok) {
+        State.avatar = res.avatar;
+        if (State.avatarEntry && State.avatarEntry.applyAvatar) State.avatarEntry.applyAvatar(res.avatar);
+        updateUserChip();
+        if (msg) { msg.textContent = '✅ Аватар сохранён!'; msg.style.color = '#2ed573'; setTimeout(() => msg.textContent = '', 2000); }
+        showToast('🧍 Новый аватар надет!', '#2ed573');
+      } else if (msg) { msg.textContent = '❌ ' + (res.msg || 'Ошибка сохранения'); msg.style.color = '#ff4757'; }
+    };
+  }
+  drawAvatarPreview();
+}
+function drawAvatarPreview() {
+  const cv = document.getElementById('avatar-preview');
+  if (!cv || !avDraft) return;
+  const x = cv.getContext('2d');
+  x.clearRect(0, 0, cv.width, cv.height);
+  // legs
+  x.fillStyle = avDraft.pants; x.fillRect(42, 118, 15, 45); x.fillRect(63, 118, 15, 45);
+  // torso
+  x.fillStyle = avDraft.shirt; x.fillRect(33, 62, 54, 58);
+  // arms
+  x.fillStyle = avDraft.skin; x.fillRect(20, 62, 13, 55); x.fillRect(87, 62, 13, 55);
+  // head
+  x.fillStyle = avDraft.skin; x.fillRect(38, 14, 44, 44);
+  // simple face per style
+  x.fillStyle = '#222'; x.strokeStyle = '#222'; x.lineWidth = 2.5;
+  const eye = (cx, cy, r) => { x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); };
+  switch (avDraft.face) {
+    case 0: eye(50, 32, 3.5); eye(70, 32, 3.5); x.beginPath(); x.arc(60, 42, 8, .15 * Math.PI, .85 * Math.PI); x.stroke(); break;
+    case 1: eye(50, 32, 3.5); eye(70, 32, 3.5); x.beginPath(); x.moveTo(52, 44); x.lineTo(68, 44); x.stroke(); break;
+    case 2: eye(50, 32, 3.5); x.beginPath(); x.arc(70, 32, 3.5, 0, 7); x.stroke(); x.beginPath(); x.arc(60, 42, 8, .15 * Math.PI, .85 * Math.PI); x.stroke(); break;
+    case 3: x.fillRect(44, 28, 13, 6); x.fillRect(63, 28, 13, 6); x.beginPath(); x.arc(60, 44, 7, .2 * Math.PI, .8 * Math.PI); x.stroke(); break;
+    case 4: x.beginPath(); x.arc(50, 32, 4, 0, 7); x.stroke(); x.beginPath(); x.arc(70, 32, 4, 0, 7); x.stroke(); x.beginPath(); x.arc(60, 46, 4, 0, 7); x.fill(); break;
+    case 5: x.beginPath(); x.moveTo(44, 26); x.lineTo(54, 30); x.moveTo(76, 26); x.lineTo(66, 30); x.stroke(); eye(50, 34, 3); eye(70, 34, 3); x.beginPath(); x.arc(60, 50, 7, 1.2 * Math.PI, 1.8 * Math.PI); x.stroke(); break;
+    case 6: eye(50, 32, 3.5); eye(70, 32, 3.5); x.fillStyle = '#4aa0e0'; x.fillRect(48, 36, 4, 9); x.fillRect(68, 36, 4, 9); x.beginPath(); x.arc(60, 48, 6, 1.15 * Math.PI, 1.85 * Math.PI); x.stroke(); break;
+    default: x.beginPath(); x.moveTo(45, 28); x.lineTo(54, 32); x.lineTo(45, 36); x.closePath(); x.fill(); x.beginPath(); x.moveTo(75, 28); x.lineTo(66, 32); x.lineTo(75, 36); x.closePath(); x.fill(); x.beginPath(); x.arc(60, 44, 8, 1.1 * Math.PI, 1.9 * Math.PI); x.stroke();
+  }
+  // hair
+  const hairCols = ['#000', '#3b2a1a', '#7a4a1e', '#d4a017', '#9932cd', '#ff4d9d', '#2ed573', '#ccc'];
+  if (avDraft.hair > 0 && avDraft.hair !== 7) {
+    x.fillStyle = hairCols[avDraft.hair % hairCols.length];
+    if (avDraft.hair === 1) x.fillRect(38, 10, 44, 7);
+    else if (avDraft.hair === 2) x.fillRect(36, 8, 48, 12);
+    else if (avDraft.hair === 3) { x.fillRect(36, 8, 48, 8); for (let i = 0; i < 5; i++) x.fillRect(40 + i * 9, 14, 5, 16); }
+    else if (avDraft.hair === 4) { x.fillRect(38, 10, 44, 7); x.fillRect(76, 14, 8, 22); }
+    else if (avDraft.hair === 5) { for (let i = 0; i < 4; i++) x.fillRect(52 + i * 4 - 6, 4 + i, 6, 14 - i * 2); }
+    else if (avDraft.hair === 6) x.fillRect(34, 8, 52, 16);
+  }
+  // hat
+  if (avDraft.hat >= 1) {
+    const hatCols = ['#00d9ff', '#ff4757', '#2f3542', '#ffd700', '#8a8f98', '#6b4a2f'];
+    x.fillStyle = hatCols[avDraft.hat % hatCols.length];
+    if (avDraft.hat === 1) { x.fillRect(38, 6, 44, 8); x.fillRect(56, 10, 34, 4); }
+    else if (avDraft.hat === 2) { x.fillRect(34, 8, 52, 4); x.fillRect(46, -14, 28, 24); }
+    else if (avDraft.hat === 3) { x.fillRect(40, 2, 40, 6); for (let i = 0; i < 5; i++) x.fillRect(40 + i * 10, -6, 5, 9); }
+    else if (avDraft.hat === 4) x.fillRect(40, -2, 40, 12);
+    else if (avDraft.hat === 5) { x.fillRect(36, 4, 48, 10); x.fillRect(30, 10, 10, 18); x.fillRect(80, 10, 10, 18); }
+  }
+}
+
 // ===================== INIT =====================
 function init() {
   cacheDom();
   const saved = localStorage.getItem('r3d_name');
   if (saved) { State.playerName = saved; DOM.settingsName.value = saved; }
   bindEvents();
+  initAuth();
   // welcome toast
   setTimeout(() => showToast('👋 Выберите игру и нажмите на карточку!', '#00d9ff'), 600);
   console.log('✅ Roblox 3D Ultimate initialized');

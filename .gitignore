@@ -1,2 +1,8 @@
+# Dependencies
+node_modules/
+
 # Logs and temp files
 *.log
+
+# User data (must not be public)
+users.json
