@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 const path = require('path');
 
@@ -8,8 +9,84 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 });
 const PORT = process.env.PORT || 3000;
 
+app.use(express.json());
 app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
+// ===================== USERS (registration / authentication) =====================
+// stored in users.json on disk so accounts survive restarts
+const USERS_FILE = path.join(__dirname, 'users.json');
+let usersDb = {};
+try { usersDb = JSON.parse(require('fs').readFileSync(USERS_FILE, 'utf8')); } catch (e) { usersDb = {}; }
+function saveUsers() {
+  try { require('fs').writeFileSync(USERS_FILE, JSON.stringify(usersDb, null, 2)); } catch (e) {}
+}
+function hashPass(salt, pass) { return crypto.scryptSync(String(pass), salt, 32).toString('hex'); }
+function makeToken() { return crypto.randomBytes(24).toString('hex'); }
+const sessions = new Map(); // token -> username
+
+app.post('/api/register', (req, res) => {
+  const u = String((req.body && req.body.username) || '').trim();
+  const p = String((req.body && req.body.password) || '');
+  if (!/^[a-zA-Z0-9_\u0400-\u04FF -]{2,16}$/.test(u)) return res.json({ ok: false, msg: 'Ник: 2–16 символов (буквы, цифры, _)' });
+  if (p.length < 4) return res.json({ ok: false, msg: 'Пароль должен быть не короче 4 символов' });
+  const key = u.toLowerCase();
+  if (usersDb[key]) return res.json({ ok: false, msg: 'Такой игрок уже зарегистрирован' });
+  const salt = crypto.randomBytes(16).toString('hex');
+  usersDb[key] = { username: u, salt, hash: hashPass(salt, p), avatar: null, created: Date.now() };
+  saveUsers();
+  const token = makeToken();
+  sessions.set(token, key);
+  res.json({ ok: true, token, username: u, avatar: usersDb[key].avatar });
+});
+
+app.post('/api/login', (req, res) => {
+  const u = String((req.body && req.body.username) || '').trim();
+  const p = String((req.body && req.body.password) || '');
+  const key = u.toLowerCase();
+  const rec = usersDb[key];
+  if (!rec) return res.json({ ok: false, msg: 'Игрок не найден — зарегистрируйтесь' });
+  if (hashPass(rec.salt, p) !== rec.hash) return res.json({ ok: false, msg: 'Неверный пароль' });
+  const token = makeToken();
+  sessions.set(token, key);
+  res.json({ ok: true, token, username: rec.username, avatar: rec.avatar });
+});
+
+app.post('/api/logout', (req, res) => {
+  const t = String((req.body && req.body.token) || '');
+  sessions.delete(t);
+  res.json({ ok: true });
+});
+
+app.post('/api/me', (req, res) => {
+  const t = String((req.body && req.body.token) || '');
+  const key = sessions.get(t);
+  if (!key || !usersDb[key]) return res.json({ ok: false });
+  res.json({ ok: true, username: usersDb[key].username, avatar: usersDb[key].avatar });
+});
+
+app.post('/api/avatar', (req, res) => {
+  const t = String((req.body && req.body.token) || '');
+  const key = sessions.get(t);
+  if (!key || !usersDb[key]) return res.json({ ok: false, msg: 'Сессия истекла' });
+  const b = req.body || {};
+  const clean = {};
+  ['skin', 'shirt', 'pants'].forEach(k => { if (/^#[0-9a-fA-F]{6}$/.test(b[k])) clean[k] = b[k].toLowerCase(); });
+  ['face', 'hair'].forEach(k => { if (typeof b[k] === 'number' && b[k] >= 0 && b[k] <= 7) clean[k] = Math.floor(b[k]); });
+  if (typeof b.hat === 'number' && b.hat >= 0 && b.hat <= 5) clean.hat = Math.floor(b.hat);
+  usersDb[key].avatar = clean;
+  saveUsers();
+  // update live player if online
+  players.forEach(p => { if (p.userKey === key) { p.avatar = clean; broadcastToGame(p.game, { type: 'playerAvatar', id: p.id, avatar: clean }); } });
+  res.json({ ok: true, avatar: clean });
+});
+
+// real online stats for the menu (poll over HTTP)
+app.get('/api/stats', (req, res) => {
+  const perGame = {};
+  Object.keys(games).forEach(g => { perGame[g] = games[g].players.size; });
+  res.json({ online: players.size, perGame });
+});
 
 // ===================== STATE =====================
 const players = new Map(); // pid -> player
@@ -42,11 +119,18 @@ wss.on('connection', (ws) => {
     try { d = JSON.parse(raw); } catch (e) { return; }
     if (!d || typeof d.type !== 'string') return;
 
-    // ---------- REGISTER ----------
+    // ---------- REGISTER (with optional auth token) ----------
     if (d.type === 'register') {
-      const name = sanitizeName(d.name);
-      if (name.length < 2) {
-        ws.send(JSON.stringify({ type: 'error', msg: 'Ник должен быть от 2 символов' }));
+      let name = sanitizeName(d.name);
+      let userKey = null;
+      let avatar = null;
+      const token = typeof d.token === 'string' ? d.token : '';
+      if (token && sessions.get(token) && usersDb[sessions.get(token)]) {
+        userKey = sessions.get(token);
+        name = usersDb[userKey].username;
+        avatar = usersDb[userKey].avatar || null;
+      } else if (!/^[a-zA-Z0-9_ -]{2,16}$/.test(name)) {
+        ws.send(JSON.stringify({ type: 'error', msg: 'Требуется вход в аккаунт или ник 2–16 символов' }));
         return;
       }
       pid = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -54,10 +138,26 @@ wss.on('connection', (ws) => {
         id: pid, ws, name, game: 'menu',
         x: 0, y: 1, z: 0, yaw: 0, moving: false,
         health: 100, team: null, kills: 0, deaths: 0,
+        userKey, avatar,
         input: { f: 0, r: 0, jump: false }
       });
-      ws.send(JSON.stringify({ type: 'registered', id: pid, name }));
-      console.log(`[+] ${name} connected (${players.size} total)`);
+      ws.send(JSON.stringify({ type: 'registered', id: pid, name, authenticated: !!userKey }));
+      pushStats();
+      console.log(`[+] ${name} connected${userKey ? ' (auth)' : ''} (${players.size} total)`);
+      return;
+    }
+
+    // ---------- WEBSOCKET AUTH (login while connected) ----------
+    if (d.type === 'auth') {
+      const u = String(d.username || '').trim().toLowerCase();
+      const rec = usersDb[u];
+      if (!rec || hashPass(rec.salt, String(d.password || '')) !== rec.hash) {
+        ws.send(JSON.stringify({ type: 'authFail', msg: 'Неверный логин или пароль' }));
+        return;
+      }
+      const token = makeToken();
+      sessions.set(token, u);
+      ws.send(JSON.stringify({ type: 'authOk', token, username: rec.username, avatar: rec.avatar }));
       return;
     }
 
@@ -88,6 +188,7 @@ wss.on('connection', (ws) => {
       games[d.gameId].players.set(pid, p);
       ws.send(JSON.stringify({ type: 'gameReady', gameId: d.gameId, team: p.team }));
       broadcastToGame(d.gameId, { type: 'chat', name: 'sys', msg: `${p.name} присоединился 👋`, sys: true });
+      pushStats();
       return;
     }
 
@@ -190,10 +291,22 @@ wss.on('connection', (ws) => {
         broadcastToGame(p.game, { type: 'chat', name: 'sys', msg: `${p.name} вышел 😢`, sys: true });
       }
       players.delete(pid);
+      pushStats();
       console.log(`[-] ${p.name} disconnected (${players.size} left)`);
     }
   });
 });
+
+// ===================== REAL ONLINE STATS PUSH =====================
+const menuSockets = new Set(); // ws of players currently in menu
+function pushStats() {
+  const perGame = {};
+  Object.keys(games).forEach(g => { perGame[g] = games[g].players.size; });
+  const msg = JSON.stringify({ type: 'stats', online: players.size, perGame });
+  players.forEach(p => {
+    if (p.ws.readyState === 1) { try { p.ws.send(msg); } catch (e) {} }
+  });
+}
 
 function broadcastToGame(gameId, data) {
   if (!games[gameId]) return;
@@ -217,7 +330,8 @@ setInterval(() => {
           nearby.push({
             id: oid, name: other.name,
             x: other.x, y: other.y, z: other.z, yaw: other.yaw,
-            team: other.team, hp: other.health, moving: other.moving
+            team: other.team, hp: other.health, moving: other.moving,
+            avatar: other.avatar || null
           });
         }
       });
@@ -229,6 +343,8 @@ setInterval(() => {
         kills: p.kills,
         deaths: p.deaths,
         ping,
+        online: players.size,
+        gamePlayers: g.players.size,
         scores: gid === 'shooter' ? { red: g.red, blue: g.blue } : undefined
       };
       try { p.ws.send(JSON.stringify(payload)); } catch (e) {}

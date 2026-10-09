@@ -216,6 +216,41 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
   #chat-box{width:220px}
   #kill-feed{right:16px;top:60px}
 }
+
+/* ===================== AUTH MODAL ===================== */
+#auth-modal{position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;background:rgba(6,8,20,.82);backdrop-filter:blur(8px)}
+.auth-card{width:360px;max-width:92vw;background:linear-gradient(150deg,#16213e,#10142e);border:1px solid #00d9ff;border-radius:18px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.7);animation:authPop .35s cubic-bezier(.2,.9,.3,1.3)}
+@keyframes authPop{from{opacity:0;transform:scale(.85) translateY(24px)}}
+.auth-logo{font-size:30px;font-weight:900;text-align:center;margin-bottom:4px;background:linear-gradient(90deg,#00d9ff,#7b2cbf,#ff4d9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:hue 6s linear infinite}
+.auth-sub{text-align:center;color:#5f7ba8;font-size:12px;margin-bottom:18px}
+.auth-tabs{display:flex;gap:8px;margin-bottom:18px}
+.auth-tab{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(0,217,255,.35);background:transparent;color:#8fb8d8;font-weight:700;cursor:pointer;transition:.25s;font-size:14px}
+.auth-tab.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(0,217,255,.4)}
+.auth-card input{width:100%;padding:12px;margin-bottom:12px;border-radius:10px;border:1px solid rgba(0,217,255,.45);background:rgba(0,217,255,.06);color:#fff;font-size:14px;outline:none;transition:.2s}
+.auth-card input:focus{border-color:#00d9ff;box-shadow:0 0 12px rgba(0,217,255,.3)}
+.auth-submit{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;color:#08131f;background:linear-gradient(90deg,#00d9ff,#7bff9e);box-shadow:0 8px 20px rgba(0,217,255,.4);transition:.25s;margin-top:4px}
+.auth-submit:hover{transform:translateY(-2px) scale(1.02)}
+.auth-submit:disabled{opacity:.5;cursor:wait;transform:none}
+.auth-msg{min-height:20px;font-size:13px;text-align:center;margin-top:10px;color:#ff6b81}
+.auth-guest{display:block;width:100%;margin-top:12px;padding:10px;border-radius:10px;border:1px dashed rgba(255,255,255,.25);background:transparent;color:#8fb8d8;font-size:13px;cursor:pointer;transition:.2s}
+.auth-guest:hover{color:#fff;border-color:#00d9ff}
+
+/* user chip in navbar */
+.user-chip{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:20px;background:rgba(123,44,191,.2);border:1px solid rgba(123,44,191,.6);color:#e6c8ff;font-weight:700;font-size:13px;margin-right:10px;cursor:pointer;transition:.25s}
+.user-chip:hover{background:rgba(123,44,191,.4)}
+.user-chip .uc-ava{width:22px;height:22px;border-radius:6px;display:inline-block;border:1px solid rgba(255,255,255,.35)}
+
+/* avatar editor */
+.ava-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:12px}
+.ava-sw{width:100%;aspect-ratio:1;border-radius:7px;cursor:pointer;border:2px solid transparent;transition:.15s}
+.ava-sw.sel{border-color:#fff;box-shadow:0 0 8px #00d9ff;transform:scale(1.12)}
+.ava-row-label{font-size:12px;color:#8fb8d8;margin:10px 0 6px;text-transform:uppercase;letter-spacing:1px}
+.ava-opt-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ava-opt{padding:7px 11px;border-radius:8px;border:1px solid rgba(0,217,255,.35);background:rgba(0,217,255,.05);color:#cfe3ff;font-size:12px;cursor:pointer;transition:.2s;font-weight:600}
+.ava-opt.sel{background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border-color:transparent}
+#avatar-preview-wrap{display:flex;justify-content:center;margin-bottom:10px}
+#avatar-preview{width:120px;height:170px;border-radius:12px;background:radial-gradient(circle at 50% 30%,#1e2a5e,#0d1024);border:1px solid rgba(0,217,255,.3)}
+.game-players-pill{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:800;background:rgba(46,213,115,.18);border:1px solid rgba(46,213,115,.55);color:#7bed9f}
 </style>
 </head>
 <body>
@@ -226,6 +261,8 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
   <div class="search"><input type="text" id="search-input" placeholder="Поиск игр..."></div>
   <div class="nav-spacer"></div>
   <div class="online-pill"><span class="online-dot"></span><span id="online-count">0 онлайн</span></div>
+  <div class="user-chip" id="user-chip" style="display:none"><span class="uc-ava" id="uc-ava"></span><span id="uc-name"></span> ▾</div>
+  <button class="nav-btn" id="btn-avatar" style="display:none">🧍 Аватар</button>
   <button class="nav-btn" id="btn-studio">🛠️ Студия</button>
   <button class="nav-btn" id="btn-settings">⚙️ Настройки</button>
 </nav>
@@ -260,7 +297,7 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
           <div class="game-play-overlay"><span>ИГРАТЬ ▶</span></div></div>
         <div class="game-info">
           <div class="game-title">Gun Arena 3D</div>
-          <div class="game-meta"><span>⭐ 9.2 · 👥 2.4K</span><span class="rating">PvP</span></div>
+          <div class="game-meta"><span>⭐ 9.2 · 👥 <span class="gpc" data-g="shooter">0</span></span><span class="rating">PvP</span></div>
           <div class="game-desc">Командный шутер: красный vs синие. Аптечки, патроны, серии убийств.</div>
         </div>
       </div>
@@ -269,7 +306,7 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
           <div class="game-play-overlay"><span>ИГРАТЬ ▶</span></div></div>
         <div class="game-info">
           <div class="game-title">Brookhaven City</div>
-          <div class="game-meta"><span>⭐ 8.8 · 👥 1.1K</span><span class="rating">Ролевая</span></div>
+          <div class="game-meta"><span>⭐ 8.8 · 👥 <span class="gpc" data-g="brookhaven">0</span></span><span class="rating">Ролевая</span></div>
           <div class="game-desc">Город: дома с открываемыми дверями, бассейн, фонтан и ездящая машина.</div>
         </div>
       </div>
@@ -278,7 +315,7 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
           <div class="game-play-overlay"><span>ИГРАТЬ ▶</span></div></div>
         <div class="game-info">
           <div class="game-title">Cheese Maze: Крыса</div>
-          <div class="game-meta"><span>⭐ 9.5 · 👥 3.7K</span><span class="rating">Хоррор</span></div>
+          <div class="game-meta"><span>⭐ 9.5 · 👥 <span class="gpc" data-g="cheese">0</span></span><span class="rating">Хоррор</span></div>
           <div class="game-desc">Соберите весь сыр в тёмном лабиринте… но вас hunt огромная Крыса. Фонарик, BFS-ИИ, скримеры.</div>
         </div>
       </div>
@@ -287,7 +324,7 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
           <div class="game-play-overlay"><span>ИГРАТЬ ▶</span></div></div>
         <div class="game-info">
           <div class="game-title">Sky Pilot 3D</div>
-          <div class="game-meta"><span>⭐ 8.6 · 👥 890</span><span class="rating">Сим</span></div>
+          <div class="game-meta"><span>⭐ 8.6 · 👥 <span class="gpc" data-g="airplane">0</span></span><span class="rating">Сим</span></div>
           <div class="game-desc">Пролетите курс из 12 колец над городом. Свалы, жёсткие посадки, звук двигателя.</div>
         </div>
       </div>
@@ -296,7 +333,7 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
           <div class="game-play-overlay"><span>ИГРАТЬ ▶</span></div></div>
         <div class="game-info">
           <div class="game-title">Turbo Kart Racing</div>
-          <div class="game-meta"><span>⭐ 9.0 · 👥 1.9K</span><span class="rating">Гонки</span></div>
+          <div class="game-meta"><span>⭐ 9.0 · 👥 <span class="gpc" data-g="racing">0</span></span><span class="rating">Гонки</span></div>
           <div class="game-desc">Круговая трасса, 3 ИИ-карта, нитро, рекорды кругов и детектор «не туда».</div>
         </div>
       </div>
@@ -312,6 +349,7 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
   <input type="text" class="settings-input" id="settings-name" maxlength="16" placeholder="Steve">
   <button class="settings-btn" id="btn-save-name">💾 Сохранить имя</button>
   <div class="settings-msg" id="settings-msg"></div>
+  <button class="settings-btn" id="btn-logout" style="background:linear-gradient(90deg,#ff4757,#c0392b);display:none">🚪 Выйти из аккаунта</button>
   <label class="settings-label" style="margin-top:10px">Управление</label>
   <div style="font-size:12px;color:#8fb8d8;line-height:1.8">
     WASD — движение · Shift — бег/нитро · Space — прыжок/тормоз<br>
@@ -319,6 +357,25 @@ input[type=file]{font-size:12px;color:#8fb8d8;margin-bottom:10px}
     T — чат · Tab — таблица счёта · M — миникарта · ЛКМ — стрельба<br>
     Команды чата: /help /roll /volume 0..1 /clear
   </div>
+</div>
+
+<div id="avatar-panel">
+  <div class="settings-title">🧍 Настройка аватара</div>
+  <div id="avatar-preview-wrap"><canvas id="avatar-preview" width="120" height="170"></canvas></div>
+  <div class="ava-row-label">Цвет кожи</div>
+  <div class="ava-grid" id="av-skin"></div>
+  <div class="ava-row-label">Футболка</div>
+  <div class="ava-grid" id="av-shirt"></div>
+  <div class="ava-row-label">Штаны</div>
+  <div class="ava-grid" id="av-pants"></div>
+  <div class="ava-row-label">Лицо</div>
+  <div class="ava-opt-row" id="av-face"></div>
+  <div class="ava-row-label">Причёска</div>
+  <div class="ava-opt-row" id="av-hair"></div>
+  <div class="ava-row-label">Головной убор</div>
+  <div class="ava-opt-row" id="av-hat"></div>
+  <button class="settings-btn" id="btn-avatar-save">💾 Сохранить аватар</button>
+  <div class="settings-msg" id="avatar-msg"></div>
 </div>
 
 <div id="studio-panel">
@@ -409,9 +466,26 @@ api.toast('Куб появился! 🧊','#7bff9e');</textarea>
 
 <div id="toast-box"></div>
 
+<!-- ===== AUTH MODAL ===== -->
+<div id="auth-modal">
+  <div class="auth-card">
+    <div class="auth-logo">ROBLOX 3D</div>
+    <div class="auth-sub">Войдите, чтобы сохранить прогресс и аватар</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login">Вход</button>
+      <button class="auth-tab" id="tab-register">Регистрация</button>
+    </div>
+    <input type="text" id="auth-user" maxlength="16" placeholder="Никнейм" autocomplete="username">
+    <input type="password" id="auth-pass" maxlength="64" placeholder="Пароль (мин. 4 символа)" autocomplete="current-password">
+    <button class="auth-submit" id="auth-submit">▶ ВОЙТИ</button>
+    <div class="auth-msg" id="auth-msg"></div>
+    <button class="auth-guest" id="auth-guest">🎮 Войти как гость (без сохранения)</button>
+  </div>
+</div>
+
 <script type="module" src="game.js"></script>
 <script>
-// menu-side logic (search + category filter + fake online counter)
+// menu-side logic (search + category filter + REAL online counter)
 (function(){
   const search=document.getElementById('search-input');
   const cards=[...document.querySelectorAll('.game-card')];
@@ -432,11 +506,18 @@ api.toast('Куб появился! 🧊','#7bff9e');</textarea>
       cat=item.dataset.cat;apply();
     });
   });
-  // online pill animation
-  let n=120+Math.floor(Math.random()*80);
+  // REAL online count from server (GET /api/stats)
   const el=document.getElementById('online-count');
-  el.textContent=n+' онлайн';
-  setInterval(()=>{n+=Math.floor(Math.random()*7)-3;n=Math.max(90,n);el.textContent=n+' онлайн';},4000);
+  async function refreshStats(){
+    try{
+      const r=await fetch('/api/stats');
+      const d=await r.json();
+      el.textContent=d.online+' онлайн';
+      document.dispatchEvent(new CustomEvent('r3d-stats',{detail:d}));
+    }catch(e){ el.textContent='— онлайн'; }
+  }
+  refreshStats();
+  setInterval(refreshStats,5000);
 })();
 </script>
 </body>

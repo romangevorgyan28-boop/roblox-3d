@@ -9,6 +9,7 @@ import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders
 
 const State = {
   ws: null, playerId: null, playerName: 'Guest', myTeam: null, currentGame: null,
+  token: localStorage.getItem('r3d_token') || null, authenticated: false, avatar: null,
   scene: null, camera: null, renderer: null, composer: null, fxaaPass: null, playerMesh: null,
   otherPlayers: new Map(), keys: {}, yaw: 0, pitch: 0, chatInitialized: false,
   studioObjects: [], airplaneState: null, cheeseWalls: [], cheeses: [], rat: null,
@@ -205,7 +206,7 @@ function connectToServer() {
   if (State.ws && State.ws.readyState === 1) return;
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   State.ws = new WebSocket(`${proto}//${location.host}`);
-  State.ws.onopen = () => State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
+  State.ws.onopen = () => State.ws.send(JSON.stringify({ type: 'register', name: State.playerName, token: State.token || undefined }));
   State.ws.onmessage = (e) => {
     try { handleNet(JSON.parse(e.data)); } catch (err) { console.error('WS:', err); }
   };
@@ -224,9 +225,19 @@ function handleNet(d) {
   switch (d.type) {
     case 'registered':
       State.playerId = d.id;
+      State.authenticated = !!d.authenticated;
+      if (State.authenticated) { State.playerName = d.name; localStorage.setItem('r3d_name', d.name); }
       send({ type: 'join', gameId: State.currentGame });
       addChat('sys', `Добро пожаловать, ${d.name}! 🎮`);
       break;
+    case 'stats':
+      applyStats(d.online, d.perGame);
+      break;
+    case 'playerAvatar': {
+      const e = State.otherPlayers.get(d.id);
+      if (e && e.applyAvatar) e.applyAvatar(d.avatar);
+      break;
+    }
     case 'error':
       showToast('❌ ' + d.msg, '#ff4757'); break;
     case 'gameReady':
@@ -237,8 +248,8 @@ function handleNet(d) {
       }
       break;
     case 'snapshot': {
-      DOM.playerCount.textContent = (d.players.length + 1);
-      if (DOM['online-hud']) DOM['online-hud'].textContent = (d.players.length + 1);
+      if (DOM.playerCount) DOM.playerCount.textContent = d.gamePlayers !== undefined ? d.gamePlayers : (d.players.length + 1);
+      if (DOM['online-hud']) DOM['online-hud'].textContent = d.online !== undefined ? d.online : (d.players.length + 1);
       if (typeof d.ping === 'number' && DOM['sb-ping']) DOM['sb-ping'].textContent = d.ping + ' ms';
       if (d.health !== undefined) {
         if (d.health < State.health && d.health > 0) { State.damageFlashT = 0.35; playHurtSound(); }
@@ -287,6 +298,8 @@ function handleNet(d) {
       hideDeathOverlay();
       State.ammo = State.magSize; State.reserve = 90;
       updateAmmoUI();
+      if (State.currentGame === 'shooter') bigCenterText('🔄 ВОЗРОЖДЕНИЕ', '', '#00d9ff', 800);
+      playJumpSound();
       break;
     case 'rateLimited':
       showToast('⏳ Медленнее!', '#ffa502'); break;
@@ -299,11 +312,14 @@ function syncOtherPlayers(list) {
     seen.add(p.id);
     let e = State.otherPlayers.get(p.id);
     if (!e) {
-      e = createAvatar(p.name, p.team);
+      e = createAvatar(p.name, p.team, p.avatar);
       e.mesh.position.set(p.x, p.y, p.z);
       State.scene.add(e.mesh);
       State.otherPlayers.set(p.id, e);
+    } else if (p.avatar && e.lastAvatarStr !== JSON.stringify(p.avatar)) {
+      e.applyAvatar(p.avatar);
     }
+    e.lastAvatarStr = e.lastAvatarStr || JSON.stringify(p.avatar || null);
     e.tx = p.x; e.ty = p.y; e.tz = p.z; e.tYaw = -p.yaw + Math.PI;
     if (p.hp !== undefined) {
       if (e.lastHp !== p.hp) { e.lastHp = p.hp; e.drawTag(p.hp); }
@@ -328,39 +344,86 @@ function disposeObject(root) {
 // ===================== AVATARS =====================
 function teamColor(team) { return team === 'red' ? 0xff4757 : team === 'blue' ? 0x3742fa : 0x00d9ff; }
 
-function createAvatar(name, team) {
+const FACE_STYLES = ['😀', ':)', ';)', '😎', '😮', '😠', '😢', '😈']; // classic/simple/cool/surprised/angry/sad/devilish
+const HAIR_STYLES = ['Без волос', 'Ёжик', 'Каштан', 'Дреды', 'Хвост', 'Ирокез', 'Каре', 'Лысый'];
+const HAT_STYLES  = ['Нет', 'Кепка', 'Цилиндр', 'Корона', 'Ведро', 'Ушанка'];
+
+function drawFaceCanvas(fc, faceIdx, skinCss) {
+  fc.clearRect(0, 0, 64, 64);
+  fc.fillStyle = skinCss; fc.fillRect(0, 0, 64, 64);
+  fc.fillStyle = '#222'; fc.strokeStyle = '#222'; fc.lineWidth = 3;
+  const eye = (x, y, r) => { fc.beginPath(); fc.arc(x, y, r, 0, 7); fc.fill(); };
+  switch (faceIdx) {
+    case 0: eye(22, 26, 4); eye(42, 26, 4); fc.beginPath(); fc.arc(32, 38, 10, .15 * Math.PI, .85 * Math.PI); fc.stroke(); break; // smile
+    case 1: eye(22, 26, 4); eye(42, 26, 4); fc.beginPath(); fc.moveTo(24, 40); fc.lineTo(40, 40); fc.stroke(); break; // flat
+    case 2: eye(22, 26, 4); fc.beginPath(); fc.arc(42, 26, 4, 0, 7); fc.stroke(); fc.beginPath(); fc.arc(32, 38, 10, .15 * Math.PI, .85 * Math.PI); fc.stroke(); break; // wink
+    case 3: fc.fillRect(15, 22, 14, 6); fc.fillRect(35, 22, 14, 6); fc.beginPath(); fc.moveTo(15, 25); fc.lineTo(8, 23); fc.moveTo(49, 25); fc.lineTo(56, 23); fc.stroke(); fc.beginPath(); fc.arc(32, 38, 9, .2 * Math.PI, .8 * Math.PI); fc.stroke(); break; // cool (shades)
+    case 4: fc.beginPath(); fc.arc(22, 26, 5, 0, 7); fc.stroke(); fc.beginPath(); fc.arc(42, 26, 5, 0, 7); fc.stroke(); fc.beginPath(); fc.arc(32, 42, 5, 0, 7); fc.fill(); break; // surprised
+    case 5: fc.lineWidth = 3.5; fc.beginPath(); fc.moveTo(16, 20); fc.lineTo(27, 25); fc.moveTo(48, 20); fc.lineTo(37, 25); fc.stroke(); eye(22, 30, 3.5); eye(42, 30, 3.5); fc.beginPath(); fc.arc(32, 48, 9, 1.2 * Math.PI, 1.8 * Math.PI); fc.stroke(); break; // angry
+    case 6: eye(22, 26, 4); eye(42, 26, 4); fc.fillStyle = '#4aa0e0'; fc.fillRect(19, 30, 5, 12); fc.fillRect(39, 30, 5, 12); fc.beginPath(); fc.arc(32, 48, 8, 1.15 * Math.PI, 1.85 * Math.PI); fc.stroke(); break; // sad tears
+    default: fc.beginPath(); fc.moveTo(18, 22); fc.lineTo(27, 26); fc.lineTo(18, 30); fc.closePath(); fc.fill(); fc.beginPath(); fc.moveTo(46, 22); fc.lineTo(37, 26); fc.lineTo(46, 30); fc.closePath(); fc.fill(); fc.beginPath(); fc.arc(32, 40, 10, 1.1 * Math.PI, 1.9 * Math.PI); fc.stroke(); fc.beginPath(); fc.moveTo(24, 40); fc.quadraticCurveTo(32, 52, 40, 40); fc.stroke(); break; // devilish grin
+  }
+}
+function hexToCss(h) { return '#' + new THREE.Color(h).getHexString(); }
+
+function createAvatar(name, team, av) {
+  av = av || {};
   const g = new THREE.Group();
-  const col = teamColor(team);
-  const skin = 0xf1c27d;
+  const col = av.shirt ? new THREE.Color(av.shirt).getHex() : teamColor(team);
+  const skinCol = av.skin ? new THREE.Color(av.skin).getHex() : 0xf1c27d;
+  const pantsCol = av.pants ? new THREE.Color(av.pants).getHex() : 0x2f3542;
   // torso (blocky roblox-style)
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.0, 0.5), new THREE.MeshStandardMaterial({ color: col }));
+  const torsoMat = new THREE.MeshStandardMaterial({ color: col });
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.0, 0.5), torsoMat);
   torso.position.y = 1.45; torso.castShadow = true; g.add(torso);
   // head
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), new THREE.MeshStandardMaterial({ color: 0xffe066 }));
+  const headMat = new THREE.MeshStandardMaterial({ color: skinCol });
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), headMat);
   head.position.y = 2.3; head.castShadow = true; g.add(head);
   // face
   const faceCv = document.createElement('canvas');
   faceCv.width = 64; faceCv.height = 64;
-  const fc = faceCv.getContext('2d');
-  fc.fillStyle = '#ffe066'; fc.fillRect(0, 0, 64, 64);
-  fc.fillStyle = '#222';
-  fc.beginPath(); fc.arc(22, 26, 4, 0, 7); fc.fill();
-  fc.beginPath(); fc.arc(42, 26, 4, 0, 7); fc.fill();
-  fc.strokeStyle = '#222'; fc.lineWidth = 3;
-  fc.beginPath(); fc.arc(32, 38, 10, 0.15 * Math.PI, 0.85 * Math.PI); fc.stroke();
   const faceTex = new THREE.CanvasTexture(faceCv);
   const face = new THREE.Mesh(new THREE.PlaneGeometry(0.58, 0.58), new THREE.MeshBasicMaterial({ map: faceTex }));
   face.position.set(0, 2.3, 0.31); g.add(face);
   // arms
-  const armMat = new THREE.MeshStandardMaterial({ color: skin });
+  const armMat = new THREE.MeshStandardMaterial({ color: skinCol });
   const armGeo = new THREE.BoxGeometry(0.28, 0.95, 0.28);
   const armL = new THREE.Mesh(armGeo, armMat); armL.position.set(-0.62, 1.42, 0); armL.castShadow = true; g.add(armL);
   const armR = new THREE.Mesh(armGeo, armMat); armR.position.set(0.62, 1.42, 0); armR.castShadow = true; g.add(armR);
   // legs
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x2f3542 });
+  const legMat = new THREE.MeshStandardMaterial({ color: pantsCol });
   const legGeo = new THREE.BoxGeometry(0.36, 0.95, 0.36);
   const legL = new THREE.Mesh(legGeo, legMat); legL.position.set(-0.24, 0.48, 0); legL.castShadow = true; g.add(legL);
   const legR = new THREE.Mesh(legGeo, legMat); legR.position.set(0.24, 0.48, 0); legR.castShadow = true; g.add(legR);
+  // hair / hat group (rebuilt on avatar change)
+  const headGear = new THREE.Group(); headGear.position.y = 2.6; g.add(headGear);
+  const rebuildHeadGear = (hairIdx, hatIdx) => {
+    while (headGear.children.length) { const o = headGear.children.pop(); headGear.remove(o); if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }
+    const hairCols = [0x000000, 0x3b2a1a, 0x7a4a1e, 0xd4a017, 0x9932cd, 0xff4d9d, 0x2ed573, 0xcccccc];
+    const hc = hairCols[(hairIdx || 0) % hairCols.length];
+    const hmat = () => new THREE.MeshStandardMaterial({ color: hc });
+    if (hairIdx === 1) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.62), hmat()); headGear.add(m); }
+    else if (hairIdx === 2) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.24, 0.66), hmat()); m.position.y = 0.04; headGear.add(m); }
+    else if (hairIdx === 3) { for (let i = 0; i < 5; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 0.1), hmat()); m.position.set(-0.25 + i * 0.125, -0.15, 0.28); headGear.add(m); } const t = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.12, 0.62), hmat()); headGear.add(t); }
+    else if (hairIdx === 4) { const t = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.62), hmat()); headGear.add(t); const p = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.5, 0.18), hmat()); p.position.set(0, -0.2, -0.35); headGear.add(p); }
+    else if (hairIdx === 5) { for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35 - i * 0.06, 0.5), hmat()); m.position.set(0, 0.05 + i * 0.02, -0.18 + i * 0.12); headGear.add(m); } }
+    else if (hairIdx === 6) { const m = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.34, 0.68), hmat()); m.position.y = -0.06; headGear.add(m); }
+    // hats override colors from hair palette using own mats
+    const hatCols = [0x00d9ff, 0xff4757, 0x2f3542, 0xffd700, 0x8a8f98, 0x6b4a2f];
+    if (hatIdx >= 1) {
+      const hcol = hatCols[hatIdx % hatCols.length];
+      const hm = () => new THREE.MeshStandardMaterial({ color: hcol });
+      if (hatIdx === 1) { const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.16, 12), hm()); cap.position.y = 0.06; headGear.add(cap); const brim = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.3), hm()); brim.position.set(0, 0.0, 0.42); headGear.add(brim); }
+      else if (hatIdx === 2) { const base = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.06, 12), hm()); headGear.add(base); const top = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.55, 12), hm()); top.position.y = 0.3; headGear.add(top); }
+      else if (hatIdx === 3) { for (let i = 0; i < 5; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.22, 0.08), hm()); const a = i / 5 * Math.PI * 2; sp.position.set(Math.cos(a) * 0.28, 0.12, Math.sin(a) * 0.28); headGear.add(sp); } const ring = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.05, 6, 16), hm()); ring.rotation.x = Math.PI / 2; headGear.add(ring); }
+      else if (hatIdx === 4) { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.24, 0.34, 12), hm()); b.position.y = 0.12; headGear.add(b); const rim = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.04, 6, 16), hm()); rim.rotation.x = Math.PI / 2; headGear.add(rim); }
+      else if (hatIdx === 5) { const u = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.24, 0.66), hm()); u.position.y = 0.1; headGear.add(u); const l = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.3, 0.3), hm()); l.position.set(-0.4, -0.02, 0); headGear.add(l); const r = l.clone(); r.position.x = 0.4; headGear.add(r); }
+    }
+  };
+  rebuildHeadGear(av.hair || 0, av.hat || 0);
+  const setFace = (idx) => { drawFaceCanvas(faceCv.getContext('2d'), idx || 0, hexToCss(skinCol)); faceTex.needsUpdate = true; };
+  setFace(av.face || 0);
   // nametag + health bar drawn together on one canvas (updated live)
   const tagCv = document.createElement('canvas');
   tagCv.width = 256; tagCv.height = 80;
@@ -387,13 +450,25 @@ function createAvatar(name, team) {
     tagTex.needsUpdate = true;
   };
   drawTag(100);
-  return { mesh: g, tx: 0, ty: 0, tz: 0, tYaw: 0, moving: false, walkPhase: 0, drawTag, parts: { armL, armR, legL, legR } };
+  const entry = { mesh: g, tx: 0, ty: 0, tz: 0, tYaw: 0, moving: false, walkPhase: 0, drawTag,
+    parts: { armL, armR, legL, legR },
+    applyAvatar(nv) {
+      nv = nv || {};
+      if (nv.shirt) torsoMat.color.set(nv.shirt);
+      if (nv.skin) { headMat.color.set(nv.skin); armMat.color.set(nv.skin); }
+      if (nv.pants) legMat.color.set(nv.pants);
+      setFace(nv.face || 0);
+      rebuildHeadGear(nv.hair || 0, nv.hat || 0);
+    }
+  };
+  return entry;
 }
 
 function createOwnAvatar() {
-  const e = createAvatar(State.playerName, State.myTeam);
+  const e = createAvatar(State.playerName, State.myTeam, State.avatar);
   e.mesh.traverse(o => { if (o.isSprite) o.visible = false; });
   State.avatarParts = e.parts;
+  State.avatarEntry = e;
   return e.mesh;
 }
 
@@ -677,9 +752,45 @@ function createShooterMap() {
   const beacon = new THREE.PointLight(0x00d9ff, 30, 40);
   beacon.position.set(0, 14, 0);
   State.scene.add(beacon);
+  // ramp onto the tower (jump pad alternative)
+  const rampMat = new THREE.MeshStandardMaterial({ color: 0x4a6b8a, roughness: 0.7 });
+  [[-6.5, 0, 0.32], [6.5, 0, -0.32], [0, -6.5, 1.5 + 0.32], [0, 6.5, 1.5 - 0.32]].forEach(([rx, rz, rot]) => {
+    const ramp = new THREE.Mesh(new THREE.BoxGeometry(5, 0.4, 7), rampMat);
+    ramp.position.set(rx, 2.2, rz);
+    ramp.rotation.y = Math.abs(rot - 1.5) < 0.1 ? Math.PI / 2 : 0;
+    ramp.rotation.x = rot > 1.5 ? -0.34 : 0.34 * (rx > 0 ? -1 : 1) * (rx !== 0 ? 1 : 0) || (rz > 0 ? -0.34 : 0.34);
+    ramp.castShadow = true; ramp.receiveShadow = true;
+    State.scene.add(ramp);
+  });
+  // rooftops around arena for sniper positions
+  [[-38, 8, -8], [38, 8, 8], [-8, 8, 38], [8, 8, -38]].forEach(([bx, by, bz], i) => {
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(10, 1, 10), mats[i % 3]);
+    roof.position.set(bx, by, bz);
+    roof.castShadow = true; roof.receiveShadow = true;
+    State.scene.add(roof);
+    const p1 = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 1), mats[0]); p1.position.set(bx, by + 2.5, bz - 5);
+    const p2 = new THREE.Mesh(new THREE.BoxGeometry(1, 4, 10), mats[0]); p2.position.set(bx - 5, by + 2.5, bz);
+    p1.castShadow = p2.castShadow = true; State.scene.add(p1, p2);
+    addCollider(bx, bz, 5, 5, by + 1, undefined);
+    const lamp = new THREE.PointLight(0xffe066, 12, 22); lamp.position.set(bx, by + 3.5, bz); State.scene.add(lamp);
+  });
   // team spawn lights
   const redSpawn = new THREE.PointLight(0xff4757, 20, 30); redSpawn.position.set(-42, 3, -42); State.scene.add(redSpawn);
   const blueSpawn = new THREE.PointLight(0x3742fa, 20, 30); blueSpawn.position.set(42, 3, 42); State.scene.add(blueSpawn);
+  // spawn pads with colored glow rings
+  [[-42, -42, 0xff4757], [42, 42, 0x3742fa]].forEach(([sx, sz, sc]) => {
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 0.3, 24), new THREE.MeshStandardMaterial({ color: sc, emissive: sc, emissiveIntensity: 0.5 }));
+    pad.position.set(sx, 0.16, sz); pad.receiveShadow = true; State.scene.add(pad);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(4, 0.18, 8, 32), new THREE.MeshBasicMaterial({ color: sc }));
+    ring.rotation.x = Math.PI / 2; ring.position.set(sx, 0.5, sz); State.scene.add(ring);
+  });
+  // jump pads near mid
+  State.jumpPads = [];
+  [[-18, 8], [18, -8]].forEach(([jx, jz]) => {
+    const jp = new THREE.Mesh(new THREE.BoxGeometry(3, 0.4, 3), new THREE.MeshStandardMaterial({ color: 0x7bff9e, emissive: 0x2ed573, emissiveIntensity: 0.8 }));
+    jp.position.set(jx, 0.2, jz); State.scene.add(jp);
+    State.jumpPads.push(jp);
+  });
   // health packs
   State.healthPacks = [];
   for (let i = 0; i < 4; i++) {
@@ -1474,6 +1585,16 @@ function updateCompass() {
 function updateShooter(dt, time) {
   // floating pickups animation + pickup detection
   const pm = State.playerMesh.position;
+  // jump pads
+  State.jumpPads?.forEach((jp, i) => {
+    jp.material.emissiveIntensity = 0.6 + Math.sin(time * 5 + i) * 0.35;
+    if (Math.abs(pm.x - jp.position.x) < 2 && Math.abs(pm.z - jp.position.z) < 2 && pm.y < 1.6) {
+      State.vel.y = 16;
+      State.onGround = false;
+      playJumpSound();
+      spawnParticles(jp.position.clone(), 0x7bff9e, 14, 5, 0.1, 0.5);
+    }
+  });
   State.healthPacks?.forEach((hp, i) => {
     if (!hp.visible) return;
     hp.rotation.y += dt * 2;
