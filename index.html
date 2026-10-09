@@ -8,10 +8,9 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
 body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-height:100vh;overflow-x:hidden}
 .navbar{display:flex;align-items:center;padding:12px 24px;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border-bottom:2px solid #00d9ff;position:sticky;top:0;z-index:100}
-.logo{font-size:28px;font-weight:800;margin-right:30px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.logo{font-size:28px;font-weight:800;margin-right:30px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .search-bar{flex:1;max-width:400px}
 .search-bar input{width:100%;padding:10px 18px;border:2px solid #00d9ff;border-radius:25px;font-size:14px;outline:none;background:rgba(0,217,255,0.1);color:#fff}
-.search-bar input::placeholder{color:rgba(255,255,255,0.5)}
 .nav-right{display:flex;align-items:center;gap:12px;margin-left:auto}
 .nav-btn{padding:8px 16px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;transition:.3s}
 .nav-btn:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(0,217,255,0.4)}
@@ -21,44 +20,40 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
 .sidebar-title{font-size:11px;color:#00d9ff;letter-spacing:2px;padding:0 20px;margin-bottom:10px;text-transform:uppercase}
 .sidebar-item{padding:12px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.3s;color:#fff;margin:4px 12px;border-radius:10px}
 .sidebar-item:hover{background:rgba(0,217,255,0.2);transform:translateX(5px)}
-.sidebar-item.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);font-weight:700;box-shadow:0 4px 10px rgba(0,217,255,0.4)}
+.sidebar-item.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);font-weight:700}
 .main-content{flex:1;padding:28px;overflow-y:auto}
 .hero{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:40px;margin-bottom:30px;position:relative;overflow:hidden}
 .hero::before{content:'🎮';position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:120px;opacity:0.3}
-.hero h1{font-size:36px;margin-bottom:12px;text-shadow:0 2px 10px rgba(0,0,0,0.3)}
+.hero h1{font-size:36px;margin-bottom:12px}
 .hero p{font-size:15px;opacity:0.9;margin-bottom:20px;max-width:600px}
 .play-btn{padding:14px 32px;background:linear-gradient(90deg,#2ed573,#7bed9f);border:none;border-radius:30px;color:#000;font-weight:700;font-size:16px;cursor:pointer;transition:.3s;box-shadow:0 6px 20px rgba(46,213,115,0.4)}
-.play-btn:hover{transform:scale(1.05);box-shadow:0 8px 25px rgba(46,213,115,0.6)}
-.section-title{font-size:24px;font-weight:700;margin:24px 0 18px;color:#00d9ff;text-shadow:0 0 10px rgba(0,217,255,0.5);display:flex;align-items:center;gap:10px}
+.play-btn:hover{transform:scale(1.05)}
+.section-title{font-size:24px;font-weight:700;margin:24px 0 18px;color:#00d9ff}
 .games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
-.game-card{cursor:pointer;transition:transform .3s,box-shadow .3s;background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3);position:relative}
+.game-card{cursor:pointer;transition:transform .3s,box-shadow .3s;background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3)}
 .game-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 10px 30px rgba(0,217,255,0.5);border-color:#00d9ff}
-.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:64px;position:relative;overflow:hidden}
-.game-badge{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;z-index:2}
+.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:64px;position:relative}
+.game-badge{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700}
 .badge-hot{background:#ff4757;color:#fff}
 .badge-rp{background:#2ed573;color:#000}
 .badge-horror{background:#8B4513;color:#fff}
 .badge-sky{background:#3742fa;color:#fff}
 .badge-new{background:#ffa502;color:#000}
 .game-info{padding:14px}
-.game-title{font-size:16px;font-weight:700;margin-bottom:6px;color:#fff}
+.game-title{font-size:16px;font-weight:700;margin-bottom:6px}
 .game-desc{font-size:11px;color:#aaa;margin-bottom:8px;line-height:1.4}
 .game-meta{display:flex;justify-content:space-between;font-size:12px;color:#00d9ff}
-.game-rating{color:#ffd700}
 
-#settings-panel{position:fixed;right:20px;top:80px;width:320px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:20px;z-index:50;display:none;max-height:70vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+#settings-panel{position:fixed;right:20px;top:80px;width:320px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:20px;z-index:50;display:none;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
 #settings-panel.active{display:block}
 .settings-title{font-size:20px;font-weight:700;color:#00d9ff;margin-bottom:16px;border-bottom:2px solid #00d9ff;padding-bottom:8px}
-.settings-label{font-size:13px;color:#aaa;margin-bottom:6px;display:block}
 .settings-input{width:100%;padding:10px;margin-bottom:16px;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;border-radius:8px;color:#fff;font-size:14px;outline:none}
-.settings-btn{width:100%;padding:10px;margin:6px 0;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.3s}
-.settings-btn:hover{transform:scale(1.02)}
+.settings-btn{width:100%;padding:10px;margin:6px 0;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600}
 
-#studio-panel{position:fixed;right:20px;top:120px;width:340px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:16px;z-index:50;display:none;max-height:65vh;overflow-y:auto}
+#studio-panel{position:fixed;right:20px;top:120px;width:340px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:16px;z-index:50;display:none}
 #studio-panel.active{display:block}
 .studio-title{font-size:18px;font-weight:700;color:#00d9ff;margin-bottom:12px}
 .studio-btn{width:100%;padding:10px;margin:6px 0;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600}
-.studio-btn:hover{transform:scale(1.02)}
 .studio-textarea{width:100%;height:100px;margin:8px 0;background:rgba(0,0,0,0.4);border:2px solid #00d9ff;color:#fff;border-radius:6px;padding:8px;font-family:monospace;font-size:12px;resize:vertical}
 
 #game-ui{position:fixed;inset:0;display:none;background:#000;z-index:2000}
@@ -74,15 +69,12 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
 #crosshair{position:fixed;top:50%;left:50%;width:20px;height:20px;border:2px solid rgba(255,255,255,0.8);border-radius:50%;transform:translate(-50%,-50%)}
 #health-bar-container{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:200px;height:20px;background:rgba(0,0,0,0.5);border-radius:10px;overflow:hidden;border:2px solid #00d9ff}
 #health-bar{width:100%;height:100%;background:linear-gradient(90deg,#ff4757,#2ed573);transition:width .3s}
-::-webkit-scrollbar{width:10px}
-::-webkit-scrollbar-track{background:#1a1a2e}
-::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#00d9ff,#7b2cbf);border-radius:5px}
 </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <div class="logo">🧱 ROBLOX 3D</div>
+  <div class="logo"> ROBLOX 3D</div>
   <div class="search-bar"><input type="text" placeholder="🔍 Поиск игр..."></div>
   <div class="nav-right">
     <div class="online-count">🟢 0 онлайн</div>
@@ -96,78 +88,68 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
     <div class="sidebar-title">Категории</div>
     <div class="sidebar-item active"><span>🏠 Главная</span></div>
     <div class="sidebar-item"><span>🎮 Все игры</span></div>
-    <div class="sidebar-item"><span>️ Экшен</span></div>
-    <div class="sidebar-item"><span>👻 Хорроры</span></div>
-    <div class="sidebar-item"><span>🏎️ Гонки и полёты</span></div>
-    <div class="sidebar-item"><span>️ Постройки</span></div>
-    <div class="sidebar-title" style="margin-top:20px">Навигация</div>
-    <div class="sidebar-item"><span> Лучшее</span></div>
-    <div class="sidebar-item"><span>🆕 Новинки</span></div>
-    <div class="sidebar-item"><span>❤️ Избранное</span></div>
+    <div class="sidebar-item"><span>⚔️ Экшен</span></div>
+    <div class="sidebar-item"><span> Хорроры</span></div>
+    <div class="sidebar-item"><span>️ Гонки</span></div>
   </aside>
 
   <main class="main-content">
     <div class="hero">
-      <h1>Добро пожаловать в ROBLOX 3D ULTIMATE </h1>
-      <p>Пять полноценных 3D-миров: командные шутеры, ужасный лабиринт с Крысой-монстром, живой город, полёты на самолёте и скоростные гонки. Мультиплеер, звук, частицы, постобработка — всё сразу в браузере.</p>
+      <h1>Добро пожаловать в ROBLOX 3D ULTIMATE 🚀</h1>
+      <p>Пять полноценных 3D-миров: шутеры, лабиринт с Крысой, город, самолёт и гонки. Мультиплеер, звук, FXAA — всё в браузере.</p>
       <button class="play-btn" id="btn-play-hero">▶ ИГРАТЬ СЕЙЧАС</button>
     </div>
 
-    <h2 class="section-title">🔥 Популярные игры <span style="font-size:13px;color:#aaa;font-weight:400">нажмите на карточку, чтобы играть</span></h2>
+    <h2 class="section-title">🔥 Популярные игры</h2>
     <div class="games-grid">
       <div class="game-card" data-game="shooter">
         <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">
-          <span class="game-badge badge-hot">🔥 HOT</span>
-          🔫
+          <span class="game-badge badge-hot">🔥 HOT</span>🔫
         </div>
         <div class="game-info">
           <div class="game-title">Gun Arena 3D</div>
-          <div class="game-desc">Командный шутер: красный vs синие. Аптечки, патроны, серии убийств.</div>
-          <div class="game-meta"><span class="game-rating">⭐ 9.2 • 👥 2.4K</span><span>PvP</span></div>
+          <div class="game-desc">Командный шутер: красный vs синие.</div>
+          <div class="game-meta"><span>⭐ 9.2 • 👥 2.4K</span><span>PvP</span></div>
         </div>
       </div>
       <div class="game-card" data-game="brookhaven">
         <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)">
-          <span class="game-badge badge-rp">RP</span>
-          
+          <span class="game-badge badge-rp">RP</span>🏡
         </div>
         <div class="game-info">
           <div class="game-title">Brookhaven City</div>
-          <div class="game-desc">Город: дома с открываемыми дверями, бассейн, фонтан и ездящая машина.</div>
-          <div class="game-meta"><span class="game-rating">⭐ 8.8 • 👥 1.1K</span><span>Ролевая</span></div>
+          <div class="game-desc">Город: дома, бассейн, машина.</div>
+          <div class="game-meta"><span>⭐ 8.8 • 👥 1.1K</span><span>Ролевая</span></div>
         </div>
       </div>
       <div class="game-card" data-game="cheese">
         <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)">
-          <span class="game-badge badge-horror"> HORROR</span>
-          
+          <span class="game-badge badge-horror">HORROR</span>🧀
         </div>
         <div class="game-info">
           <div class="game-title">Cheese Maze: Крыса</div>
-          <div class="game-desc">Соберите весь сыр в тёмном лабиринте... но вас hunt огромная Крыса. Фонарик, BFS-ИИ, скримеры.</div>
-          <div class="game-meta"><span class="game-rating">⭐ 9.5 • 👥 3.7K</span><span>Хоррор</span></div>
+          <div class="game-desc">Соберите сыр в тёмном лабиринте.</div>
+          <div class="game-meta"><span>⭐ 9.5 • 👥 3.7K</span><span>Хоррор</span></div>
         </div>
       </div>
       <div class="game-card" data-game="airplane">
         <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)">
-          <span class="game-badge badge-sky">SKY</span>
-          ️
+          <span class="game-badge badge-sky">SKY</span>✈️
         </div>
         <div class="game-info">
           <div class="game-title">Sky Pilot 3D</div>
-          <div class="game-desc">Пролетите курс из 12 колец над городом. Свалы, жёсткие посадки, звук двигателя.</div>
-          <div class="game-meta"><span class="game-rating">⭐ 8.6 • 👥 890</span><span>Сим</span></div>
+          <div class="game-desc">Пролетите курс из 12 колец.</div>
+          <div class="game-meta"><span>⭐ 8.6 • 👥 890</span><span>Сим</span></div>
         </div>
       </div>
       <div class="game-card" data-game="racing">
         <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)">
-          <span class="game-badge badge-new">✨ NEW</span>
-          🏎️
+          <span class="game-badge badge-new">NEW</span>🏎️
         </div>
         <div class="game-info">
           <div class="game-title">Turbo Kart Racing</div>
-          <div class="game-desc">Круговая трасса, 3 ИИ-карта, нитро, городом. Свалы, жёсткие посадки, рекорды кругов и детектор «не туда».</div>
-          <div class="game-meta"><span class="game-rating">⭐ 9.0 • 👥 1.9K</span><span>Гонки</span></div>
+          <div class="game-desc">Круговая трасса, нитро, ИИ-карты.</div>
+          <div class="game-meta"><span>⭐ 9.0 • 👥 1.9K</span><span>Гонки</span></div>
         </div>
       </div>
     </div>
@@ -175,8 +157,8 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
 </div>
 
 <div id="settings-panel">
-  <div class="settings-title">⚙️ Настройки профиля</div>
-  <label class="settings-label">Никнейм:</label>
+  <div class="settings-title">️ Настройки профиля</div>
+  <label style="font-size:13px;color:#aaa">Никнейм:</label>
   <input type="text" id="settings-name" class="settings-input" placeholder="Введите никнейм" maxlength="16">
   <button class="settings-btn" id="btn-save-name">💾 Сохранить имя</button>
   <div id="settings-msg" style="margin-top:12px;font-size:13px;color:#2ed573;min-height:20px"></div>
@@ -186,7 +168,7 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
   <div class="studio-title">🛠️ Roblox Studio</div>
   <button class="studio-btn" id="btn-spawn-cube">📦 Спавн куба</button>
   <button class="studio-btn" id="btn-spawn-sphere">🔵 Спавн сферы</button>
-  <button class="studio-btn" id="btn-change-color"> Случайный цвет</button>
+  <button class="studio-btn" id="btn-change-color">🎨 Случайный цвет</button>
   <button class="studio-btn" id="btn-clear-objects">🗑️ Очистить</button>
   <div style="margin:12px 0;font-size:12px;color:#aaa">Объекты: <span id="obj-count">0</span></div>
   <div style="margin-top:12px;border-top:2px solid #00d9ff;padding-top:12px">
@@ -248,12 +230,9 @@ const DOM = {
 
 function init() {
   const saved = localStorage.getItem('r3d_name');
-  if (saved) {
-    State.playerName = saved;
-    DOM.settingsName.value = saved;
-  }
+  if (saved) { State.playerName = saved; DOM.settingsName.value = saved; }
   bindEvents();
-  console.log('✅ App initialized');
+  console.log('✅ App initialized, playerName:', State.playerName);
 }
 
 function bindEvents() {
@@ -283,6 +262,7 @@ function bindEvents() {
       }
     };
   });
+  console.log('✅ All buttons bound');
 }
 
 function saveName() {
@@ -301,7 +281,7 @@ function saveName() {
 }
 
 function startGame(gameId) {
-  console.log('startGame called with:', gameId);
+  console.log('startGame called:', gameId);
   State.currentGame = gameId;
   State.health = 100;
   DOM.gameUI.style.display = 'block';
@@ -347,7 +327,6 @@ function initAudio() {
   State.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   State.shootSound = new Audio('shoot.mp3');
   State.shootSound.volume = 0.4;
-  State.shootSound.preload = 'auto';
 }
 
 function playShootSound() {
@@ -357,12 +336,9 @@ function playShootSound() {
     if (!State.audioCtx) initAudio();
     const osc = State.audioCtx.createOscillator();
     const gain = State.audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(State.audioCtx.destination);
-    osc.frequency.value = 800;
-    gain.gain.value = 0.1;
-    osc.start();
-    osc.stop(State.audioCtx.currentTime + 0.1);
+    osc.connect(gain); gain.connect(State.audioCtx.destination);
+    osc.frequency.value = 800; gain.gain.value = 0.1;
+    osc.start(); osc.stop(State.audioCtx.currentTime + 0.1);
   });
 }
 
@@ -458,7 +434,6 @@ function init3D(gameId) {
   State.scene.add(State.playerMesh);
 
   if (gameId === 'shooter') loadWeapon();
-
   setupInput();
 
   State.composer = new EffectComposer(State.renderer);
