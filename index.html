@@ -10,39 +10,53 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
 .navbar{display:flex;align-items:center;padding:12px 24px;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border-bottom:2px solid #00d9ff;position:sticky;top:0;z-index:100}
 .logo{font-size:28px;font-weight:800;margin-right:30px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .nav-right{display:flex;align-items:center;gap:12px;margin-left:auto}
-.nav-btn{padding:8px 16px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer}
-.nav-btn:hover{transform:scale(1.05)}
+.nav-btn{padding:8px 16px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;transition:.3s;pointer-events:auto}
+.nav-btn:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(0,217,255,0.4)}
+.online-count{background:rgba(46,213,115,0.2);border:1px solid #2ed573;padding:6px 14px;border-radius:20px;font-size:13px;color:#2ed573}
 .container{display:flex;min-height:calc(100vh - 65px)}
 .sidebar{width:240px;padding:24px 0;background:rgba(0,0,0,0.3);border-right:2px solid #00d9ff}
-.sidebar-item{padding:12px 20px;cursor:pointer;margin:4px 12px;border-radius:10px}
-.sidebar-item:hover{background:rgba(0,217,255,0.2)}
+.sidebar-title{font-size:11px;color:#00d9ff;letter-spacing:2px;padding:0 20px;margin-bottom:10px;text-transform:uppercase}
+.sidebar-item{padding:12px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.3s;color:#fff;margin:4px 12px;border-radius:10px;pointer-events:auto}
+.sidebar-item:hover{background:rgba(0,217,255,0.2);transform:translateX(5px)}
 .sidebar-item.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);font-weight:700}
 .main-content{flex:1;padding:28px;overflow-y:auto}
-.hero{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:40px;margin-bottom:30px}
+.hero{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:40px;margin-bottom:30px;position:relative;overflow:hidden}
+.hero::before{content:'🎮';position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:120px;opacity:0.3}
 .hero h1{font-size:36px;margin-bottom:12px}
-.hero p{font-size:15px;opacity:0.9;margin-bottom:20px}
-.play-btn{padding:14px 32px;background:linear-gradient(90deg,#2ed573,#7bed9f);border:none;border-radius:30px;color:#000;font-weight:700;font-size:16px;cursor:pointer}
+.hero p{font-size:15px;opacity:0.9;margin-bottom:20px;max-width:600px}
+.play-btn{padding:14px 32px;background:linear-gradient(90deg,#2ed573,#7bed9f);border:none;border-radius:30px;color:#000;font-weight:700;font-size:16px;cursor:pointer;transition:.3s;box-shadow:0 6px 20px rgba(46,213,115,0.4);pointer-events:auto}
+.play-btn:hover{transform:scale(1.05)}
 .section-title{font-size:24px;font-weight:700;margin:24px 0 18px;color:#00d9ff}
 .games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
-.game-card{cursor:pointer;background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3);transition:.3s}
-.game-card:hover{transform:translateY(-8px);box-shadow:0 10px 30px rgba(0,217,255,0.5)}
-.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:64px}
+.game-card{cursor:pointer;transition:transform .3s,box-shadow .3s;background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3);pointer-events:auto}
+.game-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 10px 30px rgba(0,217,255,0.5);border-color:#00d9ff}
+.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:64px;position:relative}
+.game-badge{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.badge-hot{background:#ff4757;color:#fff}
+.badge-rp{background:#2ed573;color:#000}
+.badge-horror{background:#8B4513;color:#fff}
+.badge-sky{background:#3742fa;color:#fff}
+.badge-new{background:#ffa502;color:#000}
 .game-info{padding:14px}
 .game-title{font-size:16px;font-weight:700;margin-bottom:6px}
-.game-desc{font-size:11px;color:#aaa}
+.game-desc{font-size:11px;color:#aaa;margin-bottom:8px}
+.game-meta{display:flex;justify-content:space-between;font-size:12px;color:#00d9ff}
 
-#settings-panel,#studio-panel{position:fixed;right:20px;top:80px;width:320px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:20px;z-index:50;display:none}
-#settings-panel.active,#studio-panel.active{display:block}
-.settings-input{width:100%;padding:10px;margin:8px 0;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;border-radius:8px;color:#fff}
-.settings-btn{width:100%;padding:10px;margin:6px 0;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:8px;cursor:pointer}
+#settings-panel,#studio-panel,#editor-panel{position:fixed;right:20px;top:80px;width:340px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:20px;z-index:150;display:none;max-height:80vh;overflow-y:auto;pointer-events:auto;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+#settings-panel.active,#studio-panel.active,#editor-panel.active{display:block}
+.panel-title{font-size:20px;font-weight:700;color:#00d9ff;margin-bottom:16px;border-bottom:2px solid #00d9ff;padding-bottom:8px}
+.settings-input{width:100%;padding:10px;margin:8px 0;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;border-radius:8px;color:#fff;font-size:14px;outline:none;pointer-events:auto}
+.panel-btn{width:100%;padding:10px;margin:6px 0;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;pointer-events:auto;transition:.3s}
+.panel-btn:hover{transform:scale(1.02)}
+.panel-btn.danger{background:linear-gradient(90deg,#ff4757,#ff6b81)}
 
 #game-ui{position:fixed;inset:0;display:none;background:#000;z-index:2000}
 #game-canvas{width:100%;height:100%;display:block}
-#exit-game{position:fixed;top:20px;left:20px;padding:12px 22px;background:#ff4757;color:#fff;border:none;border-radius:10px;cursor:pointer;z-index:10}
-#hud-info{position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.7);color:#00d9ff;padding:10px 18px;border-radius:10px;z-index:10}
-#chat-box{position:fixed;top:80px;left:20px;width:300px;max-height:180px;overflow-y:auto;background:rgba(22,33,62,0.9);border-radius:12px;padding:12px;z-index:10}
-#chat-input{width:100%;padding:8px;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;color:#fff;border-radius:6px;margin-top:8px}
-.msg{margin:4px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:6px;font-size:13px}
+#exit-game{position:fixed;top:20px;left:20px;padding:12px 22px;background:linear-gradient(90deg,#ff4757,#ff6b81);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:15px;z-index:10;font-weight:700;pointer-events:auto}
+#hud-info{position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.7);color:#00d9ff;padding:10px 18px;border-radius:10px;font-size:15px;z-index:10;border:2px solid #00d9ff;pointer-events:none}
+#chat-box{position:fixed;top:80px;left:20px;width:300px;max-height:180px;overflow-y:auto;background:rgba(22,33,62,0.9);border-radius:12px;padding:12px;font-size:13px;color:#fff;z-index:10;border:2px solid #00d9ff;pointer-events:auto}
+#chat-input{width:100%;padding:8px;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;color:#fff;border-radius:6px;margin-top:8px;outline:none;pointer-events:auto}
+.msg{margin:4px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:6px}
 .msg .n{font-weight:bold;color:#00d9ff}
 .msg.sys{color:#2ed573;font-style:italic}
 
@@ -50,28 +64,47 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
 #crosshair{position:fixed;top:50%;left:50%;width:20px;height:20px;border:2px solid rgba(255,255,255,0.8);border-radius:50%;transform:translate(-50%,-50%)}
 #health-bar-container{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:200px;height:20px;background:rgba(0,0,0,0.5);border-radius:10px;overflow:hidden;border:2px solid #00d9ff}
 #health-bar{width:100%;height:100%;background:linear-gradient(90deg,#ff4757,#2ed573);transition:width .3s}
-#score-board{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 20px;border-radius:10px;font-size:18px;font-weight:700;z-index:10}
-#timer-display{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:8px 16px;border-radius:10px;font-size:16px;z-index:10}
+#score-board{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 20px;border-radius:10px;font-size:18px;font-weight:700;z-index:10;pointer-events:none}
+#timer-display{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:8px 16px;border-radius:10px;font-size:16px;z-index:10;pointer-events:none}
 
 #mobile-hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:25}
 #mobile-joy{position:absolute;bottom:30px;left:30px;width:120px;height:120px;background:rgba(0,217,255,0.2);border-radius:50%;border:3px solid #00d9ff;pointer-events:auto}
 #mobile-joy-knob{position:absolute;top:50%;left:50%;width:50px;height:50px;background:linear-gradient(135deg,#00d9ff,#7b2cbf);border-radius:50%;transform:translate(-50%,-50%);border:3px solid #fff}
-#mobile-jump{position:absolute;bottom:40px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#2ed573,#7bed9f);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto}
-#mobile-fire{position:absolute;bottom:130px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#ff4757,#ff6b81);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto}
+#mobile-jump{position:absolute;bottom:40px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#2ed573,#7bed9f);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto;font-weight:700}
+#mobile-fire{position:absolute;bottom:130px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#ff4757,#ff6b81);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto;font-weight:700}
 
-#lobby-screen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:3000;flex-direction:column}
+#lobby-screen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:3000;flex-direction:column;pointer-events:auto}
 #lobby-screen.active{display:flex}
 .lobby-box{background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:20px;padding:40px;max-width:600px;width:90%;text-align:center}
 .lobby-title{font-size:28px;color:#00d9ff;margin-bottom:20px}
 .lobby-info{font-size:18px;margin:12px 0}
-.lobby-btn{padding:12px 24px;margin:8px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:10px;color:#fff;font-size:16px;cursor:pointer}
+.lobby-btn{padding:12px 24px;margin:8px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:10px;color:#fff;font-size:16px;cursor:pointer;pointer-events:auto}
 .lobby-btn:hover{transform:scale(1.05)}
 .lobby-btn.red{background:linear-gradient(90deg,#ff4757,#ff6b81)}
 .lobby-btn.blue{background:linear-gradient(90deg,#3742fa,#5352ed)}
-.team-list{display:flex;justify-content:space-around;margin:20px 0}
-.team-box{padding:20px;border-radius:10px;min-width:200px}
+.team-list{display:flex;justify-content:space-around;margin:20px 0;gap:20px}
+.team-box{padding:20px;border-radius:10px;min-width:200px;flex:1}
 .team-box.red{background:rgba(255,71,87,0.2);border:2px solid #ff4757}
 .team-box.blue{background:rgba(55,66,250,0.2);border:2px solid #3742fa}
+
+/* РЕДАКТОР */
+#editor-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;z-index:4000;flex-direction:column}
+#editor-overlay.active{display:flex}
+#editor-topbar{height:50px;background:#1e1e2e;display:flex;align-items:center;padding:0 20px;border-bottom:2px solid #00d9ff;gap:10px}
+#editor-topbar .logo{font-size:20px}
+.editor-btn{padding:8px 16px;background:#00d9ff;border:none;border-radius:6px;color:#000;font-weight:600;cursor:pointer;pointer-events:auto}
+.editor-btn.danger{background:#ff4757;color:#fff}
+#editor-body{display:flex;flex:1;overflow:hidden}
+#editor-left{width:220px;background:#16213e;border-right:2px solid #00d9ff;overflow-y:auto;padding:10px}
+#editor-viewport{flex:1;position:relative;background:#000}
+#editor-canvas{width:100%;height:100%;display:block}
+#editor-right{width:280px;background:#16213e;border-left:2px solid #00d9ff;overflow-y:auto;padding:10px}
+.editor-section{margin-bottom:16px;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px}
+.editor-section h3{color:#00d9ff;margin-bottom:8px;font-size:14px}
+.editor-input{width:100%;padding:8px;margin:4px 0;background:rgba(0,217,255,0.1);border:1px solid #00d9ff;border-radius:6px;color:#fff;font-size:13px;pointer-events:auto}
+.editor-obj-item{padding:8px;margin:4px 0;background:rgba(0,217,255,0.1);border-radius:6px;cursor:pointer;font-size:13px;pointer-events:auto}
+.editor-obj-item:hover{background:rgba(0,217,255,0.3)}
+.editor-obj-item.selected{background:#00d9ff;color:#000}
 
 @media(max-width:768px){
   .sidebar{display:none}
@@ -81,72 +114,139 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
   .games-grid{grid-template-columns:1fr}
   #mobile-hud{display:block}
   #chat-box{width:200px;font-size:11px}
+  #editor-overlay{display:none !important}
 }
 </style>
 </head>
 <body>
 
 <nav class="navbar">
-  <div class="logo"> ROBLOX 3D</div>
+  <div class="logo">🧱 ROBLOX 3D</div>
   <div class="nav-right">
-    <button class="nav-btn" id="btn-studio">🛠️ Студия</button>
+    <div class="online-count">🟢 <span id="online-count">0</span> онлайн</div>
+    <button class="nav-btn" id="btn-editor">🎮 Редактор</button>
+    <button class="nav-btn" id="btn-studio">️ Студия</button>
     <button class="nav-btn" id="btn-settings">⚙️ Настройки</button>
   </div>
 </nav>
 
 <div class="container">
   <aside class="sidebar">
-    <div class="sidebar-item active">🏠 Главная</div>
+    <div class="sidebar-title">Категории</div>
+    <div class="sidebar-item active"> Главная</div>
     <div class="sidebar-item">🎮 Все игры</div>
     <div class="sidebar-item">⚔️ Экшен</div>
+    <div class="sidebar-item">👻 Хорроры</div>
+    <div class="sidebar-item">🏎️ Гонки</div>
   </aside>
 
   <main class="main-content">
     <div class="hero">
       <h1>Добро пожаловать в ROBLOX 3D ULTIMATE 🚀</h1>
-      <p>Пять полноценных 3D-миров: шутеры, лабиринт, город, самолёт и гонки.</p>
-      <button class="play-btn" id="btn-play">▶ ИГРАТЬ СЕЙЧАС</button>
+      <p>Пять полноценных 3D-миров: шутеры, лабиринт с Крысой, город, самолёт и гонки. Мультиплеер, звук, FXAA — всё в браузере.</p>
+      <button class="play-btn" id="btn-play-hero">▶ ИГРАТЬ СЕЙЧАС</button>
     </div>
 
-    <h2 class="section-title"> Популярные игры</h2>
+    <h2 class="section-title">🔥 Популярные игры</h2>
     <div class="games-grid">
       <div class="game-card" data-game="shooter">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">🔫</div>
-        <div class="game-info"><div class="game-title">Gun Arena 3D</div><div class="game-desc">Командный шутер 2v2</div></div>
+        <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">
+          <span class="game-badge badge-hot">🔥 HOT</span>🔫
+        </div>
+        <div class="game-info">
+          <div class="game-title">Gun Arena 3D</div>
+          <div class="game-desc">Командный шутер 2v2. Раунды по 3 минуты.</div>
+          <div class="game-meta"><span>⭐ 9.2 •  2.4K</span><span>PvP</span></div>
+        </div>
       </div>
       <div class="game-card" data-game="brookhaven">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)"></div>
-        <div class="game-info"><div class="game-title">Brookhaven City</div><div class="game-desc">Город: дома, бассейн</div></div>
+        <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)">
+          <span class="game-badge badge-rp">RP</span>🏡
+        </div>
+        <div class="game-info">
+          <div class="game-title">Brookhaven City</div>
+          <div class="game-desc">Город: дома, бассейн, машина.</div>
+          <div class="game-meta"><span>⭐ 8.8 • 👥 1.1K</span><span>Ролевая</span></div>
+        </div>
       </div>
       <div class="game-card" data-game="cheese">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)">🧀</div>
-        <div class="game-info"><div class="game-title">Cheese Maze</div><div class="game-desc">Лабиринт с Крысой</div></div>
+        <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)">
+          <span class="game-badge badge-horror">HORROR</span>
+        </div>
+        <div class="game-info">
+          <div class="game-title">Cheese Maze</div>
+          <div class="game-desc">Соберите сыр в тёмном лабиринте.</div>
+          <div class="game-meta"><span>⭐ 9.5 • 👥 3.7K</span><span>Хоррор</span></div>
+        </div>
       </div>
       <div class="game-card" data-game="airplane">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)">✈️</div>
-        <div class="game-info"><div class="game-title">Sky Pilot 3D</div><div class="game-desc">Полёты над городом</div></div>
+        <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)">
+          <span class="game-badge badge-sky">SKY</span>✈️
+        </div>
+        <div class="game-info">
+          <div class="game-title">Sky Pilot 3D</div>
+          <div class="game-desc">Пролетите курс из 12 колец.</div>
+          <div class="game-meta"><span>⭐ 8.6 • 👥 890</span><span>Сим</span></div>
+        </div>
       </div>
       <div class="game-card" data-game="racing">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)">🏎️</div>
-        <div class="game-info"><div class="game-title">Turbo Kart Racing</div><div class="game-desc">Гонки с нитро</div></div>
+        <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)">
+          <span class="game-badge badge-new">NEW</span>🏎️
+        </div>
+        <div class="game-info">
+          <div class="game-title">Turbo Kart Racing</div>
+          <div class="game-desc">Круговая трасса, нитро, ИИ-карты.</div>
+          <div class="game-meta"><span>⭐ 9.0 • 👥 1.9K</span><span>Гонки</span></div>
+        </div>
       </div>
     </div>
   </main>
 </div>
 
 <div id="settings-panel">
-  <h3 style="color:#00d9ff;margin-bottom:12px">⚙️ Настройки</h3>
+  <div class="panel-title">⚙️ Настройки</div>
   <label style="font-size:13px;color:#aaa">Никнейм:</label>
   <input type="text" id="settings-name" class="settings-input" placeholder="Введите никнейм" maxlength="16">
-  <button class="settings-btn" id="btn-save-name">💾 Сохранить</button>
+  <button class="panel-btn" id="btn-save-name">💾 Сохранить</button>
   <div id="settings-msg" style="margin-top:12px;font-size:13px;color:#2ed573"></div>
 </div>
 
 <div id="studio-panel">
-  <h3 style="color:#00d9ff;margin-bottom:12px">🛠️ Studio</h3>
-  <button class="settings-btn" id="btn-spawn-cube">📦 Куб</button>
-  <button class="settings-btn" id="btn-spawn-sphere">🔵 Сфера</button>
-  <button class="settings-btn" id="btn-clear">🗑️ Очистить</button>
+  <div class="panel-title">🛠️ Studio</div>
+  <button class="panel-btn" id="btn-spawn-cube">📦 Спавн куба</button>
+  <button class="panel-btn" id="btn-spawn-sphere">🔵 Спавн сферы</button>
+  <button class="panel-btn" id="btn-change-color">🎨 Случайный цвет</button>
+  <button class="panel-btn danger" id="btn-clear-objects">🗑️ Очистить</button>
+  <div style="margin:12px 0;font-size:12px;color:#aaa">Объекты: <span id="obj-count">0</span></div>
+</div>
+
+<div id="editor-panel">
+  <div class="panel-title">🎮 Редактор игр</div>
+  <div class="editor-section">
+    <h3>📝 Название</h3>
+    <input type="text" id="editor-game-name" class="settings-input" placeholder="Моя игра">
+  </div>
+  <div class="editor-section">
+    <h3>🌍 Размер карты</h3>
+    <input type="range" id="editor-map-size" class="settings-input" min="50" max="200" value="100">
+    <div style="font-size:12px;color:#aaa">Размер: <span id="map-size-value">100</span></div>
+  </div>
+  <div class="editor-section">
+    <h3>️ Объекты</h3>
+    <button class="panel-btn" id="editor-add-wall">🧱 Стена</button>
+    <button class="panel-btn" id="editor-add-tree">🌳 Дерево</button>
+    <button class="panel-btn" id="editor-add-house">🏠 Дом</button>
+  </div>
+  <div class="editor-section">
+    <h3>💾 Сохранить</h3>
+    <button class="panel-btn" id="editor-save">💾 Сохранить JSON</button>
+    <button class="panel-btn" id="editor-load">📂 Загрузить JSON</button>
+    <input type="file" id="editor-file-input" accept=".json" style="display:none">
+  </div>
+  <div class="editor-section">
+    <h3>▶️ Тест</h3>
+    <button class="panel-btn" id="editor-test">▶️ Тестировать игру</button>
+  </div>
 </div>
 
 <div id="lobby-screen">
@@ -154,6 +254,52 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
     <div class="lobby-title" id="lobby-title">Ожидание игроков...</div>
     <div class="lobby-info" id="lobby-info">Игроков: 0/4</div>
     <div id="lobby-content"></div>
+  </div>
+</div>
+
+<div id="editor-overlay">
+  <div id="editor-topbar">
+    <div class="logo" style="font-size:18px"> Editor</div>
+    <button class="editor-btn" id="editor-play">▶️ Play</button>
+    <button class="editor-btn danger" id="editor-stop">⏹ Stop</button>
+    <button class="editor-btn" id="editor-save-scene">💾 Save</button>
+    <button class="editor-btn danger" id="editor-close">✕ Close</button>
+  </div>
+  <div id="editor-body">
+    <div id="editor-left">
+      <div class="editor-section">
+        <h3> Добавить</h3>
+        <button class="panel-btn" id="ed-add-cube">Куб</button>
+        <button class="panel-btn" id="ed-add-sphere">Сфера</button>
+        <button class="panel-btn" id="ed-add-cylinder">Цилиндр</button>
+        <button class="panel-btn" id="ed-add-plane">Плоскость</button>
+      </div>
+      <div class="editor-section">
+        <h3>🌍 Explorer</h3>
+        <div id="editor-explorer"></div>
+      </div>
+    </div>
+    <div id="editor-viewport">
+      <canvas id="editor-canvas"></canvas>
+    </div>
+    <div id="editor-right">
+      <div class="editor-section">
+        <h3>⚙️ Свойства</h3>
+        <div id="editor-properties">
+          <div style="color:#aaa;font-size:13px">Выберите объект</div>
+        </div>
+      </div>
+      <div class="editor-section">
+        <h3> Цвет</h3>
+        <input type="color" id="editor-color" class="settings-input" value="#00d9ff">
+      </div>
+      <div class="editor-section">
+        <h3>📐 Размер</h3>
+        <label style="font-size:12px">X: <input type="range" id="prop-x" min="0.1" max="10" step="0.1" value="1" class="settings-input"></label>
+        <label style="font-size:12px">Y: <input type="range" id="prop-y" min="0.1" max="10" step="0.1" value="1" class="settings-input"></label>
+        <label style="font-size:12px">Z: <input type="range" id="prop-z" min="0.1" max="10" step="0.1" value="1" class="settings-input"></label>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -173,7 +319,7 @@ body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-h
   </div>
   <div id="mobile-hud">
     <div id="mobile-joy"><div id="mobile-joy-knob"></div></div>
-    <div id="mobile-jump">️</div>
+    <div id="mobile-jump">⬆️</div>
     <div id="mobile-fire">🔥</div>
   </div>
 </div>
@@ -193,7 +339,8 @@ const State = {
   studioObjects: [], cheeseWalls: [],
   audioCtx: null, shootSound: null, weaponMesh: null, health: 100,
   joystick: { x: 0, y: 0, active: false },
-  shooterState: 'lobby', myTeam: null
+  shooterState: 'lobby', myTeam: null,
+  editorObjects: [], selectedEditorObj: null, editorPlaying: false
 };
 
 const DOM = {
@@ -202,10 +349,13 @@ const DOM = {
   chatMessages: document.getElementById('chat-messages'),
   chatInput: document.getElementById('chat-input'),
   playerCount: document.getElementById('player-count'),
+  onlineCount: document.getElementById('online-count'),
   studioPanel: document.getElementById('studio-panel'),
   settingsPanel: document.getElementById('settings-panel'),
+  editorPanel: document.getElementById('editor-panel'),
   settingsName: document.getElementById('settings-name'),
   settingsMsg: document.getElementById('settings-msg'),
+  objCount: document.getElementById('obj-count'),
   shooterHud: document.getElementById('shooter-hud'),
   healthBar: document.getElementById('health-bar'),
   lobbyScreen: document.getElementById('lobby-screen'),
@@ -216,40 +366,129 @@ const DOM = {
   timerDisplay: document.getElementById('timer-display'),
   timerValue: document.getElementById('timer-value'),
   redScore: document.getElementById('red-score'),
-  blueScore: document.getElementById('blue-score')
+  blueScore: document.getElementById('blue-score'),
+  editorOverlay: document.getElementById('editor-overlay')
 };
 
+// ===== ИНИЦИАЛИЗАЦИЯ =====
 function init() {
   const saved = localStorage.getItem('r3d_name');
   if (saved) { State.playerName = saved; DOM.settingsName.value = saved; }
-  bindEvents();
-  console.log('✅ App initialized');
+  bindAllEvents();
+  console.log('✅ App initialized, playerName:', State.playerName);
+  if (isMobile) console.log('📱 Mobile device detected');
 }
 
-function bindEvents() {
-  document.getElementById('btn-settings').onclick = () => {
+// ===== ВСЕ ОБРАБОТЧИКИ КНОПОК =====
+function bindAllEvents() {
+  // Навигация
+  document.getElementById('btn-settings').addEventListener('click', () => {
     DOM.settingsPanel.classList.toggle('active');
     DOM.studioPanel.classList.remove('active');
-  };
-  document.getElementById('btn-studio').onclick = () => {
+    DOM.editorPanel.classList.remove('active');
+  });
+  document.getElementById('btn-studio').addEventListener('click', () => {
     DOM.studioPanel.classList.toggle('active');
     DOM.settingsPanel.classList.remove('active');
-  };
-  document.getElementById('btn-save-name').onclick = saveName;
-  document.getElementById('btn-spawn-cube').onclick = spawnCube;
-  document.getElementById('btn-spawn-sphere').onclick = spawnSphere;
-  document.getElementById('btn-clear').onclick = clearObjects;
-  document.getElementById('exit-game').onclick = exitGame;
-  document.getElementById('btn-play').onclick = () => startGame('shooter');
-
-  document.querySelectorAll('.game-card').forEach(card => {
-    card.onclick = () => {
-      if (card.dataset.game) startGame(card.dataset.game);
-    };
+    DOM.editorPanel.classList.remove('active');
+  });
+  document.getElementById('btn-editor').addEventListener('click', () => {
+    if (isMobile) {
+      alert('🖥️ Редактор доступен только на ПК!');
+      return;
+    }
+    DOM.editorPanel.classList.toggle('active');
+    DOM.settingsPanel.classList.remove('active');
+    DOM.studioPanel.classList.remove('active');
   });
 
+  // Настройки
+  document.getElementById('btn-save-name').addEventListener('click', saveName);
+
+  // Студия
+  document.getElementById('btn-spawn-cube').addEventListener('click', spawnCube);
+  document.getElementById('btn-spawn-sphere').addEventListener('click', spawnSphere);
+  document.getElementById('btn-change-color').addEventListener('click', changeColor);
+  document.getElementById('btn-clear-objects').addEventListener('click', clearObjects);
+
+  // Выход из игры
+  document.getElementById('exit-game').addEventListener('click', exitGame);
+
+  // Кнопка Play Hero
+  document.getElementById('btn-play-hero').addEventListener('click', () => {
+    console.log('🎮 Play Hero clicked');
+    startGame('shooter');
+  });
+
+  // Карточки игр
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const gameId = card.dataset.game;
+      if (gameId) {
+        console.log('🎮 Starting game:', gameId);
+        startGame(gameId);
+      }
+    });
+  });
+
+  // Редактор - размер карты
+  const mapSizeInput = document.getElementById('editor-map-size');
+  if (mapSizeInput) {
+    mapSizeInput.addEventListener('input', (e) => {
+      document.getElementById('map-size-value').textContent = e.target.value;
+    });
+  }
+
+  // Редактор - добавление объектов
+  document.getElementById('editor-add-wall').addEventListener('click', () => showToast('🧱 Стена добавлена!'));
+  document.getElementById('editor-add-tree').addEventListener('click', () => showToast('🌳 Дерево добавлено!'));
+  document.getElementById('editor-add-house').addEventListener('click', () => showToast(' Дом добавлен!'));
+
+  // Редактор - сохранение
+  document.getElementById('editor-save').addEventListener('click', saveEditorGame);
+  document.getElementById('editor-load').addEventListener('click', () => {
+    document.getElementById('editor-file-input').click();
+  });
+  document.getElementById('editor-file-input').addEventListener('change', loadEditorGame);
+  document.getElementById('editor-test').addEventListener('click', () => {
+    showToast('▶️ Тестирование...');
+    startGame('shooter');
+  });
+
+  // Редактор оверлей
+  document.getElementById('editor-close').addEventListener('click', () => {
+    DOM.editorOverlay.classList.remove('active');
+  });
+  document.getElementById('editor-play').addEventListener('click', () => {
+    State.editorPlaying = true;
+    showToast('▶️ Play режим');
+  });
+  document.getElementById('editor-stop').addEventListener('click', () => {
+    State.editorPlaying = false;
+    showToast('⏹ Stop режим');
+  });
+  document.getElementById('editor-save-scene').addEventListener('click', saveEditorScene);
+
+  // Объекты редактора
+  document.getElementById('ed-add-cube').addEventListener('click', () => addEditorObject('cube'));
+  document.getElementById('ed-add-sphere').addEventListener('click', () => addEditorObject('sphere'));
+  document.getElementById('ed-add-cylinder').addEventListener('click', () => addEditorObject('cylinder'));
+  document.getElementById('ed-add-plane').addEventListener('click', () => addEditorObject('plane'));
+
+  // Свойства редактора
+  document.getElementById('editor-color').addEventListener('input', (e) => {
+    if (State.selectedEditorObj) {
+      State.selectedEditorObj.material.color.set(e.target.value);
+    }
+  });
+  ['prop-x', 'prop-y', 'prop-z'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateEditorObjectScale);
+  });
+
+  // Мобильное управление
   if (isMobile) setupMobileControls();
-  console.log('✅ Buttons bound');
+
+  console.log('✅ All buttons bound successfully');
 }
 
 function setupMobileControls() {
@@ -296,10 +535,14 @@ function saveName() {
     localStorage.setItem('r3d_name', name);
     DOM.settingsMsg.textContent = '✅ Сохранено!';
     setTimeout(() => DOM.settingsMsg.textContent = '', 2000);
+  } else {
+    DOM.settingsMsg.textContent = ' 2-16 символов';
+    setTimeout(() => DOM.settingsMsg.textContent = '', 2000);
   }
 }
 
 function startGame(gameId) {
+  console.log('startGame called:', gameId);
   State.currentGame = gameId;
   State.health = 100;
   DOM.gameUI.style.display = 'block';
@@ -309,7 +552,7 @@ function startGame(gameId) {
   
   if (gameId === 'shooter') {
     DOM.lobbyScreen.classList.add('active');
-    DOM.lobbyTitle.textContent = 'Подключение к серверу...';
+    DOM.lobbyTitle.textContent = 'Подключение...';
     DOM.lobbyInfo.textContent = '';
     DOM.lobbyContent.innerHTML = '';
   }
@@ -347,6 +590,7 @@ function exitGame() {
   DOM.chatMessages.innerHTML = '';
   DOM.studioPanel.classList.remove('active');
   DOM.settingsPanel.classList.remove('active');
+  DOM.editorPanel.classList.remove('active');
   State.currentGame = null;
 }
 
@@ -385,20 +629,22 @@ function connectToServer() {
       if (d.type === 'waiting_lobby') {
         DOM.lobbyTitle.textContent = 'Раунд идёт';
         DOM.lobbyInfo.textContent = d.msg;
+        DOM.lobbyContent.innerHTML = '<div style="font-size:48px">⏳</div>';
       }
       if (d.type === 'shooter_state') {
         State.shooterState = d.state;
+        DOM.onlineCount.textContent = d.playerCount;
         DOM.lobbyInfo.textContent = `Игроков: ${d.playerCount}/4`;
         
         if (d.state === 'lobby') {
           DOM.lobbyTitle.textContent = 'Ожидание игроков...';
-          DOM.lobbyContent.innerHTML = '<div style="font-size:48px;margin:20px"></div>';
+          DOM.lobbyContent.innerHTML = '<div style="font-size:48px;margin:20px">⏳</div>';
         }
         if (d.state === 'map_select') {
           DOM.lobbyTitle.textContent = 'Выберите карту';
           DOM.lobbyContent.innerHTML = `
-            <button class="lobby-btn" onclick="selectMap('arena')">Арена</button>
-            <button class="lobby-btn" onclick="selectMap('city')">Город</button>
+            <button class="lobby-btn" onclick="window.selectMap('arena')">⚔️ Арена</button>
+            <button class="lobby-btn" onclick="window.selectMap('city')">️ Город</button>
           `;
         }
         if (d.state === 'team_select') {
@@ -406,14 +652,14 @@ function connectToServer() {
           DOM.lobbyContent.innerHTML = `
             <div class="team-list">
               <div class="team-box red">
-                <div style="font-size:20px;color:#ff4757">Красные</div>
-                <div>${d.red.join('<br>') || 'Пусто'}</div>
-                <button class="lobby-btn red" onclick="selectTeam('red')" ${d.red.length >= 2 ? 'disabled' : ''}>Вступить</button>
+                <div style="font-size:20px;color:#ff4757">🔴 Красные</div>
+                <div style="margin:10px 0">${d.red.join('<br>') || 'Пусто'}</div>
+                <button class="lobby-btn red" onclick="window.selectTeam('red')" ${d.red.length >= 2 ? 'disabled style="opacity:0.5"' : ''}>Вступить</button>
               </div>
               <div class="team-box blue">
-                <div style="font-size:20px;color:#3742fa">Синие</div>
-                <div>${d.blue.join('<br>') || 'Пусто'}</div>
-                <button class="lobby-btn blue" onclick="selectTeam('blue')" ${d.blue.length >= 2 ? 'disabled' : ''}>Вступить</button>
+                <div style="font-size:20px;color:#3742fa">🔵 Синие</div>
+                <div style="margin:10px 0">${d.blue.join('<br>') || 'Пусто'}</div>
+                <button class="lobby-btn blue" onclick="window.selectTeam('blue')" ${d.blue.length >= 2 ? 'disabled style="opacity:0.5"' : ''}>Вступить</button>
               </div>
             </div>
           `;
@@ -424,11 +670,6 @@ function connectToServer() {
           DOM.timerDisplay.style.display = 'block';
           DOM.redScore.textContent = d.redScore;
           DOM.blueScore.textContent = d.blueScore;
-        }
-        if (d.state === 'round_end') {
-          DOM.lobbyTitle.textContent = 'Раунд окончен!';
-          DOM.lobbyInfo.textContent = `Счёт: ${d.redScore} : ${d.blueScore}`;
-          DOM.lobbyContent.innerHTML = `<div style="font-size:24px;margin:20px">${d.winner === 'red' ? '🔴 Красные победили!' : d.winner === 'blue' ? '🔵 Синие победили!' : '🤝 Ничья!'}</div>`;
         }
       }
       if (d.type === 'round_start') {
@@ -441,7 +682,7 @@ function connectToServer() {
       if (d.type === 'round_end') {
         DOM.lobbyTitle.textContent = 'Раунд окончен!';
         DOM.lobbyInfo.textContent = `Счёт: ${d.redScore} : ${d.blueScore}`;
-        DOM.lobbyContent.innerHTML = `<div style="font-size:24px">${d.winner === 'red' ? '🔴 Красные победили!' : d.winner === 'blue' ? '🔵 Синие победили!' : '🤝 Ничья!'}</div>`;
+        DOM.lobbyContent.innerHTML = `<div style="font-size:24px;margin:20px">${d.winner === 'red' ? '🔴 Красные победили!' : d.winner === 'blue' ? '🔵 Синие победили!' : ' Ничья!'}</div>`;
         DOM.lobbyScreen.classList.add('active');
       }
       if (d.type === 'timer') {
@@ -475,6 +716,7 @@ function connectToServer() {
       }
       if (d.type === 'chat') addChat(d.name, d.msg);
       if (d.type === 'shoot') playShootSound();
+      if (d.type === 'kill') addChat('sys', `💀 ${d.killer} убил ${d.victim}`);
     } catch (err) { console.error('WS:', err); }
   };
   State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
@@ -602,7 +844,10 @@ function createBrookhaven() {
 }
 
 function setupInput() {
-  document.addEventListener('keydown', e => { State.keys[e.code] = true; });
+  document.addEventListener('keydown', e => { 
+    State.keys[e.code] = true; 
+    if(e.code==='Enter'&&e.target===DOM.chatInput) e.preventDefault(); 
+  });
   document.addEventListener('keyup', e => { State.keys[e.code] = false; });
   document.addEventListener('mousemove', e => {
     if(document.pointerLockElement) { 
@@ -610,7 +855,8 @@ function setupInput() {
       State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY*0.002)); 
     }
   });
-  document.addEventListener('click', () => { 
+  document.addEventListener('click', (e) => { 
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
     if(!document.pointerLockElement && State.renderer?.domElement) State.renderer.domElement.requestPointerLock();
     if(State.currentGame === 'shooter' && document.pointerLockElement) shoot();
   });
@@ -671,7 +917,8 @@ function gameLoop(t) {
     State.keys['Space']=false;
   }
 
-  State.composer.render();
+  if (State.composer) State.composer.render();
+  else if (State.renderer) State.renderer.render(State.scene, State.camera);
   requestAnimationFrame(gameLoop);
 }
 
@@ -743,12 +990,14 @@ function racingLoop() {
   requestAnimationFrame(racingLoop);
 }
 
+// ===== СТУДИЯ =====
 function spawnCube() {
   if (!State.scene) return;
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color:Math.random()*0xffffff}));
   mesh.position.set(0, 1, 0);
   State.scene.add(mesh);
   State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
 }
 
 function spawnSphere() {
@@ -757,11 +1006,144 @@ function spawnSphere() {
   mesh.position.set(0, 1.5, 0);
   State.scene.add(mesh);
   State.studioObjects.push(mesh);
+  DOM.objCount.textContent = State.studioObjects.length;
+}
+
+function changeColor() {
+  State.studioObjects.forEach(obj => obj.material.color.setHex(Math.random()*0xffffff));
 }
 
 function clearObjects() {
   State.studioObjects.forEach(obj => State.scene.remove(obj));
   State.studioObjects = [];
+  DOM.objCount.textContent = '0';
+}
+
+// ===== РЕДАКТОР =====
+function addEditorObject(type) {
+  if (!State.scene) {
+    showToast('❌ Сначала откройте игру');
+    return;
+  }
+  let mesh;
+  const color = Math.random() * 0xffffff;
+  if (type === 'cube') mesh = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color}));
+  else if (type === 'sphere') mesh = new THREE.Mesh(new THREE.SphereGeometry(1.5,32,32), new THREE.MeshStandardMaterial({color}));
+  else if (type === 'cylinder') mesh = new THREE.Mesh(new THREE.CylinderGeometry(1,1,2,16), new THREE.MeshStandardMaterial({color}));
+  else if (type === 'plane') mesh = new THREE.Mesh(new THREE.PlaneGeometry(4,4), new THREE.MeshStandardMaterial({color, side: THREE.DoubleSide}));
+  
+  mesh.position.set((Math.random()-0.5)*10, 1, (Math.random()-0.5)*10);
+  mesh.castShadow = true;
+  mesh.userData.name = `${type}_${State.editorObjects.length + 1}`;
+  State.scene.add(mesh);
+  State.editorObjects.push(mesh);
+  updateEditorExplorer();
+  showToast(`✅ ${type} добавлен`);
+}
+
+function updateEditorExplorer() {
+  const explorer = document.getElementById('editor-explorer');
+  if (!explorer) return;
+  explorer.innerHTML = State.editorObjects.map((obj, i) => `
+    <div class="editor-obj-item ${State.selectedEditorObj === obj ? 'selected' : ''}" data-index="${i}">
+      ${obj.userData.name || `obj_${i}`}
+    </div>
+  `).join('');
+  
+  explorer.querySelectorAll('.editor-obj-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const idx = parseInt(item.dataset.index);
+      State.selectedEditorObj = State.editorObjects[idx];
+      updateEditorExplorer();
+      updateEditorProperties();
+    });
+  });
+}
+
+function updateEditorProperties() {
+  const props = document.getElementById('editor-properties');
+  if (!props || !State.selectedEditorObj) {
+    if (props) props.innerHTML = '<div style="color:#aaa;font-size:13px">Выберите объект</div>';
+    return;
+  }
+  const obj = State.selectedEditorObj;
+  props.innerHTML = `
+    <div style="font-size:13px;margin:4px 0">Имя: ${obj.userData.name || 'obj'}</div>
+    <div style="font-size:13px;margin:4px 0">X: ${obj.position.x.toFixed(2)}</div>
+    <div style="font-size:13px;margin:4px 0">Y: ${obj.position.y.toFixed(2)}</div>
+    <div style="font-size:13px;margin:4px 0">Z: ${obj.position.z.toFixed(2)}</div>
+  `;
+}
+
+function updateEditorObjectScale() {
+  if (!State.selectedEditorObj) return;
+  const x = parseFloat(document.getElementById('prop-x').value);
+  const y = parseFloat(document.getElementById('prop-y').value);
+  const z = parseFloat(document.getElementById('prop-z').value);
+  State.selectedEditorObj.scale.set(x, y, z);
+}
+
+function saveEditorGame() {
+  const gameData = {
+    name: document.getElementById('editor-game-name').value || 'My Game',
+    mapSize: document.getElementById('editor-map-size').value,
+    objects: State.editorObjects.map(obj => ({
+      type: obj.geometry.type,
+      position: obj.position.toArray(),
+      rotation: obj.rotation.toArray(),
+      scale: obj.scale.toArray(),
+      color: obj.material.color.getHex()
+    }))
+  };
+  const blob = new Blob([JSON.stringify(gameData, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${gameData.name}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Игра сохранена!');
+}
+
+function loadEditorGame(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+      document.getElementById('editor-game-name').value = data.name || '';
+      document.getElementById('editor-map-size').value = data.mapSize || 100;
+      showToast('📂 Игра загружена!');
+    } catch (err) {
+      showToast('❌ Ошибка загрузки');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function saveEditorScene() {
+  const sceneData = State.editorObjects.map(obj => ({
+    type: obj.geometry.type,
+    position: obj.position.toArray(),
+    color: obj.material.color.getHex()
+  }));
+  const blob = new Blob([JSON.stringify(sceneData)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'scene.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Сцена сохранена!');
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.textContent = msg;
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:#fff;padding:16px 28px;border-radius:12px;z-index:9999;font-size:16px;border:2px solid #00d9ff;pointer-events:none';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
 }
 
 function addChat(name, msg) {
@@ -771,6 +1153,7 @@ function addChat(name, msg) {
   else d.innerHTML = `<span class="n">${name}:</span> ${msg}`;
   DOM.chatMessages.appendChild(d);
   DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
+  if(DOM.chatMessages.children.length>50) DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
 }
 
 window.addEventListener('resize', () => {
@@ -780,9 +1163,13 @@ window.addEventListener('resize', () => {
     State.camera.aspect = window.innerWidth/window.innerHeight;
     State.camera.updateProjectionMatrix();
     State.renderer.setSize(window.innerWidth, window.innerHeight);
+    if(State.composer) {
+      State.composer.setSize(window.innerWidth, window.innerHeight);
+    }
   }
 });
 
+// ===== ЗАПУСК =====
 init();
 </script>
 </body>
