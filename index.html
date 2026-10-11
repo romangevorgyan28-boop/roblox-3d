@@ -4,7 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roblox 3D Ultimate</title>
-<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+<!-- Importmap для Three.js и GLTFLoader -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
 body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none}
@@ -172,7 +182,7 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
     </aside>
     <main class="main-content">
       <div class="hero">
-        <h1>Добро пожаловать! </h1>
+        <h1>Добро пожаловать! 🚀</h1>
         <p>5 полноценных 3D-миров: шутеры, лабиринт с Крысой, город, самолёт и гонки.</p>
         <button class="hero-btn" id="btn-play-hero">▶ ИГРАТЬ СЕЙЧАС</button>
       </div>
@@ -188,15 +198,15 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
         </div>
         <div class="game-card" data-game="cheese">
           <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)"><span class="game-badge badge-horror">👻 HORROR</span>🧀</div>
-          <div class="game-info"><h3>Cheese Maze: Крыса</h3><p>Лабиринт с Крысой-монстром</p><div class="meta"><span>⭐ 9.5 • 👥 3.7K</span><span>Хоррор</span></div></div>
+          <div class="game-info"><h3>Cheese Maze: Крыса</h3><p>Лабиринт с Крысой-монстром</p><div class="meta"><span>⭐ 9.5 •  3.7K</span><span>Хоррор</span></div></div>
         </div>
         <div class="game-card" data-game="airplane">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)"><span class="game-badge badge-sky">SKY</span>️</div>
+          <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)"><span class="game-badge badge-sky">SKY</span>✈️</div>
           <div class="game-info"><h3>Sky Pilot 3D</h3><p>Полёты над городом</p><div class="meta"><span>⭐ 8.6 • 👥 890</span><span>Сим</span></div></div>
         </div>
         <div class="game-card" data-game="racing">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)"><span class="game-badge badge-new">✨ NEW</span>️</div>
-          <div class="game-info"><h3>Turbo Kart Racing</h3><p>Гонки с нитро</p><div class="meta"><span>⭐ 9.0 • 👥 1.9K</span><span>Гонки</span></div></div>
+          <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)"><span class="game-badge badge-new">✨ NEW</span>🏎️</div>
+          <div class="game-info"><h3>Turbo Kart Racing</h3><p>Гонки с нитро</p><div class="meta"><span>⭐ 9.0 •  1.9K</span><span>Гонки</span></div></div>
         </div>
       </div>
     </main>
@@ -216,7 +226,7 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
 
 <div id="editor">
   <div class="ed-top">
-    <div class="logo">🎮 Roblox Studio</div>
+    <div class="logo"> Roblox Studio</div>
     <button class="ed-btn" id="ed-play">▶️ Play</button>
     <button class="ed-btn danger" id="ed-stop">⏹ Stop</button>
     <button class="ed-btn" id="ed-save">💾 Save</button>
@@ -225,12 +235,12 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
   <div class="ed-body">
     <div class="ed-left">
       <div class="ed-sec">
-        <h3>🧱 Добавить</h3>
-        <button class="set-btn" id="ed-add-cube">📦 Куб</button>
-        <button class="set-btn" id="ed-add-sphere">🔵 Сфера</button>
-        <button class="set-btn" id="ed-add-cyl">🔷 Цилиндр</button>
+        <h3> Добавить</h3>
+        <button class="set-btn" id="ed-add-cube"> Куб</button>
+        <button class="set-btn" id="ed-add-sphere"> Сфера</button>
+        <button class="set-btn" id="ed-add-cyl"> Цилиндр</button>
         <button class="set-btn" id="ed-add-house">🏠 Дом</button>
-        <button class="set-btn" id="ed-add-tree">🌳 Дерево</button>
+        <button class="set-btn" id="ed-add-tree"> Дерево</button>
       </div>
       <div class="ed-sec">
         <h3>🌍 Explorer</h3>
@@ -286,12 +296,16 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
   </div>
   <div id="mobile-hud">
     <div id="mobile-joy"><div id="mobile-joy-knob"></div></div>
-    <div id="mobile-jump">️</div>
+    <div id="mobile-jump">⬆️</div>
     <div id="mobile-fire">🔥</div>
   </div>
 </div>
 
-<script>
+<!-- МОДУЛЬНЫЙ СКРИПТ С GLTFLOADER -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
 // ============================================================
 // СОСТОЯНИЕ
 // ============================================================
@@ -307,7 +321,9 @@ var S = {
   sens: 0.002,
   edObjs: [], edSel: null,
   airplaneState: null, racingState: null,
-  lastShot: 0
+  lastShot: 0,
+  THREE: THREE,
+  GLTFLoader: GLTFLoader
 };
 
 var $ = function(id){ return document.getElementById(id); };
@@ -377,7 +393,7 @@ function initMenu(){
   for(var i = 0; i < cards.length; i++){
     cards[i].addEventListener('click', function(){
       var g = this.getAttribute('data-game');
-      console.log('🎮 Card:', g);
+      console.log(' Card:', g);
       if(g) startGame(g);
     });
   }
@@ -449,7 +465,7 @@ function initAudio(){
     S.shootSound = new Audio('shoot.mp3');
     S.shootSound.volume = 0.4;
     S.shootSound.preload = 'auto';
-    console.log('✅ Звук загружен');
+    console.log('✅ Звук shoot.mp3 загружен');
   } catch(e){ console.log('️ Звук:', e); }
 }
 
@@ -501,32 +517,34 @@ function init3D(gid){
 }
 
 // ============================================================
-// ОРУЖИЕ (ИЗ ПРИМИТИВОВ — 100% РАБОТАЕТ)
+// ОРУЖИЕ ИЗ rifle.glb.glb
 // ============================================================
 function createWeapon(){
-  S.weapon = new THREE.Group();
-  // Ствол
-  var barrel = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.7), new THREE.MeshStandardMaterial({color:0x222222, metalness:0.8, roughness:0.2}));
-  barrel.position.z = -0.35;
-  S.weapon.add(barrel);
-  // Рукоять
-  var handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.25, 0.1), new THREE.MeshStandardMaterial({color:0x444444}));
-  handle.position.set(0, -0.15, 0.1);
-  handle.rotation.x = -0.3;
-  S.weapon.add(handle);
-  // Магазин
-  var mag = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, 0.08), new THREE.MeshStandardMaterial({color:0x333333}));
-  mag.position.set(0, -0.2, -0.05);
-  S.weapon.add(mag);
-  // Прицел
-  var sight = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.04), new THREE.MeshStandardMaterial({color:0x111111}));
-  sight.position.set(0, 0.08, -0.2);
-  S.weapon.add(sight);
-  S.weapon.position.set(0.4, -0.3, -0.7);
-  S.weapon.rotation.y = Math.PI;
-  S.cam.add(S.weapon);
-  S.scene.add(S.cam);
-  console.log('✅ Оружие создано из примитивов');
+  var loader = new S.GLTFLoader();
+  loader.load('rifle.glb.glb', function(gltf){
+    S.weapon = gltf.scene;
+    S.weapon.scale.set(0.5, 0.5, 0.5);
+    S.weapon.position.set(0.4, -0.3, -0.7);
+    S.weapon.rotation.y = Math.PI;
+    S.cam.add(S.weapon);
+    S.scene.add(S.cam);
+    console.log('✅ Оружие загружено из rifle.glb.glb');
+  }, undefined, function(err){
+    console.log('⚠️ rifle.glb.glb не найден, создаю из примитивов');
+    S.weapon = new THREE.Group();
+    var barrel = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.7), new THREE.MeshStandardMaterial({color:0x222222, metalness:0.8, roughness:0.2}));
+    barrel.position.z = -0.35; S.weapon.add(barrel);
+    var handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.25, 0.1), new THREE.MeshStandardMaterial({color:0x444444}));
+    handle.position.set(0, -0.15, 0.1); handle.rotation.x = -0.3; S.weapon.add(handle);
+    var mag = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, 0.08), new THREE.MeshStandardMaterial({color:0x333333}));
+    mag.position.set(0, -0.2, -0.05); S.weapon.add(mag);
+    var sight = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.04), new THREE.MeshStandardMaterial({color:0x111111}));
+    sight.position.set(0, 0.08, -0.2); S.weapon.add(sight);
+    S.weapon.position.set(0.4, -0.3, -0.7);
+    S.weapon.rotation.y = Math.PI;
+    S.cam.add(S.weapon);
+    S.scene.add(S.cam);
+  });
 }
 
 // ============================================================
@@ -545,7 +563,6 @@ function createShooterMap(){
     c.castShadow = true; c.receiveShadow = true;
     S.scene.add(c);
   }
-  // Точки спавна
   var rs = new THREE.Mesh(new THREE.CylinderGeometry(2,2,0.1,16), new THREE.MeshStandardMaterial({color:0xff4757, emissive:0xff4757, emissiveIntensity:0.5}));
   rs.position.set(-20, 0.05, 0); S.scene.add(rs);
   var bs = new THREE.Mesh(new THREE.CylinderGeometry(2,2,0.1,16), new THREE.MeshStandardMaterial({color:0x3742fa, emissive:0x3742fa, emissiveIntensity:0.5}));
@@ -554,7 +571,7 @@ function createShooterMap(){
 }
 
 // ============================================================
-// ЛАБИРИНТ CHEESE С КРЫСОЙ И СЫРОМ
+// ЛАБИРИНТ CHEESE С КРЫСОЙ ИЗ rat.glb
 // ============================================================
 function createCheese(){
   var wallMat = new THREE.MeshStandardMaterial({color:0x8B4513, roughness:0.9});
@@ -574,20 +591,31 @@ function createCheese(){
   }
   console.log('✅ Стены лабиринта:', S.cheeseWalls.length);
 
-  // Загрузка текстуры сыра из файла
-  var cheeseTex = new THREE.TextureLoader().load('cheese_texture.png', function(tex){
+  // Загрузка текстуры сыра
+  var texLoader = new THREE.TextureLoader();
+  texLoader.load('cheese_texture.png', function(tex){
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     tex.repeat.set(2,2);
     console.log('✅ Текстура сыра загружена из cheese_texture.png');
     createCheesesWithTexture(tex);
   }, undefined, function(){
-    console.log('⚠️ cheese_texture.png не найден, использую процедурную текстуру');
+    console.log('️ cheese_texture.png не найден, процедурная текстура');
     var procTex = createProceduralCheeseTexture();
     createCheesesWithTexture(procTex);
   });
 
-  // Крыса (из примитивов — 100% отображается)
-  createRat();
+  // Загрузка крысы из rat.glb
+  var loader = new S.GLTFLoader();
+  loader.load('rat.glb', function(gltf){
+    S.rat = gltf.scene;
+    S.rat.scale.set(1.5, 1.5, 1.5);
+    S.rat.position.set(0, 0, 0);
+    S.scene.add(S.rat);
+    console.log('✅ Крыса загружена из rat.glb');
+  }, undefined, function(err){
+    console.log('⚠️ rat.glb не найден, создаю из примитивов');
+    createRatFromPrimitives();
+  });
 }
 
 function createProceduralCheeseTexture(){
@@ -640,42 +668,32 @@ function createCheesesWithTexture(tex){
   console.log('✅ Сыр создан с текстурой');
 }
 
-function createRat(){
+function createRatFromPrimitives(){
   S.rat = new THREE.Group();
-  // Тело
   var body = new THREE.Mesh(new THREE.BoxGeometry(2,1.2,3), new THREE.MeshStandardMaterial({color:0x4a4a4a, roughness:0.8}));
-  body.position.y = 1; body.castShadow = true;
-  S.rat.add(body);
-  // Голова
+  body.position.y = 1; body.castShadow = true; S.rat.add(body);
   var head = new THREE.Mesh(new THREE.SphereGeometry(0.8,8,8), new THREE.MeshStandardMaterial({color:0x4a4a4a}));
-  head.position.set(0,1.2,1.8); head.castShadow = true;
-  S.rat.add(head);
-  // Глаза (красные светящиеся)
+  head.position.set(0,1.2,1.8); head.castShadow = true; S.rat.add(head);
   var eyeMat = new THREE.MeshStandardMaterial({color:0xff0000, emissive:0xff0000, emissiveIntensity:1});
   var le = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), eyeMat);
   le.position.set(-0.3,1.3,2.3); S.rat.add(le);
   var re = new THREE.Mesh(new THREE.SphereGeometry(0.15,8,8), eyeMat);
   re.position.set(0.3,1.3,2.3); S.rat.add(re);
-  // Уши
   var earMat = new THREE.MeshStandardMaterial({color:0xff6699});
   var le2 = new THREE.Mesh(new THREE.ConeGeometry(0.3,0.5,8), earMat);
   le2.position.set(-0.5,1.7,1.6); S.rat.add(le2);
   var re2 = new THREE.Mesh(new THREE.ConeGeometry(0.3,0.5,8), earMat);
   re2.position.set(0.5,1.7,1.6); S.rat.add(re2);
-  // Хвост
   var tail = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.05,2,8), new THREE.MeshStandardMaterial({color:0xff6699}));
-  tail.rotation.x = Math.PI/2; tail.position.set(0,1,-2);
-  S.rat.add(tail);
-  // Лапы
+  tail.rotation.x = Math.PI/2; tail.position.set(0,1,-2); S.rat.add(tail);
   var legMat = new THREE.MeshStandardMaterial({color:0x3a3a3a});
   [[-0.7,0.4,1],[0.7,0.4,1],[-0.7,0.4,-1],[0.7,0.4,-1]].forEach(function(pos){
     var leg = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.8,0.3), legMat);
-    leg.position.set(pos[0],pos[1],pos[2]);
-    S.rat.add(leg);
+    leg.position.set(pos[0],pos[1],pos[2]); S.rat.add(leg);
   });
   S.rat.position.set(0,0,0);
   S.scene.add(S.rat);
-  console.log('✅ Крыса создана из примитивов');
+  console.log('✅ Крыса создана из примитивов (fallback)');
 }
 
 // ============================================================
@@ -774,7 +792,6 @@ function gameLoop(t){
   if(!S.player){ requestAnimationFrame(gameLoop); return; }
   var dt = Math.min((t-lt)/1000, 0.1); lt = t;
 
-  // Движение: W = вперёд, S = назад
   var forward = (S.keys['KeyW'] ? 1 : 0) - (S.keys['KeyS'] ? 1 : 0);
   var right = (S.keys['KeyD'] ? 1 : 0) - (S.keys['KeyA'] ? 1 : 0);
   if(/Android|iPhone|iPad/i.test(navigator.userAgent)){
@@ -785,7 +802,6 @@ function gameLoop(t){
   var nx = S.player.position.x + (forward * Math.sin(S.yaw) + right * Math.cos(S.yaw)) * sp;
   var nz = S.player.position.z + (forward * Math.cos(S.yaw) - right * Math.sin(S.yaw)) * sp;
 
-  // Коллизии (скольжение вдоль стен)
   if(S.game === 'cheese' && S.cheeseWalls.length > 0){
     var canX = true, canZ = true;
     for(var i = 0; i < S.cheeseWalls.length; i++){
@@ -824,7 +840,7 @@ function gameLoop(t){
       if(S.hp <= 0){
         S.hp = 100;
         S.player.position.set(0, 1.25, 0);
-        addChat('sys', '🐀 Крыса поймала вас! Респавн...');
+        addChat('sys', ' Крыса поймала вас! Респавн...');
       }
     }
   }
@@ -972,16 +988,16 @@ function connect(){
       if(d.type === 'waiting_lobby'){ $('lobby-title').textContent = 'Раунд идёт'; $('lobby-info').textContent = d.msg; }
       if(d.type === 'shooter_state'){
         $('lobby-info').textContent = 'Игроков: '+d.playerCount+'/4';
-        if(d.state === 'lobby'){ $('lobby-title').textContent = 'Ожидание...'; $('lobby-content').innerHTML = '<div style="font-size:48px"></div>'; }
-        if(d.state === 'map_select'){ $('lobby-title').textContent = 'Выберите карту'; $('lobby-content').innerHTML = '<button class="lobby-btn" onclick="selectMap(\'arena\')">⚔️ Арена</button><button class="lobby-btn" onclick="selectMap(\'city\')">️ Город</button>'; }
+        if(d.state === 'lobby'){ $('lobby-title').textContent = 'Ожидание...'; $('lobby-content').innerHTML = '<div style="font-size:48px">⏳</div>'; }
+        if(d.state === 'map_select'){ $('lobby-title').textContent = 'Выберите карту'; $('lobby-content').innerHTML = '<button class="lobby-btn" onclick="selectMap(\'arena\')">⚔️ Арена</button><button class="lobby-btn" onclick="selectMap(\'city\')">🏙️ Город</button>'; }
         if(d.state === 'team_select'){
           $('lobby-title').textContent = 'Выберите команду';
-          $('lobby-content').innerHTML = '<div class="teams"><div class="team-box red"><div class="team-name" style="color:#ff4757">🔴 Красные</div><div>'+(d.red.join('<br>')||'Пусто')+'</div><button class="lobby-btn red" onclick="selectTeam(\'red\')" '+(d.red.length>=2?'disabled':'')+'>Вступить</button></div><div class="team-box blue"><div class="team-name" style="color:#3742fa">🔵 Синие</div><div>'+(d.blue.join('<br>')||'Пусто')+'</div><button class="lobby-btn blue" onclick="selectTeam(\'blue\')" '+(d.blue.length>=2?'disabled':'')+'>Вступить</button></div></div>';
+          $('lobby-content').innerHTML = '<div class="teams"><div class="team-box red"><div class="team-name" style="color:#ff4757"> Красные</div><div>'+(d.red.join('<br>')||'Пусто')+'</div><button class="lobby-btn red" onclick="selectTeam(\'red\')" '+(d.red.length>=2?'disabled':'')+'>Вступить</button></div><div class="team-box blue"><div class="team-name" style="color:#3742fa"> Синие</div><div>'+(d.blue.join('<br>')||'Пусто')+'</div><button class="lobby-btn blue" onclick="selectTeam(\'blue\')" '+(d.blue.length>=2?'disabled':'')+'>Вступить</button></div></div>';
         }
         if(d.state === 'playing'){ $('lobby').classList.remove('show'); $('score-board').style.display = 'block'; $('timer-display').style.display = 'block'; $('red-score').textContent = d.redScore; $('blue-score').textContent = d.blueScore; }
       }
-      if(d.type === 'round_start'){ S.team = d.team; $('lobby').classList.remove('show'); $('score-board').style.display = 'block'; $('timer-display').style.display = 'block'; addChat('sys', 'Раунд начался! Вы в команде '+(d.team==='red'?'':'🔵')); }
-      if(d.type === 'round_end'){ $('lobby-title').textContent = 'Раунд окончен!'; $('lobby-info').textContent = 'Счёт: '+d.redScore+' : '+d.blueScore; $('lobby-content').innerHTML = '<div style="font-size:24px">'+(d.winner==='red'?'🔴 Красные победили!':d.winner==='blue'?' Синие победили!':'🤝 Ничья!')+'</div>'; $('lobby').classList.add('show'); }
+      if(d.type === 'round_start'){ S.team = d.team; $('lobby').classList.remove('show'); $('score-board').style.display = 'block'; $('timer-display').style.display = 'block'; addChat('sys', 'Раунд начался! Вы в команде '+(d.team==='red'?'🔴':'🔵')); }
+      if(d.type === 'round_end'){ $('lobby-title').textContent = 'Раунд окончен!'; $('lobby-info').textContent = 'Счёт: '+d.redScore+' : '+d.blueScore; $('lobby-content').innerHTML = '<div style="font-size:24px">'+(d.winner==='red'?'🔴 Красные победили!':d.winner==='blue'?'🔵 Синие победили!':'🤝 Ничья!')+'</div>'; $('lobby').classList.add('show'); }
       if(d.type === 'timer'){ var m = Math.floor(d.time/60), s = d.time%60; $('timer-value').textContent = m+':'+(s<10?'0':'')+s; }
       if(d.type === 'snapshot'){
         $('player-count').textContent = d.players.length+1;
@@ -1055,7 +1071,7 @@ function initEditor(){
     showToast('💾 Сохранено!');
   };
   $('ed-play').onclick = function(){ S.edPlaying = true; showToast('▶️ Play'); };
-  $('ed-stop').onclick = function(){ S.edPlaying = false; showToast(' Stop'); };
+  $('ed-stop').onclick = function(){ S.edPlaying = false; showToast('⏹ Stop'); };
   $('ed-close').onclick = function(){ $('editor').classList.remove('show'); };
   editorLoop();
   console.log('✅ Редактор инициализирован');
@@ -1136,7 +1152,7 @@ window.addEventListener('resize', function(){
 // ============================================================
 initReg();
 initMenu();
-console.log('✅ Roblox 3D Ultimate запущен');
+console.log('✅ Roblox 3D Ultimate запущен с GLTFLoader');
 </script>
 </body>
 </html>
