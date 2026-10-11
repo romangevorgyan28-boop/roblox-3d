@@ -2,296 +2,326 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Roblox 3D Ultimate</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-body{background:#0a0a1a;color:#fff;min-height:100vh}
-
-/* РЕГИСТРАЦИЯ */
-#reg-screen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:9999}
-#reg-screen.hidden{display:none}
-.reg-box{background:linear-gradient(135deg,#1a1a3e,#2a2a5e);border:2px solid #00d9ff;border-radius:20px;padding:40px;max-width:400px;width:90%;text-align:center}
-.reg-box h1{color:#00d9ff;margin-bottom:20px;font-size:28px}
-.reg-box p{color:#aaa;margin-bottom:20px}
-.reg-input{width:100%;padding:14px;margin:10px 0;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;border-radius:10px;color:#fff;font-size:16px;outline:none}
-.reg-btn{width:100%;padding:14px;margin-top:10px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;transition:.3s}
-.reg-btn:hover{transform:scale(1.05);box-shadow:0 5px 20px rgba(0,217,255,0.5)}
-.reg-btn:disabled{background:#555;cursor:not-allowed;transform:none;box-shadow:none}
-.reg-error{color:#ff4757;font-size:13px;min-height:20px;margin-top:8px}
-
-/* ГЛАВНОЕ МЕНЮ */
-#main-menu{display:none;min-height:100vh}
-#main-menu.active{display:block}
-.navbar{display:flex;align-items:center;padding:14px 24px;background:rgba(0,0,0,0.6);border-bottom:2px solid #00d9ff;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
-.logo{font-size:26px;font-weight:800;background:linear-gradient(90deg,#00d9ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.nav-right{margin-left:auto;display:flex;gap:12px;align-items:center}
-.nav-user{background:linear-gradient(135deg,#00d9ff,#7b2cbf);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;cursor:pointer}
-.nav-btn{padding:8px 16px;background:rgba(0,217,255,0.2);border:1px solid #00d9ff;border-radius:8px;color:#fff;cursor:pointer;font-size:14px;transition:.3s}
-.nav-btn:hover{background:rgba(0,217,255,0.4);transform:scale(1.05)}
-
-.menu-body{display:flex;min-height:calc(100vh - 70px)}
-.sidebar{width:220px;background:rgba(0,0,0,0.3);border-right:2px solid #00d9ff;padding:20px 0}
-.side-item{padding:12px 20px;cursor:pointer;margin:4px 12px;border-radius:10px;transition:.3s;display:flex;align-items:center;gap:10px}
-.side-item:hover{background:rgba(0,217,255,0.2)}
-.side-item.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);font-weight:700}
-
-.content{flex:1;padding:30px}
-.hero{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:40px;margin-bottom:30px;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;right:30px;top:50%;transform:translateY(-50%);font-size:100px;opacity:0.3}
-.hero h1{font-size:32px;margin-bottom:10px}
+body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-height:100vh;overflow-x:hidden}
+.navbar{display:flex;align-items:center;padding:12px 24px;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border-bottom:2px solid #00d9ff;position:sticky;top:0;z-index:100}
+.logo{font-size:28px;font-weight:800;margin-right:30px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-right{display:flex;align-items:center;gap:12px;margin-left:auto}
+.nav-btn{padding:8px 16px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer}
+.nav-btn:hover{transform:scale(1.05)}
+.container{display:flex;min-height:calc(100vh - 65px)}
+.sidebar{width:240px;padding:24px 0;background:rgba(0,0,0,0.3);border-right:2px solid #00d9ff}
+.sidebar-item{padding:12px 20px;cursor:pointer;margin:4px 12px;border-radius:10px}
+.sidebar-item:hover{background:rgba(0,217,255,0.2)}
+.sidebar-item.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);font-weight:700}
+.main-content{flex:1;padding:28px;overflow-y:auto}
+.hero{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:40px;margin-bottom:30px}
+.hero h1{font-size:36px;margin-bottom:12px}
 .hero p{font-size:15px;opacity:0.9;margin-bottom:20px}
-.hero-btn{padding:14px 32px;background:linear-gradient(90deg,#2ed573,#7bed9f);border:none;border-radius:30px;color:#000;font-weight:700;font-size:16px;cursor:pointer;transition:.3s}
-.hero-btn:hover{transform:scale(1.05)}
+.play-btn{padding:14px 32px;background:linear-gradient(90deg,#2ed573,#7bed9f);border:none;border-radius:30px;color:#000;font-weight:700;font-size:16px;cursor:pointer}
+.section-title{font-size:24px;font-weight:700;margin:24px 0 18px;color:#00d9ff}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+.game-card{cursor:pointer;background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3);transition:.3s}
+.game-card:hover{transform:translateY(-8px);box-shadow:0 10px 30px rgba(0,217,255,0.5)}
+.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:64px}
+.game-info{padding:14px}
+.game-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.game-desc{font-size:11px;color:#aaa}
 
-.section-title{font-size:22px;font-weight:700;margin:24px 0 16px;color:#00d9ff}
-.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
-.game-card{background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3);cursor:pointer;transition:.3s}
-.game-card:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(0,217,255,0.4);border-color:#00d9ff}
-.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative}
-.game-badge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#ff4757;color:#fff}
-.game-info{padding:12px}
-.game-info h3{font-size:15px;margin-bottom:4px}
-.game-info p{font-size:11px;color:#aaa}
-.game-info .meta{font-size:11px;color:#00d9ff;margin-top:6px}
+#settings-panel,#studio-panel{position:fixed;right:20px;top:80px;width:320px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:20px;z-index:50;display:none}
+#settings-panel.active,#studio-panel.active{display:block}
+.settings-input{width:100%;padding:10px;margin:8px 0;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;border-radius:8px;color:#fff}
+.settings-btn{width:100%;padding:10px;margin:6px 0;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:8px;cursor:pointer}
 
-/* ИГРА */
-#game-screen{position:fixed;inset:0;display:none;background:#000;z-index:2000}
-#game-screen.active{display:block}
+#game-ui{position:fixed;inset:0;display:none;background:#000;z-index:2000}
 #game-canvas{width:100%;height:100%;display:block}
-#exit-btn{position:fixed;top:16px;left:16px;padding:10px 18px;background:#ff4757;color:#fff;border:none;border-radius:8px;cursor:pointer;z-index:10;font-weight:700}
-#hud{position:fixed;top:16px;right:16px;background:rgba(0,0,0,0.7);color:#00d9ff;padding:10px 16px;border-radius:8px;z-index:10;font-size:14px;border:1px solid #00d9ff}
-#chat{position:fixed;bottom:16px;left:16px;width:280px;max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.7);border-radius:10px;padding:10px;z-index:10;border:1px solid #00d9ff}
-#chat-input{width:100%;padding:6px;background:rgba(0,217,255,0.1);border:1px solid #00d9ff;color:#fff;border-radius:4px;margin-top:6px;font-size:12px}
-.chat-msg{font-size:12px;margin:3px 0;padding:3px 6px;background:rgba(0,0,0,0.3);border-radius:4px}
-.chat-msg .name{font-weight:bold;color:#00d9ff}
-.chat-msg.sys{color:#2ed573;font-style:italic}
+#exit-game{position:fixed;top:20px;left:20px;padding:12px 22px;background:#ff4757;color:#fff;border:none;border-radius:10px;cursor:pointer;z-index:10}
+#hud-info{position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.7);color:#00d9ff;padding:10px 18px;border-radius:10px;z-index:10}
+#chat-box{position:fixed;top:80px;left:20px;width:300px;max-height:180px;overflow-y:auto;background:rgba(22,33,62,0.9);border-radius:12px;padding:12px;z-index:10}
+#chat-input{width:100%;padding:8px;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;color:#fff;border-radius:6px;margin-top:8px}
+.msg{margin:4px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:6px;font-size:13px}
+.msg .n{font-weight:bold;color:#00d9ff}
+.msg.sys{color:#2ed573;font-style:italic}
+
+#shooter-hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:15}
+#crosshair{position:fixed;top:50%;left:50%;width:20px;height:20px;border:2px solid rgba(255,255,255,0.8);border-radius:50%;transform:translate(-50%,-50%)}
+#health-bar-container{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:200px;height:20px;background:rgba(0,0,0,0.5);border-radius:10px;overflow:hidden;border:2px solid #00d9ff}
+#health-bar{width:100%;height:100%;background:linear-gradient(90deg,#ff4757,#2ed573);transition:width .3s}
+#score-board{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 20px;border-radius:10px;font-size:18px;font-weight:700;z-index:10}
+#timer-display{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:8px 16px;border-radius:10px;font-size:16px;z-index:10}
+
+#mobile-hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:25}
+#mobile-joy{position:absolute;bottom:30px;left:30px;width:120px;height:120px;background:rgba(0,217,255,0.2);border-radius:50%;border:3px solid #00d9ff;pointer-events:auto}
+#mobile-joy-knob{position:absolute;top:50%;left:50%;width:50px;height:50px;background:linear-gradient(135deg,#00d9ff,#7b2cbf);border-radius:50%;transform:translate(-50%,-50%);border:3px solid #fff}
+#mobile-jump{position:absolute;bottom:40px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#2ed573,#7bed9f);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto}
+#mobile-fire{position:absolute;bottom:130px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#ff4757,#ff6b81);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto}
+
+#lobby-screen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:3000;flex-direction:column}
+#lobby-screen.active{display:flex}
+.lobby-box{background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:20px;padding:40px;max-width:600px;width:90%;text-align:center}
+.lobby-title{font-size:28px;color:#00d9ff;margin-bottom:20px}
+.lobby-info{font-size:18px;margin:12px 0}
+.lobby-btn{padding:12px 24px;margin:8px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:10px;color:#fff;font-size:16px;cursor:pointer}
+.lobby-btn:hover{transform:scale(1.05)}
+.lobby-btn.red{background:linear-gradient(90deg,#ff4757,#ff6b81)}
+.lobby-btn.blue{background:linear-gradient(90deg,#3742fa,#5352ed)}
+.team-list{display:flex;justify-content:space-around;margin:20px 0}
+.team-box{padding:20px;border-radius:10px;min-width:200px}
+.team-box.red{background:rgba(255,71,87,0.2);border:2px solid #ff4757}
+.team-box.blue{background:rgba(55,66,250,0.2);border:2px solid #3742fa}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main-content{padding:16px}
+  .hero{padding:20px}
+  .hero h1{font-size:24px}
+  .games-grid{grid-template-columns:1fr}
+  #mobile-hud{display:block}
+  #chat-box{width:200px;font-size:11px}
+}
 </style>
 </head>
 <body>
 
-<!-- РЕГИСТРАЦИЯ -->
-<div id="reg-screen">
-  <div class="reg-box">
-    <h1>🎮 Roblox 3D</h1>
-    <p>Введите никнейм для входа</p>
-    <input type="text" id="reg-input" class="reg-input" placeholder="Ваш никнейм" maxlength="16" autocomplete="off">
-    <div id="reg-error" class="reg-error"></div>
-    <button id="reg-btn" class="reg-btn" disabled>ИГРАТЬ</button>
+<nav class="navbar">
+  <div class="logo"> ROBLOX 3D</div>
+  <div class="nav-right">
+    <button class="nav-btn" id="btn-studio">🛠️ Студия</button>
+    <button class="nav-btn" id="btn-settings">⚙️ Настройки</button>
   </div>
-</div>
+</nav>
 
-<!-- ГЛАВНОЕ МЕНЮ -->
-<div id="main-menu">
-  <nav class="navbar">
-    <div class="logo">🧱 ROBLOX 3D</div>
-    <div class="nav-right">
-      <div class="nav-user" id="user-avatar">?</div>
-      <button class="nav-btn" id="btn-settings">⚙️ Настройки</button>
+<div class="container">
+  <aside class="sidebar">
+    <div class="sidebar-item active">🏠 Главная</div>
+    <div class="sidebar-item">🎮 Все игры</div>
+    <div class="sidebar-item">⚔️ Экшен</div>
+  </aside>
+
+  <main class="main-content">
+    <div class="hero">
+      <h1>Добро пожаловать в ROBLOX 3D ULTIMATE 🚀</h1>
+      <p>Пять полноценных 3D-миров: шутеры, лабиринт, город, самолёт и гонки.</p>
+      <button class="play-btn" id="btn-play">▶ ИГРАТЬ СЕЙЧАС</button>
     </div>
-  </nav>
-  <div class="menu-body">
-    <aside class="sidebar">
-      <div class="side-item active">🏠 Главная</div>
-      <div class="side-item"> Все игры</div>
-      <div class="side-item">⚔️ Экшен</div>
-      <div class="side-item"> Хорроры</div>
-      <div class="side-item">🏎️ Гонки</div>
-    </aside>
-    <main class="content">
-      <div class="hero">
-        <h1>Добро пожаловать в Roblox 3D! 🚀</h1>
-        <p>Мультиплеерные 3D-игры прямо в браузере. Шутеры, гонки, хорроры и многое другое.</p>
-        <button class="hero-btn" id="btn-play-now">▶ ИГРАТЬ СЕЙЧАС</button>
+
+    <h2 class="section-title"> Популярные игры</h2>
+    <div class="games-grid">
+      <div class="game-card" data-game="shooter">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">🔫</div>
+        <div class="game-info"><div class="game-title">Gun Arena 3D</div><div class="game-desc">Командный шутер 2v2</div></div>
       </div>
-      <h2 class="section-title">🔥 Популярные игры</h2>
-      <div class="games-grid">
-        <div class="game-card" data-game="shooter">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">
-            <span class="game-badge">🔥 HOT</span>🔫
-          </div>
-          <div class="game-info">
-            <h3>Gun Arena 3D</h3>
-            <p>Командный шутер 2v2</p>
-            <div class="meta">⭐ 9.2 • 👥 2.4K</div>
-          </div>
-        </div>
-        <div class="game-card" data-game="brookhaven">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)">
-            <span class="game-badge" style="background:#2ed573;color:#000">RP</span>🏡
-          </div>
-          <div class="game-info">
-            <h3>Brookhaven City</h3>
-            <p>Город: дома, бассейн</p>
-            <div class="meta">⭐ 8.8 • 👥 1.1K</div>
-          </div>
-        </div>
-        <div class="game-card" data-game="cheese">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)">
-            <span class="game-badge" style="background:#8B4513">HORROR</span>🧀
-          </div>
-          <div class="game-info">
-            <h3>Cheese Maze</h3>
-            <p>Лабиринт с Крысой</p>
-            <div class="meta">⭐ 9.5 • 👥 3.7K</div>
-          </div>
-        </div>
-        <div class="game-card" data-game="airplane">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)">
-            <span class="game-badge" style="background:#3742fa">SKY</span>✈️
-          </div>
-          <div class="game-info">
-            <h3>Sky Pilot 3D</h3>
-            <p>Полёты над городом</p>
-            <div class="meta">⭐ 8.6 • 👥 890</div>
-          </div>
-        </div>
-        <div class="game-card" data-game="racing">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)">
-            <span class="game-badge" style="background:#ffa502;color:#000">NEW</span>🏎️
-          </div>
-          <div class="game-info">
-            <h3>Turbo Kart Racing</h3>
-            <p>Гонки с нитро</p>
-            <div class="meta">⭐ 9.0 • 👥 1.9K</div>
-          </div>
-        </div>
+      <div class="game-card" data-game="brookhaven">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)"></div>
+        <div class="game-info"><div class="game-title">Brookhaven City</div><div class="game-desc">Город: дома, бассейн</div></div>
       </div>
-    </main>
+      <div class="game-card" data-game="cheese">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)">🧀</div>
+        <div class="game-info"><div class="game-title">Cheese Maze</div><div class="game-desc">Лабиринт с Крысой</div></div>
+      </div>
+      <div class="game-card" data-game="airplane">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)">✈️</div>
+        <div class="game-info"><div class="game-title">Sky Pilot 3D</div><div class="game-desc">Полёты над городом</div></div>
+      </div>
+      <div class="game-card" data-game="racing">
+        <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)">🏎️</div>
+        <div class="game-info"><div class="game-title">Turbo Kart Racing</div><div class="game-desc">Гонки с нитро</div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="settings-panel">
+  <h3 style="color:#00d9ff;margin-bottom:12px">⚙️ Настройки</h3>
+  <label style="font-size:13px;color:#aaa">Никнейм:</label>
+  <input type="text" id="settings-name" class="settings-input" placeholder="Введите никнейм" maxlength="16">
+  <button class="settings-btn" id="btn-save-name">💾 Сохранить</button>
+  <div id="settings-msg" style="margin-top:12px;font-size:13px;color:#2ed573"></div>
+</div>
+
+<div id="studio-panel">
+  <h3 style="color:#00d9ff;margin-bottom:12px">🛠️ Studio</h3>
+  <button class="settings-btn" id="btn-spawn-cube">📦 Куб</button>
+  <button class="settings-btn" id="btn-spawn-sphere">🔵 Сфера</button>
+  <button class="settings-btn" id="btn-clear">🗑️ Очистить</button>
+</div>
+
+<div id="lobby-screen">
+  <div class="lobby-box">
+    <div class="lobby-title" id="lobby-title">Ожидание игроков...</div>
+    <div class="lobby-info" id="lobby-info">Игроков: 0/4</div>
+    <div id="lobby-content"></div>
   </div>
 </div>
 
-<!-- ИГРА -->
-<div id="game-screen">
+<div id="game-ui">
   <canvas id="game-canvas"></canvas>
-  <button id="exit-btn">🏠 Выйти</button>
-  <div id="hud">Игроков: <span id="player-count">1</span></div>
-  <div id="chat">
+  <button id="exit-game">🏠 В меню</button>
+  <div id="hud-info">Игроков: <span id="player-count">1</span></div>
+  <div id="score-board" style="display:none"><span id="red-score" style="color:#ff4757">0</span> : <span id="blue-score" style="color:#3742fa">0</span></div>
+  <div id="timer-display" style="display:none">⏱️ <span id="timer-value">3:00</span></div>
+  <div id="chat-box">
     <div id="chat-messages"></div>
     <input type="text" id="chat-input" placeholder="Сообщение...">
+  </div>
+  <div id="shooter-hud">
+    <div id="crosshair"></div>
+    <div id="health-bar-container"><div id="health-bar"></div></div>
+  </div>
+  <div id="mobile-hud">
+    <div id="mobile-joy"><div id="mobile-joy-knob"></div></div>
+    <div id="mobile-jump">️</div>
+    <div id="mobile-fire">🔥</div>
   </div>
 </div>
 
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { EffectComposer } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'https://unpkg.com/three@0.160.0/examples/jsm/shaders/FXAAShader.js';
 
-// ===== СОСТОЯНИЕ =====
+const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768;
 const State = {
-  playerName: 'Guest',
-  currentGame: null,
-  scene: null, camera: null, renderer: null, player: null,
-  keys: {}, yaw: 0, pitch: 0,
-  ws: null, playerId: null,
-  otherPlayers: new Map()
+  ws: null, playerId: null, playerName: 'Guest', currentGame: null,
+  scene: null, camera: null, renderer: null, composer: null, playerMesh: null,
+  otherPlayers: new Map(), keys: {}, yaw: 0, pitch: 0,
+  studioObjects: [], cheeseWalls: [],
+  audioCtx: null, shootSound: null, weaponMesh: null, health: 100,
+  joystick: { x: 0, y: 0, active: false },
+  shooterState: 'lobby', myTeam: null
 };
 
-// ===== DOM =====
-const $ = id => document.getElementById(id);
+const DOM = {
+  gameUI: document.getElementById('game-ui'),
+  canvas: document.getElementById('game-canvas'),
+  chatMessages: document.getElementById('chat-messages'),
+  chatInput: document.getElementById('chat-input'),
+  playerCount: document.getElementById('player-count'),
+  studioPanel: document.getElementById('studio-panel'),
+  settingsPanel: document.getElementById('settings-panel'),
+  settingsName: document.getElementById('settings-name'),
+  settingsMsg: document.getElementById('settings-msg'),
+  shooterHud: document.getElementById('shooter-hud'),
+  healthBar: document.getElementById('health-bar'),
+  lobbyScreen: document.getElementById('lobby-screen'),
+  lobbyTitle: document.getElementById('lobby-title'),
+  lobbyInfo: document.getElementById('lobby-info'),
+  lobbyContent: document.getElementById('lobby-content'),
+  scoreBoard: document.getElementById('score-board'),
+  timerDisplay: document.getElementById('timer-display'),
+  timerValue: document.getElementById('timer-value'),
+  redScore: document.getElementById('red-score'),
+  blueScore: document.getElementById('blue-score')
+};
 
-// ===== РЕГИСТРАЦИЯ =====
-function initRegistration() {
+function init() {
   const saved = localStorage.getItem('r3d_name');
-  if (saved && saved.length >= 2) {
-    State.playerName = saved;
-    showMenu();
-    return;
-  }
-
-  const input = $('reg-input');
-  const btn = $('reg-btn');
-  const error = $('reg-error');
-
-  input.addEventListener('input', () => {
-    const v = input.value.trim();
-    if (v.length >= 2 && v.length <= 16) {
-      error.textContent = '';
-      btn.disabled = false;
-    } else {
-      error.textContent = v.length === 0 ? '' : (v.length < 2 ? 'Минимум 2 символа' : 'Максимум 16');
-      btn.disabled = true;
-    }
-  });
-
-  btn.addEventListener('click', () => {
-    const name = input.value.trim();
-    if (name.length >= 2 && name.length <= 16) {
-      State.playerName = name;
-      localStorage.setItem('r3d_name', name);
-      showMenu();
-    }
-  });
-
-  input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !btn.disabled) btn.click();
-  });
-
-  setTimeout(() => input.focus(), 100);
+  if (saved) { State.playerName = saved; DOM.settingsName.value = saved; }
+  bindEvents();
+  console.log('✅ App initialized');
 }
 
-// ===== ПОКАЗАТЬ МЕНЮ =====
-function showMenu() {
-  $('reg-screen').classList.add('hidden');
-  $('main-menu').classList.add('active');
-  $('user-avatar').textContent = State.playerName.charAt(0).toUpperCase();
-  console.log('✅ Меню показано, игрок:', State.playerName);
-}
+function bindEvents() {
+  document.getElementById('btn-settings').onclick = () => {
+    DOM.settingsPanel.classList.toggle('active');
+    DOM.studioPanel.classList.remove('active');
+  };
+  document.getElementById('btn-studio').onclick = () => {
+    DOM.studioPanel.classList.toggle('active');
+    DOM.settingsPanel.classList.remove('active');
+  };
+  document.getElementById('btn-save-name').onclick = saveName;
+  document.getElementById('btn-spawn-cube').onclick = spawnCube;
+  document.getElementById('btn-spawn-sphere').onclick = spawnSphere;
+  document.getElementById('btn-clear').onclick = clearObjects;
+  document.getElementById('exit-game').onclick = exitGame;
+  document.getElementById('btn-play').onclick = () => startGame('shooter');
 
-// ===== ОБРАБОТЧИКИ КНОПОК МЕНЮ =====
-function initMenuButtons() {
-  // Кнопка "Играть сейчас"
-  $('btn-play-now').addEventListener('click', () => {
-    console.log('🎮 Play Now clicked');
-    startGame('shooter');
-  });
-
-  // Кнопка настроек
-  $('btn-settings').addEventListener('click', () => {
-    const newName = prompt('Введите новый никнейм:', State.playerName);
-    if (newName && newName.trim().length >= 2 && newName.trim().length <= 16) {
-      State.playerName = newName.trim();
-      localStorage.setItem('r3d_name', State.playerName);
-      $('user-avatar').textContent = State.playerName.charAt(0).toUpperCase();
-      alert('✅ Имя изменено на: ' + State.playerName);
-    }
-  });
-
-  // Карточки игр
   document.querySelectorAll('.game-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const game = card.dataset.game;
-      console.log('🎮 Card clicked:', game);
-      if (game) startGame(game);
-    });
+    card.onclick = () => {
+      if (card.dataset.game) startGame(card.dataset.game);
+    };
   });
 
-  // Кнопка выхода из игры
-  $('exit-btn').addEventListener('click', exitGame);
-
-  // Чат
-  $('chat-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && e.target.value.trim() && State.ws?.readyState === 1) {
-      State.ws.send(JSON.stringify({ type: 'chat', msg: e.target.value.trim() }));
-      e.target.value = '';
-    }
-  });
-
-  console.log('✅ Все кнопки меню привязаны');
+  if (isMobile) setupMobileControls();
+  console.log('✅ Buttons bound');
 }
 
-// ===== ЗАПУСК ИГРЫ =====
-function startGame(gameId) {
-  console.log('🚀 Starting game:', gameId);
-  State.currentGame = gameId;
-  $('main-menu').classList.remove('active');
-  $('game-screen').classList.add('active');
+function setupMobileControls() {
+  const joy = document.getElementById('mobile-joy');
+  const knob = document.getElementById('mobile-joy-knob');
+  let startX = 0, startY = 0;
   
-  init3D(gameId);
+  joy.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    startX = t.clientX; startY = t.clientY;
+    State.joystick.active = true;
+  }, { passive: false });
+
+  joy.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!State.joystick.active) return;
+    const t = e.changedTouches[0];
+    let dx = t.clientX - startX, dy = t.clientY - startY;
+    const dist = Math.min(35, Math.hypot(dx, dy));
+    const angle = Math.atan2(dy, dx);
+    knob.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
+    State.joystick.x = Math.cos(angle) * (dist/35);
+    State.joystick.y = Math.sin(angle) * (dist/35);
+  }, { passive: false });
+
+  const resetJoy = () => {
+    State.joystick.active = false;
+    State.joystick.x = 0; State.joystick.y = 0;
+    knob.style.transform = 'translate(-50%, -50%)';
+  };
+  joy.addEventListener('touchend', resetJoy);
+  joy.addEventListener('touchcancel', resetJoy);
+
+  document.getElementById('mobile-jump').addEventListener('touchstart', (e) => { e.preventDefault(); State.keys['Space'] = true; }, { passive: false });
+  document.getElementById('mobile-jump').addEventListener('touchend', () => State.keys['Space'] = false);
+  document.getElementById('mobile-fire').addEventListener('touchstart', (e) => { e.preventDefault(); if (State.currentGame === 'shooter') shoot(); }, { passive: false });
+}
+
+function saveName() {
+  const name = DOM.settingsName.value.trim();
+  if (name.length >= 2 && name.length <= 16) {
+    State.playerName = name;
+    localStorage.setItem('r3d_name', name);
+    DOM.settingsMsg.textContent = '✅ Сохранено!';
+    setTimeout(() => DOM.settingsMsg.textContent = '', 2000);
+  }
+}
+
+function startGame(gameId) {
+  State.currentGame = gameId;
+  State.health = 100;
+  DOM.gameUI.style.display = 'block';
+  DOM.shooterHud.style.display = gameId === 'shooter' ? 'block' : 'none';
+  DOM.scoreBoard.style.display = 'none';
+  DOM.timerDisplay.style.display = 'none';
+  
+  if (gameId === 'shooter') {
+    DOM.lobbyScreen.classList.add('active');
+    DOM.lobbyTitle.textContent = 'Подключение к серверу...';
+    DOM.lobbyInfo.textContent = '';
+    DOM.lobbyContent.innerHTML = '';
+  }
+  
+  if (gameId === 'airplane') initAirplaneGame();
+  else if (gameId === 'racing') initRacingGame();
+  else init3D(gameId);
+  
   connectToServer();
 }
 
-// ===== ВЫХОД ИЗ ИГРЫ =====
 function exitGame() {
-  console.log(' Exiting game');
   if (State.ws) { State.ws.close(); State.ws = null; }
   if (State.renderer) { State.renderer.dispose(); State.renderer = null; }
   if (State.scene) {
@@ -305,27 +335,172 @@ function exitGame() {
     State.scene = null;
   }
   State.otherPlayers.clear();
-  State.player = null;
-  $('game-screen').classList.remove('active');
-  $('chat-messages').innerHTML = '';
+  State.playerMesh = null;
+  State.weaponMesh = null;
+  State.studioObjects = [];
+  State.cheeseWalls = [];
+  DOM.gameUI.style.display = 'none';
+  DOM.shooterHud.style.display = 'none';
+  DOM.lobbyScreen.classList.remove('active');
+  DOM.scoreBoard.style.display = 'none';
+  DOM.timerDisplay.style.display = 'none';
+  DOM.chatMessages.innerHTML = '';
+  DOM.studioPanel.classList.remove('active');
+  DOM.settingsPanel.classList.remove('active');
   State.currentGame = null;
-  showMenu();
 }
 
-// ===== 3D ИНИЦИАЛИЗАЦИЯ =====
+function initAudio() {
+  State.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  State.shootSound = new Audio('shoot.mp3');
+  State.shootSound.volume = 0.4;
+}
+
+function playShootSound() {
+  if (!State.shootSound) initAudio();
+  const clone = State.shootSound.cloneNode();
+  clone.play().catch(() => {
+    if (!State.audioCtx) initAudio();
+    const osc = State.audioCtx.createOscillator();
+    const gain = State.audioCtx.createGain();
+    osc.connect(gain); gain.connect(State.audioCtx.destination);
+    osc.frequency.value = 800; gain.gain.value = 0.1;
+    osc.start(); osc.stop(State.audioCtx.currentTime + 0.1);
+  });
+}
+
+function connectToServer() {
+  if (State.ws && State.ws.readyState === 1) return;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  State.ws = new WebSocket(`${proto}//${location.host}`);
+  State.ws.onopen = () => State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
+  State.ws.onmessage = (e) => {
+    try {
+      const d = JSON.parse(e.data);
+      if (d.type === 'registered') {
+        State.playerId = d.id;
+        State.ws.send(JSON.stringify({ type: 'join', gameId: State.currentGame }));
+        addChat('sys', `Добро пожаловать, ${d.name}!`);
+      }
+      if (d.type === 'waiting_lobby') {
+        DOM.lobbyTitle.textContent = 'Раунд идёт';
+        DOM.lobbyInfo.textContent = d.msg;
+      }
+      if (d.type === 'shooter_state') {
+        State.shooterState = d.state;
+        DOM.lobbyInfo.textContent = `Игроков: ${d.playerCount}/4`;
+        
+        if (d.state === 'lobby') {
+          DOM.lobbyTitle.textContent = 'Ожидание игроков...';
+          DOM.lobbyContent.innerHTML = '<div style="font-size:48px;margin:20px"></div>';
+        }
+        if (d.state === 'map_select') {
+          DOM.lobbyTitle.textContent = 'Выберите карту';
+          DOM.lobbyContent.innerHTML = `
+            <button class="lobby-btn" onclick="selectMap('arena')">Арена</button>
+            <button class="lobby-btn" onclick="selectMap('city')">Город</button>
+          `;
+        }
+        if (d.state === 'team_select') {
+          DOM.lobbyTitle.textContent = 'Выберите команду';
+          DOM.lobbyContent.innerHTML = `
+            <div class="team-list">
+              <div class="team-box red">
+                <div style="font-size:20px;color:#ff4757">Красные</div>
+                <div>${d.red.join('<br>') || 'Пусто'}</div>
+                <button class="lobby-btn red" onclick="selectTeam('red')" ${d.red.length >= 2 ? 'disabled' : ''}>Вступить</button>
+              </div>
+              <div class="team-box blue">
+                <div style="font-size:20px;color:#3742fa">Синие</div>
+                <div>${d.blue.join('<br>') || 'Пусто'}</div>
+                <button class="lobby-btn blue" onclick="selectTeam('blue')" ${d.blue.length >= 2 ? 'disabled' : ''}>Вступить</button>
+              </div>
+            </div>
+          `;
+        }
+        if (d.state === 'playing') {
+          DOM.lobbyScreen.classList.remove('active');
+          DOM.scoreBoard.style.display = 'block';
+          DOM.timerDisplay.style.display = 'block';
+          DOM.redScore.textContent = d.redScore;
+          DOM.blueScore.textContent = d.blueScore;
+        }
+        if (d.state === 'round_end') {
+          DOM.lobbyTitle.textContent = 'Раунд окончен!';
+          DOM.lobbyInfo.textContent = `Счёт: ${d.redScore} : ${d.blueScore}`;
+          DOM.lobbyContent.innerHTML = `<div style="font-size:24px;margin:20px">${d.winner === 'red' ? '🔴 Красные победили!' : d.winner === 'blue' ? '🔵 Синие победили!' : '🤝 Ничья!'}</div>`;
+        }
+      }
+      if (d.type === 'round_start') {
+        State.myTeam = d.team;
+        DOM.lobbyScreen.classList.remove('active');
+        DOM.scoreBoard.style.display = 'block';
+        DOM.timerDisplay.style.display = 'block';
+        addChat('sys', `Раунд начался! Вы в команде ${d.team === 'red' ? '🔴' : '🔵'}`);
+      }
+      if (d.type === 'round_end') {
+        DOM.lobbyTitle.textContent = 'Раунд окончен!';
+        DOM.lobbyInfo.textContent = `Счёт: ${d.redScore} : ${d.blueScore}`;
+        DOM.lobbyContent.innerHTML = `<div style="font-size:24px">${d.winner === 'red' ? '🔴 Красные победили!' : d.winner === 'blue' ? '🔵 Синие победили!' : '🤝 Ничья!'}</div>`;
+        DOM.lobbyScreen.classList.add('active');
+      }
+      if (d.type === 'timer') {
+        const min = Math.floor(d.time / 60);
+        const sec = d.time % 60;
+        DOM.timerValue.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+      }
+      if (d.type === 'snapshot') {
+        DOM.playerCount.textContent = d.players.length + 1;
+        if (d.health !== undefined) {
+          State.health = d.health;
+          DOM.healthBar.style.width = `${Math.max(0, d.health)}%`;
+        }
+        d.players.forEach(p => {
+          if (!State.otherPlayers.has(p.id)) {
+            const m = new THREE.Mesh(
+              new THREE.CapsuleGeometry(0.5, 1.5, 4, 8),
+              new THREE.MeshStandardMaterial({ color: p.team === 'red' ? 0xff4757 : 0x3742fa })
+            );
+            m.position.set(p.x, 1.25, p.z);
+            m.rotation.y = -p.yaw;
+            m.castShadow = true;
+            State.scene.add(m);
+            State.otherPlayers.set(p.id, m);
+          } else {
+            const m = State.otherPlayers.get(p.id);
+            m.position.set(p.x, p.y, p.z);
+            m.rotation.y = -p.yaw;
+          }
+        });
+      }
+      if (d.type === 'chat') addChat(d.name, d.msg);
+      if (d.type === 'shoot') playShootSound();
+    } catch (err) { console.error('WS:', err); }
+  };
+  State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
+}
+
+window.selectMap = function(map) {
+  if (State.ws) State.ws.send(JSON.stringify({ type: 'select_map', map }));
+};
+
+window.selectTeam = function(team) {
+  if (State.ws) State.ws.send(JSON.stringify({ type: 'select_team', team }));
+};
+
 function init3D(gameId) {
-  const canvas = $('game-canvas');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const cv = DOM.canvas;
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
 
   State.scene = new THREE.Scene();
   const skyColor = gameId === 'shooter' ? 0x2d3436 : (gameId === 'cheese' ? 0x1a1a2e : 0x74b9ff);
   State.scene.background = new THREE.Color(skyColor);
   State.scene.fog = new THREE.Fog(skyColor, 15, 70);
 
-  State.camera = new THREE.PerspectiveCamera(70, canvas.width / canvas.height, 0.1, 200);
-  State.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  State.renderer.setSize(canvas.width, canvas.height);
+  State.camera = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 200);
+  State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  State.renderer.setSize(cv.width, cv.height);
   State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   State.renderer.shadowMap.enabled = true;
 
@@ -343,148 +518,272 @@ function init3D(gameId) {
   floor.receiveShadow = true;
   State.scene.add(floor);
 
-  State.scene.add(new THREE.GridHelper(100, 20, 0x00d9ff));
+  if (gameId === 'shooter') createShooterMap();
+  if (gameId === 'cheese') createCheeseMaze();
+  if (gameId === 'brookhaven') createBrookhaven();
 
-  // Игрок
-  State.player = new THREE.Mesh(
+  State.playerMesh = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.5, 1.5, 4, 8),
     new THREE.MeshStandardMaterial({ color: 0x00d9ff })
   );
-  State.player.position.y = 1.25;
-  State.player.castShadow = true;
-  State.scene.add(State.player);
+  State.playerMesh.position.y = 1.25;
+  State.playerMesh.castShadow = true;
+  State.scene.add(State.playerMesh);
 
-  // Управление
+  if (gameId === 'shooter') loadWeapon();
   setupInput();
+
+  State.composer = new EffectComposer(State.renderer);
+  State.composer.addPass(new RenderPass(State.scene, State.camera));
+  const fxaaPass = new ShaderPass(FXAAShader);
+  fxaaPass.material.uniforms['resolution'].value.set(
+    1 / (cv.width * State.renderer.getPixelRatio()),
+    1 / (cv.height * State.renderer.getPixelRatio())
+  );
+  State.composer.addPass(fxaaPass);
+
   gameLoop();
 }
 
-// ===== УПРАВЛЕНИЕ =====
+function loadWeapon() {
+  const gun = new THREE.Group();
+  gun.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x333 })));
+  gun.children[0].position.z = -0.3;
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.08), new THREE.MeshStandardMaterial({ color: 0x555 }));
+  handle.position.set(0, -0.15, 0);
+  gun.add(handle);
+  State.weaponMesh = gun;
+  State.weaponMesh.position.set(0.3, -0.3, -0.6);
+  State.weaponMesh.rotation.y = Math.PI;
+  State.camera.add(State.weaponMesh);
+  State.scene.add(State.camera);
+}
+
+function createShooterMap() {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x636e72 });
+  [[-45,0,2,92],[45,0,2,92],[0,-45,92,2],[0,45,92,2]].forEach(([x,z,w,d]) => {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(w,6,d), mat);
+    wall.position.set(x,3,z);
+    wall.castShadow = true;
+    State.scene.add(wall);
+  });
+  for(let i=0;i<8;i++) {
+    const cover = new THREE.Mesh(new THREE.BoxGeometry(4,2,4), mat);
+    cover.position.set((Math.random()-0.5)*70, 1, (Math.random()-0.5)*70);
+    cover.castShadow = true;
+    State.scene.add(cover);
+  }
+}
+
+function createCheeseMaze() {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+  State.cheeseWalls = [];
+  const maze = [[1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0,0,0,0,1],[1,0,1,0,1,0,1,1,1,1,0,1],[1,0,1,0,0,0,0,0,0,1,0,1],[1,0,1,1,1,1,0,1,0,1,0,1],[1,0,0,0,0,1,0,1,0,0,0,1],[1,1,1,1,0,1,0,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1]];
+  const cell = 7;
+  for(let r=0;r<maze.length;r++) for(let c=0;c<maze[r].length;c++) if(maze[r][c]===1) {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(cell,5,cell), mat);
+    wall.position.set((c-6)*cell, 2.5, (r-4.5)*cell);
+    wall.castShadow = true;
+    State.scene.add(wall);
+    State.cheeseWalls.push({x:wall.position.x, z:wall.position.z, w:cell, d:cell});
+  }
+}
+
+function createBrookhaven() {
+  for(let i=0;i<12;i++) {
+    const house = new THREE.Group();
+    const walls = new THREE.Mesh(new THREE.BoxGeometry(12,6,10), new THREE.MeshStandardMaterial({color:0xf8f9fa}));
+    walls.position.y=3; house.add(walls);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(9,4,4), new THREE.MeshStandardMaterial({color:0xe74c3c}));
+    roof.position.y=8; roof.rotation.y=Math.PI/4; house.add(roof);
+    house.position.set((Math.random()-0.5)*80, 0, (Math.random()-0.5)*80);
+    State.scene.add(house);
+  }
+}
+
 function setupInput() {
   document.addEventListener('keydown', e => { State.keys[e.code] = true; });
   document.addEventListener('keyup', e => { State.keys[e.code] = false; });
   document.addEventListener('mousemove', e => {
-    if (document.pointerLockElement) {
-      State.yaw -= e.movementX * 0.002;
-      State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY * 0.002));
+    if(document.pointerLockElement) { 
+      State.yaw -= e.movementX*0.002; 
+      State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY*0.002)); 
     }
   });
-  document.addEventListener('click', () => {
-    if (!document.pointerLockElement && State.renderer?.domElement) {
-      State.renderer.domElement.requestPointerLock();
+  document.addEventListener('click', () => { 
+    if(!document.pointerLockElement && State.renderer?.domElement) State.renderer.domElement.requestPointerLock();
+    if(State.currentGame === 'shooter' && document.pointerLockElement) shoot();
+  });
+  DOM.chatInput.addEventListener('keypress', e => {
+    if(e.key==='Enter' && e.target.value.trim() && State.ws?.readyState===1) {
+      State.ws.send(JSON.stringify({type:'chat',msg:e.target.value.trim()}));
+      e.target.value='';
     }
   });
 }
 
-// ===== ИГРОВОЙ ЦИКЛ =====
+function shoot() {
+  if (State.ws && State.ws.readyState === 1) State.ws.send(JSON.stringify({ type: 'action' }));
+  playShootSound();
+  if (State.weaponMesh) {
+    State.weaponMesh.position.z += 0.1;
+    setTimeout(() => { if (State.weaponMesh) State.weaponMesh.position.z -= 0.1; }, 100);
+  }
+}
+
 let lastTime = 0;
 function gameLoop(t) {
-  if (!State.player) { requestAnimationFrame(gameLoop); return; }
-  const dt = Math.min((t - lastTime) / 1000, 0.1);
+  if(!State.playerMesh) { requestAnimationFrame(gameLoop); return; }
+  const dt = Math.min((t-lastTime)/1000, 0.1);
   lastTime = t;
 
-  const f = (State.keys['KeyW'] ? 1 : 0) - (State.keys['KeyS'] ? 1 : 0);
-  const r = (State.keys['KeyD'] ? 1 : 0) - (State.keys['KeyA'] ? 1 : 0);
+  const f = isMobile ? -State.joystick.y : ((State.keys['KeyW']?1:0) - (State.keys['KeyS']?1:0));
+  const r = isMobile ? State.joystick.x : ((State.keys['KeyD']?1:0) - (State.keys['KeyA']?1:0));
   const speed = 0.2;
 
-  State.player.position.x += (f * Math.sin(State.yaw) + r * Math.cos(State.yaw)) * speed;
-  State.player.position.z += (f * Math.cos(State.yaw) - r * Math.sin(State.yaw)) * speed;
-  State.player.position.x = Math.max(-48, Math.min(48, State.player.position.x));
-  State.player.position.z = Math.max(-48, Math.min(48, State.player.position.z));
-
-  if (State.keys['Space'] && State.player.position.y <= 1.3) {
-    State.player.position.y = 3.5;
-    State.keys['Space'] = false;
+  const newX = State.playerMesh.position.x + (f*Math.sin(State.yaw) + r*Math.cos(State.yaw)) * speed;
+  const newZ = State.playerMesh.position.z + (f*Math.cos(State.yaw) - r*Math.sin(State.yaw)) * speed;
+  
+  if(State.currentGame==='cheese' && State.cheeseWalls) {
+    let col=false;
+    for(const w of State.cheeseWalls) if(Math.abs(newX-w.x)<w.w/2+0.5 && Math.abs(newZ-w.z)<w.d/2+0.5) {col=true;break;}
+    if(!col) { State.playerMesh.position.x=newX; State.playerMesh.position.z=newZ; }
+  } else {
+    State.playerMesh.position.x = Math.max(-48, Math.min(48, newX));
+    State.playerMesh.position.z = Math.max(-48, Math.min(48, newZ));
   }
-  if (State.player.position.y > 1.25) State.player.position.y -= 0.25;
-  if (State.player.position.y < 1.25) State.player.position.y = 1.25;
 
-  State.player.rotation.y = State.yaw;
+  if(State.keys['Space'] && State.playerMesh.position.y<=1.3) { State.playerMesh.position.y=3.5; State.keys['Space']=false; }
+  if(State.playerMesh.position.y>1.25) State.playerMesh.position.y-=0.25;
+  if(State.playerMesh.position.y<1.25) State.playerMesh.position.y=1.25;
+
+  State.playerMesh.rotation.y = State.yaw;
 
   State.camera.position.set(
-    State.player.position.x + Math.sin(State.yaw) * 7,
-    State.player.position.y + 4,
-    State.player.position.z + Math.cos(State.yaw) * 7
+    State.playerMesh.position.x+Math.sin(State.yaw)*7,
+    State.playerMesh.position.y+4+Math.sin(State.pitch)*1.5,
+    State.playerMesh.position.z+Math.cos(State.yaw)*7
   );
-  State.camera.lookAt(State.player.position.x, State.player.position.y + 1.5, State.player.position.z);
+  State.camera.lookAt(State.playerMesh.position.x, State.playerMesh.position.y+1.5, State.playerMesh.position.z);
 
-  if (State.ws && State.ws.readyState === 1) {
-    State.ws.send(JSON.stringify({ type: 'input', f, r, jump: State.keys['Space'], yaw: State.yaw }));
-    State.keys['Space'] = false;
+  if(State.ws && State.ws.readyState===1) {
+    State.ws.send(JSON.stringify({type:'input',f:f,r:r,jump:State.keys['Space'],yaw:State.yaw}));
+    State.keys['Space']=false;
   }
 
-  State.renderer.render(State.scene, State.camera);
+  State.composer.render();
   requestAnimationFrame(gameLoop);
 }
 
-// ===== СЕТЬ =====
-function connectToServer() {
-  if (State.ws && State.ws.readyState === 1) return;
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  State.ws = new WebSocket(`${proto}//${location.host}`);
-  
-  State.ws.onopen = () => {
-    State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
-  };
-  
-  State.ws.onmessage = (e) => {
-    try {
-      const d = JSON.parse(e.data);
-      if (d.type === 'registered') {
-        State.playerId = d.id;
-        State.ws.send(JSON.stringify({ type: 'join', gameId: State.currentGame }));
-        addChat('sys', `Добро пожаловать, ${d.name}!`);
-      }
-      if (d.type === 'snapshot') {
-        $('player-count').textContent = d.players.length + 1;
-        d.players.forEach(p => {
-          if (!State.otherPlayers.has(p.id)) {
-            const m = new THREE.Mesh(
-              new THREE.CapsuleGeometry(0.5, 1.5, 4, 8),
-              new THREE.MeshStandardMaterial({ color: p.team === 'red' ? 0xff4757 : 0x3742fa })
-            );
-            m.position.set(p.x, 1.25, p.z);
-            m.castShadow = true;
-            State.scene.add(m);
-            State.otherPlayers.set(p.id, m);
-          } else {
-            const m = State.otherPlayers.get(p.id);
-            m.position.set(p.x, p.y, p.z);
-          }
-        });
-      }
-      if (d.type === 'chat') addChat(d.name, d.msg);
-    } catch (err) { console.error('WS:', err); }
-  };
-  
-  State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
+function initAirplaneGame() {
+  const cv = DOM.canvas;
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  State.scene = new THREE.Scene();
+  State.scene.background = new THREE.Color(0x87CEEB);
+  State.camera = new THREE.PerspectiveCamera(60, cv.width/cv.height, 0.1, 3000);
+  State.renderer = new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  State.renderer.setSize(cv.width, cv.height);
+  State.scene.add(new THREE.HemisphereLight(0xcfe8ff,0x6f9a54,0.9));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2400,2400), new THREE.MeshStandardMaterial({color:0x5f9c4a}));
+  floor.rotation.x=-Math.PI/2; State.scene.add(floor);
+  State.playerMesh = new THREE.Mesh(new THREE.BoxGeometry(2,1,4), new THREE.MeshStandardMaterial({color:0xd84332}));
+  State.playerMesh.position.set(0,12,140); State.scene.add(State.playerMesh);
+  State.airplaneState = {speed:24,pitch:0,yaw:0,roll:0};
+  document.addEventListener('keydown', e => { State.keys[e.code]=true; });
+  document.addEventListener('keyup', e => { State.keys[e.code]=false; });
+  airplaneLoop();
+}
+
+function airplaneLoop() {
+  if(!State.playerMesh || State.currentGame!=='airplane') { requestAnimationFrame(airplaneLoop); return; }
+  const dt=0.016;
+  const plane = State.playerMesh;
+  const s = State.airplaneState;
+  s.yaw += ((State.keys['KeyA']?1:0)-(State.keys['KeyD']?1:0))*1.35*dt;
+  s.pitch = THREE.MathUtils.clamp(s.pitch+((State.keys['KeyW']?1:0)-(State.keys['KeyS']?1:0))*1.05*dt, -1.15, 1.15);
+  s.speed = THREE.MathUtils.clamp(s.speed+(State.keys['Space']?1:0)*26*dt, 10, 62);
+  plane.rotation.set(s.pitch, s.yaw, 0);
+  const fwd = new THREE.Vector3(0,0,-1).applyQuaternion(plane.quaternion);
+  plane.position.addScaledVector(fwd, s.speed*dt);
+  State.camera.position.set(plane.position.x, plane.position.y+5, plane.position.z+15);
+  State.camera.lookAt(plane.position);
+  State.renderer.render(State.scene, State.camera);
+  requestAnimationFrame(airplaneLoop);
+}
+
+function initRacingGame() {
+  const cv = DOM.canvas;
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  State.scene = new THREE.Scene();
+  State.scene.background = new THREE.Color(0x8fd3ff);
+  State.camera = new THREE.PerspectiveCamera(62, cv.width/cv.height, 0.1, 700);
+  State.renderer = new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  State.renderer.setSize(cv.width, cv.height);
+  const track = new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshStandardMaterial({color:0x484e59}));
+  track.rotation.x=-Math.PI/2; State.scene.add(track);
+  State.playerMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5,0.5,2.5), new THREE.MeshStandardMaterial({color:0xe53935}));
+  State.playerMesh.position.y=0.5; State.scene.add(State.playerMesh);
+  document.addEventListener('keydown', e => { State.keys[e.code]=true; });
+  document.addEventListener('keyup', e => { State.keys[e.code]=false; });
+  racingLoop();
+}
+
+function racingLoop() {
+  if(!State.playerMesh || State.currentGame!=='racing') { requestAnimationFrame(racingLoop); return; }
+  const kart = State.playerMesh;
+  if(State.keys['KeyW']) kart.position.z -= 0.3;
+  if(State.keys['KeyS']) kart.position.z += 0.3;
+  if(State.keys['KeyA']) { kart.position.x -= 0.3; kart.rotation.y = 0.05; }
+  if(State.keys['KeyD']) { kart.position.x += 0.3; kart.rotation.y = -0.05; }
+  kart.position.x = Math.max(-95, Math.min(95, kart.position.x));
+  kart.position.z = Math.max(-95, Math.min(95, kart.position.z));
+  State.camera.position.set(kart.position.x, 8, kart.position.z+15);
+  State.camera.lookAt(kart.position);
+  State.renderer.render(State.scene, State.camera);
+  requestAnimationFrame(racingLoop);
+}
+
+function spawnCube() {
+  if (!State.scene) return;
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color:Math.random()*0xffffff}));
+  mesh.position.set(0, 1, 0);
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+}
+
+function spawnSphere() {
+  if (!State.scene) return;
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.5,32,32), new THREE.MeshStandardMaterial({color:Math.random()*0xffffff}));
+  mesh.position.set(0, 1.5, 0);
+  State.scene.add(mesh);
+  State.studioObjects.push(mesh);
+}
+
+function clearObjects() {
+  State.studioObjects.forEach(obj => State.scene.remove(obj));
+  State.studioObjects = [];
 }
 
 function addChat(name, msg) {
   const d = document.createElement('div');
-  d.className = 'chat-msg' + (name === 'sys' ? ' sys' : '');
-  if (name === 'sys') d.textContent = msg;
-  else d.innerHTML = `<span class="name">${name}:</span> ${msg}`;
-  $('chat-messages').appendChild(d);
-  $('chat-messages').scrollTop = $('chat-messages').scrollHeight;
+  d.className = 'msg';
+  if(name==='sys') { d.classList.add('sys'); d.textContent=msg; }
+  else d.innerHTML = `<span class="n">${name}:</span> ${msg}`;
+  DOM.chatMessages.appendChild(d);
+  DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
 }
 
-// ===== RESIZE =====
 window.addEventListener('resize', () => {
-  if (State.camera && State.renderer) {
-    const canvas = $('game-canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    State.camera.aspect = window.innerWidth / window.innerHeight;
+  if(State.camera && State.renderer) {
+    const cv = DOM.canvas;
+    cv.width = window.innerWidth; cv.height = window.innerHeight;
+    State.camera.aspect = window.innerWidth/window.innerHeight;
     State.camera.updateProjectionMatrix();
     State.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 });
 
-// ===== ЗАПУСК =====
-initRegistration();
-initMenuButtons();
-console.log('✅ Приложение запущено');
+init();
 </script>
 </body>
 </html>
