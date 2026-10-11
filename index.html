@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Roblox 3D</title>
+<title>Roblox 3D Ultimate</title>
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-body{background:#0a0a1a;color:#fff}
+body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh}
 
 #reg{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:9999}
 #reg.hide{display:none}
@@ -18,7 +19,7 @@ body{background:#0a0a1a;color:#fff}
 .box button:disabled{background:#555;cursor:not-allowed}
 .err{color:#ff4757;font-size:12px;min-height:18px;margin-top:6px}
 
-#menu{display:none}
+#menu{display:none;height:100vh;overflow-y:auto}
 #menu.show{display:block}
 .nav{display:flex;align-items:center;padding:12px 20px;background:#111;border-bottom:2px solid #00d9ff}
 .nav .logo{font-size:22px;font-weight:800;color:#00d9ff}
@@ -57,6 +58,11 @@ body{background:#0a0a1a;color:#fff}
 .msg{font-size:11px;margin:2px 0;padding:2px 5px;background:rgba(0,0,0,0.3);border-radius:3px}
 .msg .n{font-weight:bold;color:#00d9ff}
 .msg.sys{color:#2ed573}
+
+#crosshair{position:fixed;top:50%;left:50%;width:20px;height:20px;border:2px solid rgba(255,255,255,0.8);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:15;display:none}
+#hp-bar{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:200px;height:20px;background:rgba(0,0,0,0.5);border-radius:10px;overflow:hidden;border:2px solid #00d9ff;z-index:15;display:none}
+#hp-fill{width:100%;height:100%;background:linear-gradient(90deg,#ff4757,#2ed573);transition:width .3s}
+#weapon-hud{position:fixed;bottom:30px;right:30px;font-size:48px;z-index:15;display:none}
 </style>
 </head>
 <body>
@@ -87,8 +93,8 @@ body{background:#0a0a1a;color:#fff}
     </aside>
     <main class="main">
       <div class="hero">
-        <h1>Добро пожаловать! </h1>
-        <p>5 полноценных 3D-миров: шутеры, лабиринт, город, самолёт и гонки.</p>
+        <h1>Добро пожаловать! 🚀</h1>
+        <p>5 полноценных 3D-миров: шутеры, лабиринт с Крысой, город, самолёт и гонки.</p>
         <button id="btn-play">▶ ИГРАТЬ СЕЙЧАС</button>
       </div>
       <h2 class="sec">🔥 Популярные игры</h2>
@@ -126,10 +132,13 @@ body{background:#0a0a1a;color:#fff}
     <div id="chat-msgs"></div>
     <input type="text" id="chat-in" placeholder="Сообщение...">
   </div>
+  <div id="crosshair"></div>
+  <div id="hp-bar"><div id="hp-fill"></div></div>
+  <div id="weapon-hud">🔫</div>
 </div>
 
 <script>
-var S={name:'Guest',game:null,scene:null,cam:null,ren:null,player:null,keys:{},yaw:0,pitch:0,ws:null,pid:null,others:{},hp:100,team:null,cheeseWalls:[]};
+var S={name:'Guest',game:null,scene:null,cam:null,ren:null,player:null,keys:{},yaw:0,pitch:0,ws:null,pid:null,others:{},hp:100,team:null,cheeseWalls:[],rat:null,weapon:null,audioCtx:null,shootSound:null};
 var $=function(id){return document.getElementById(id)};
 
 function initReg(){
@@ -153,7 +162,7 @@ function showMenu(){
   $('reg').classList.add('hide');
   $('menu').classList.add('show');
   $('av').textContent=S.name.charAt(0).toUpperCase();
-  console.log('✅ Меню показано:',S.name);
+  console.log('✅ Меню:',S.name);
 }
 
 function initMenu(){
@@ -185,6 +194,9 @@ function startGame(gid){
   S.game=gid;S.hp=100;
   $('menu').classList.remove('show');
   $('game').classList.add('show');
+  $('crosshair').style.display=gid==='shooter'?'block':'none';
+  $('hp-bar').style.display=gid==='shooter'?'block':'none';
+  $('weapon-hud').style.display=gid==='shooter'?'block':'none';
   if(gid==='airplane')initAirplane();
   else if(gid==='racing')initRacing();
   else init3D(gid);
@@ -196,11 +208,33 @@ function exitGame(){
   if(S.ws){S.ws.close();S.ws=null;}
   if(S.ren){S.ren.dispose();S.ren=null;}
   if(S.scene){S.scene.traverse(function(o){if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(function(m){m.dispose();});else o.material.dispose();}});S.scene=null;}
-  S.others={};S.player=null;S.cheeseWalls=[];
+  S.others={};S.player=null;S.cheeseWalls=[];S.rat=null;S.weapon=null;
   $('game').classList.remove('show');
+  $('crosshair').style.display='none';
+  $('hp-bar').style.display='none';
+  $('weapon-hud').style.display='none';
   $('chat-msgs').innerHTML='';
   S.game=null;
   showMenu();
+}
+
+// ===== ТЕКСТУРА СЫРА =====
+function createCheeseTexture(){
+  var canvas=document.createElement('canvas');
+  canvas.width=256;canvas.height=256;
+  var ctx=canvas.getContext('2d');
+  ctx.fillStyle='#FFD700';
+  ctx.fillRect(0,0,256,256);
+  for(var i=0;i<30;i++){
+    ctx.fillStyle='#FFA500';
+    ctx.beginPath();
+    ctx.arc(Math.random()*256,Math.random()*256,5+Math.random()*15,0,Math.PI*2);
+    ctx.fill();
+  }
+  var tex=new THREE.CanvasTexture(canvas);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(2,2);
+  return tex;
 }
 
 function init3D(gid){
@@ -224,26 +258,121 @@ function init3D(gid){
   if(gid==='brookhaven')createBrookhaven();
   S.player=new THREE.Mesh(new THREE.CapsuleGeometry(0.5,1.5,4,8),new THREE.MeshStandardMaterial({color:0x00d9ff}));
   S.player.position.y=1.25;S.player.castShadow=true;S.scene.add(S.player);
+  if(gid==='shooter')loadWeapon();
   setupInput();
   gameLoop();
+}
+
+function loadWeapon(){
+  var loader=new THREE.GLTFLoader();
+  loader.load('rifle.glb.glb',function(gltf){
+    S.weapon=gltf.scene;
+    S.weapon.scale.set(0.5,0.5,0.5);
+    S.weapon.position.set(0.3,-0.3,-0.6);
+    S.weapon.rotation.y=Math.PI;
+    S.cam.add(S.weapon);
+    S.scene.add(S.cam);
+    console.log('✅ Оружие загружено');
+  },undefined,function(){
+    console.log('⚠️ rifle.glb.glb не найден, используем fallback');
+    var gun=new THREE.Group();
+    var barrel=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.6),new THREE.MeshStandardMaterial({color:0x333}));
+    barrel.position.z=-0.3;gun.add(barrel);
+    var handle=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.2,0.08),new THREE.MeshStandardMaterial({color:0x555}));
+    handle.position.set(0,-0.15,0);gun.add(handle);
+    S.weapon=gun;
+    S.weapon.position.set(0.3,-0.3,-0.6);
+    S.weapon.rotation.y=Math.PI;
+    S.cam.add(S.weapon);
+    S.scene.add(S.cam);
+  });
+  loadAudio();
+}
+
+function loadAudio(){
+  try{
+    S.audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    S.shootSound=new Audio('shoot.mp3');
+    S.shootSound.volume=0.4;
+    S.shootSound.preload='auto';
+    console.log('✅ Звук загружен');
+  }catch(e){console.log('⚠️ Звук не загружен');}
+}
+
+function playShootSound(){
+  if(S.shootSound){
+    var clone=S.shootSound.cloneNode();
+    clone.play().catch(function(){});
+  }else if(S.audioCtx){
+    var o=S.audioCtx.createOscillator(),g=S.audioCtx.createGain();
+    o.connect(g);g.connect(S.audioCtx.destination);
+    o.frequency.value=800;g.gain.value=0.1;
+    o.start();o.stop(S.audioCtx.currentTime+0.1);
+  }
 }
 
 function createShooterMap(){
   var mat=new THREE.MeshStandardMaterial({color:0x636e72});
   [[-45,0,2,92],[45,0,2,92],[0,-45,92,2],[0,45,92,2]].forEach(function(w){
-    var m=new THREE.Mesh(new THREE.BoxGeometry(w[2],6,w[3]),mat);m.position.set(w[0],3,w[1]);m.castShadow=true;S.scene.add(m);
+    var m=new THREE.Mesh(new THREE.BoxGeometry(w[2],6,w[3]),mat);m.position.set(w[0],3,w[1]);m.castShadow=true;m.receiveShadow=true;S.scene.add(m);
   });
   for(var i=0;i<8;i++){var c=new THREE.Mesh(new THREE.BoxGeometry(4,2,4),mat);c.position.set((Math.random()-0.5)*70,1,(Math.random()-0.5)*70);c.castShadow=true;S.scene.add(c);}
 }
 
 function createCheese(){
-  var mat=new THREE.MeshStandardMaterial({color:0x8B4513});S.cheeseWalls=[];
+  var wallMat=new THREE.MeshStandardMaterial({color:0x8B4513});
+  var cheeseTex=createCheeseTexture();
+  S.cheeseWalls=[];
   var maze=[[1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0,0,0,0,1],[1,0,1,0,1,0,1,1,1,1,0,1],[1,0,1,0,0,0,0,0,0,1,0,1],[1,0,1,1,1,1,0,1,0,1,0,1],[1,0,0,0,0,1,0,1,0,0,0,1],[1,1,1,1,0,1,0,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1]];
   var cell=7;
   for(var r=0;r<maze.length;r++)for(var c=0;c<maze[r].length;c++)if(maze[r][c]===1){
-    var w=new THREE.Mesh(new THREE.BoxGeometry(cell,5,cell),mat);w.position.set((c-6)*cell,2.5,(r-4.5)*cell);w.castShadow=true;S.scene.add(w);
+    var w=new THREE.Mesh(new THREE.BoxGeometry(cell,5,cell),wallMat);
+    w.position.set((c-6)*cell,2.5,(r-4.5)*cell);w.castShadow=true;w.receiveShadow=true;
+    S.scene.add(w);
     S.cheeseWalls.push({x:w.position.x,z:w.position.z,w:cell,d:cell});
   }
+  // Сыр с текстурой
+  for(var i=0;i<9;i++){
+    var ch=new THREE.Group();
+    var base=new THREE.Mesh(new THREE.ConeGeometry(1.2,2.5,8),new THREE.MeshStandardMaterial({map:cheeseTex,color:0xFFD700,emissive:0xFFA500,emissiveIntensity:0.3}));
+    base.position.y=1.25;base.castShadow=true;ch.add(base);
+    for(var j=0;j<3;j++){
+      var h=new THREE.Mesh(new THREE.SphereGeometry(0.3,8,8),new THREE.MeshStandardMaterial({color:0xFFA500}));
+      h.position.set((Math.random()-0.5)*1.5,0.8+Math.random()*0.8,(Math.random()-0.5)*1.5);
+      ch.add(h);
+    }
+    var placed=false;
+    while(!placed){
+      var x=(Math.random()-0.5)*60,z=(Math.random()-0.5)*60,inW=false;
+      for(var k=0;k<S.cheeseWalls.length;k++){var w=S.cheeseWalls[k];if(Math.abs(x-w.x)<w.w/2+1&&Math.abs(z-w.z)<w.d/2+1){inW=true;break;}}
+      if(!inW){ch.position.set(x,0,z);placed=true;}
+    }
+    S.scene.add(ch);
+  }
+  // Крыса
+  loadRat();
+}
+
+function loadRat(){
+  var loader=new THREE.GLTFLoader();
+  loader.load('rat.glb',function(gltf){
+    S.rat=gltf.scene;
+    S.rat.scale.set(2,2,2);
+    S.rat.position.set(0,0,0);
+    S.scene.add(S.rat);
+    console.log('✅ Крыса загружена');
+  },undefined,function(){
+    console.log('⚠️ rat.glb не найден, создаём fallback крысу');
+    S.rat=new THREE.Group();
+    var body=new THREE.Mesh(new THREE.BoxGeometry(1.5,1,2),new THREE.MeshStandardMaterial({color:0x666666}));
+    body.position.y=0.5;S.rat.add(body);
+    var head=new THREE.Mesh(new THREE.SphereGeometry(0.6,8,8),new THREE.MeshStandardMaterial({color:0x666666}));
+    head.position.set(0,0.8,1.2);S.rat.add(head);
+    var tail=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.5,8),new THREE.MeshStandardMaterial({color:0xff6699}));
+    tail.rotation.x=Math.PI/2;tail.position.set(0,0.5,-1.5);S.rat.add(tail);
+    S.rat.position.set(0,0,0);
+    S.scene.add(S.rat);
+  });
 }
 
 function createBrookhaven(){
@@ -252,6 +381,12 @@ function createBrookhaven(){
     var w=new THREE.Mesh(new THREE.BoxGeometry(12,6,10),new THREE.MeshStandardMaterial({color:0xf8f9fa}));w.position.y=3;w.castShadow=true;h.add(w);
     var r=new THREE.Mesh(new THREE.ConeGeometry(9,4,4),new THREE.MeshStandardMaterial({color:0xe74c3c}));r.position.y=8;r.rotation.y=Math.PI/4;r.castShadow=true;h.add(r);
     h.position.set((Math.random()-0.5)*80,0,(Math.random()-0.5)*80);S.scene.add(h);
+  }
+  for(var i=0;i<20;i++){
+    var t=new THREE.Group();
+    var tr=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.8,3,8),new THREE.MeshStandardMaterial({color:0x8B4513}));tr.position.y=1.5;tr.castShadow=true;t.add(tr);
+    var l=new THREE.Mesh(new THREE.SphereGeometry(3,8,8),new THREE.MeshStandardMaterial({color:0x27ae60}));l.position.y=4.5;l.castShadow=true;t.add(l);
+    t.position.set((Math.random()-0.5)*90,0,(Math.random()-0.5)*90);S.scene.add(t);
   }
 }
 
@@ -264,7 +399,17 @@ function setupInput(){
   document.addEventListener('click',function(e){
     if(e.target.tagName==='BUTTON'||e.target.closest('button'))return;
     if(!document.pointerLockElement&&S.ren&&S.ren.domElement)S.ren.domElement.requestPointerLock();
+    if(S.game==='shooter'&&document.pointerLockElement)shoot();
   });
+}
+
+function shoot(){
+  if(S.ws&&S.ws.readyState===1)S.ws.send(JSON.stringify({type:'action'}));
+  playShootSound();
+  if(S.weapon){
+    S.weapon.position.z+=0.1;
+    setTimeout(function(){if(S.weapon)S.weapon.position.z-=0.1;},100);
+  }
 }
 
 var lt=0;
@@ -276,17 +421,50 @@ function gameLoop(t){
   var sp=0.2;
   var nx=S.player.position.x+(f*Math.sin(S.yaw)+r*Math.cos(S.yaw))*sp;
   var nz=S.player.position.z+(f*Math.cos(S.yaw)-r*Math.sin(S.yaw))*sp;
+  
+  // ИСПРАВЛЕННЫЕ КОЛЛИЗИИ - скольжение вдоль стен
   if(S.game==='cheese'&&S.cheeseWalls.length>0){
-    var col=false;
-    for(var i=0;i<S.cheeseWalls.length;i++){var w=S.cheeseWalls[i];if(Math.abs(nx-w.x)<w.w/2+0.5&&Math.abs(nz-w.z)<w.d/2+0.5){col=true;break;}}
-    if(!col){S.player.position.x=nx;S.player.position.z=nz;}
-  }else{S.player.position.x=Math.max(-48,Math.min(48,nx));S.player.position.z=Math.max(-48,Math.min(48,nz));}
+    var canX=true,canZ=true;
+    for(var i=0;i<S.cheeseWalls.length;i++){
+      var w=S.cheeseWalls[i];
+      if(Math.abs(nx-w.x)<w.w/2+0.5&&Math.abs(S.player.position.z-w.z)<w.d/2+0.5)canX=false;
+      if(Math.abs(S.player.position.x-w.x)<w.w/2+0.5&&Math.abs(nz-w.z)<w.d/2+0.5)canZ=false;
+    }
+    if(canX)S.player.position.x=nx;
+    if(canZ)S.player.position.z=nz;
+  }else{
+    S.player.position.x=Math.max(-48,Math.min(48,nx));
+    S.player.position.z=Math.max(-48,Math.min(48,nz));
+  }
+  
   if(S.keys['Space']&&S.player.position.y<=1.3){S.player.position.y=3.5;S.keys['Space']=false;}
   if(S.player.position.y>1.25)S.player.position.y-=0.25;
   if(S.player.position.y<1.25)S.player.position.y=1.25;
   S.player.rotation.y=S.yaw;
-  S.cam.position.set(S.player.position.x+Math.sin(S.yaw)*7,S.player.position.y+4,S.player.position.z+Math.cos(S.yaw)*7);
+  S.cam.position.set(S.player.position.x+Math.sin(S.yaw)*7,S.player.position.y+4+Math.sin(S.pitch)*1.5,S.player.position.z+Math.cos(S.yaw)*7);
   S.cam.lookAt(S.player.position.x,S.player.position.y+1.5,S.player.position.z);
+  
+  // ИИ Крысы
+  if(S.game==='cheese'&&S.rat){
+    var dx=S.player.position.x-S.rat.position.x;
+    var dz=S.player.position.z-S.rat.position.z;
+    var dist=Math.hypot(dx,dz);
+    if(dist>1){
+      S.rat.position.x+=dx/dist*0.08;
+      S.rat.position.z+=dz/dist*0.08;
+      S.rat.rotation.y=Math.atan2(dx,dz);
+    }
+    if(dist<2){
+      S.hp-=0.5;
+      $('hp-fill').style.width=Math.max(0,S.hp)+'%';
+      if(S.hp<=0){
+        S.hp=100;
+        S.player.position.set(0,1.25,0);
+        addChat('sys',' Крыса поймала вас!');
+      }
+    }
+  }
+  
   if(S.ws&&S.ws.readyState===1){S.ws.send(JSON.stringify({type:'input',f:f,r:r,jump:S.keys['Space'],yaw:S.yaw}));S.keys['Space']=false;}
   S.ren.render(S.scene,S.cam);
   requestAnimationFrame(gameLoop);
@@ -299,7 +477,10 @@ function initAirplane(){
   S.ren=new THREE.WebGLRenderer({canvas:cv,antialias:true});S.ren.setSize(cv.width,cv.height);
   S.scene.add(new THREE.HemisphereLight(0xcfe8ff,0x6f9a54,0.9));
   var floor=new THREE.Mesh(new THREE.PlaneGeometry(2400,2400),new THREE.MeshStandardMaterial({color:0x5f9c4a}));floor.rotation.x=-Math.PI/2;S.scene.add(floor);
-  S.player=new THREE.Mesh(new THREE.BoxGeometry(2,1,4),new THREE.MeshStandardMaterial({color:0xd84332}));S.player.position.set(0,12,140);S.scene.add(S.player);
+  S.player=new THREE.Group();
+  var body=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.55,4.2,14),new THREE.MeshStandardMaterial({color:0xd84332}));body.rotation.x=Math.PI/2;S.player.add(body);
+  var wings=new THREE.Mesh(new THREE.BoxGeometry(6.6,0.14,1.5),new THREE.MeshStandardMaterial({color:0xf4f1e8}));wings.position.set(0,0.12,-0.15);S.player.add(wings);
+  S.player.position.set(0,12,140);S.scene.add(S.player);
   document.addEventListener('keydown',function(e){S.keys[e.code]=true;});
   document.addEventListener('keyup',function(e){S.keys[e.code]=false;});
   airplaneLoop();
@@ -310,8 +491,7 @@ function airplaneLoop(){
   var p=S.player;
   p.rotation.y+=((S.keys['KeyA']?1:0)-(S.keys['KeyD']?1:0))*0.02;
   p.rotation.x=THREE.MathUtils.clamp(p.rotation.x+((S.keys['KeyW']?1:0)-(S.keys['KeyS']?1:0))*0.015,-0.5,0.5);
-  var sp=0.3;
-  if(S.keys['Space'])sp=0.5;
+  var sp=0.3;if(S.keys['Space'])sp=0.5;
   var fwd=new THREE.Vector3(0,0,-1).applyQuaternion(p.quaternion);
   p.position.addScaledVector(fwd,sp);
   p.position.y=THREE.MathUtils.clamp(p.position.y,1.5,420);
@@ -327,7 +507,13 @@ function initRacing(){
   S.cam=new THREE.PerspectiveCamera(62,cv.width/cv.height,0.1,700);
   S.ren=new THREE.WebGLRenderer({canvas:cv,antialias:true});S.ren.setSize(cv.width,cv.height);
   var track=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x484e59}));track.rotation.x=-Math.PI/2;S.scene.add(track);
-  S.player=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.5,2.5),new THREE.MeshStandardMaterial({color:0xe53935}));S.player.position.y=0.5;S.scene.add(S.player);
+  S.player=new THREE.Group();
+  var body=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.5,2.5),new THREE.MeshStandardMaterial({color:0xe53935}));body.position.y=0.5;S.player.add(body);
+  var wg=new THREE.CylinderGeometry(0.42,0.42,0.34,12);wg.rotateZ(Math.PI/2);
+  [[0.85,0.95],[-0.85,0.95],[0.88,-0.92],[-0.88,-0.92]].forEach(function(p){
+    var w=new THREE.Mesh(wg,new THREE.MeshStandardMaterial({color:0x22252a}));w.position.set(p[0],0.42,p[1]);S.player.add(w);
+  });
+  S.scene.add(S.player);
   document.addEventListener('keydown',function(e){S.keys[e.code]=true;});
   document.addEventListener('keyup',function(e){S.keys[e.code]=false;});
   racingLoop();
@@ -335,11 +521,11 @@ function initRacing(){
 
 function racingLoop(){
   if(!S.player||S.game!=='racing'){requestAnimationFrame(racingLoop);return;}
-  var k=S.player;
-  if(S.keys['KeyW'])k.position.z-=0.3;
-  if(S.keys['KeyS'])k.position.z+=0.3;
-  if(S.keys['KeyA']){k.position.x-=0.3;k.rotation.y=0.05;}
-  if(S.keys['KeyD']){k.position.x+=0.3;k.rotation.y=-0.05;}
+  var k=S.player,sp=0.3;
+  if(S.keys['KeyW'])k.position.z-=sp;
+  if(S.keys['KeyS'])k.position.z+=sp;
+  if(S.keys['KeyA']){k.position.x-=sp;k.rotation.y=0.05;}
+  if(S.keys['KeyD']){k.position.x+=sp;k.rotation.y=-0.05;}
   k.position.x=Math.max(-95,Math.min(95,k.position.x));
   k.position.z=Math.max(-95,Math.min(95,k.position.z));
   S.cam.position.set(k.position.x,8,k.position.z+15);
@@ -376,7 +562,7 @@ window.addEventListener('resize',function(){
 
 initReg();
 initMenu();
-console.log('✅ Roblox 3D запущен');
+console.log('✅ Roblox 3D Ultimate запущен');
 </script>
 </body>
 </html>
