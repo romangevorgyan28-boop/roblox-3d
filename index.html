@@ -113,7 +113,6 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
 #hp-fill{width:100%;height:100%;background:linear-gradient(90deg,#ff4757,#ff6b81);transition:width .3s}
 #score-board{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:10px 24px;border-radius:10px;font-size:20px;font-weight:700;z-index:10;border:2px solid #00d9ff;display:none}
 #timer-display{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);padding:8px 18px;border-radius:10px;font-size:18px;z-index:10;border:2px solid #00d9ff;display:none}
-#weapon-display{position:fixed;bottom:30px;right:30px;font-size:64px;z-index:15}
 
 #lobby-text{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#00d9ff;padding:8px 16px;border-radius:8px;font-size:14px;z-index:10;display:none;border:1px solid #00d9ff}
 #lobby-text.show{display:block}
@@ -168,7 +167,7 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
 
 <div id="menu">
   <nav class="navbar">
-    <div class="nav-logo">🧱 ROBLOX 3D ULTIMATE</div>
+    <div class="nav-logo"> ROBLOX 3D ULTIMATE</div>
     <div class="nav-right">
       <div class="avatar" id="avatar">?</div>
       <button class="nav-btn" id="btn-settings">⚙️ Настройки</button>
@@ -178,27 +177,23 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
   <div class="menu-body">
     <aside class="sidebar">
       <div class="side-title">Категории</div>
-      <div class="side-item active"> Главная</div>
-      <div class="side-item">🎮 Все игры</div>
+      <div class="side-item active">🏠 Главная</div>
+      <div class="side-item"> Все игры</div>
       <div class="side-item">⚔️ Экшен</div>
       <div class="side-item">👻 Хорроры</div>
-      <div class="side-item">️ Гонки</div>
-      <div class="side-title" style="margin-top:20px">Навигация</div>
-      <div class="side-item">🏆 Лучшее</div>
-      <div class="side-item">🆕 Новинки</div>
-      <div class="side-item">❤️ Избранное</div>
+      <div class="side-item">🏎️ Гонки</div>
     </aside>
     <main class="main-content">
       <div class="hero">
         <h1>Добро пожаловать! 🚀</h1>
-        <p>5 полноценных 3D-миров: шутеры, лабиринт с Крысой, город, самолёт и гонки. Мультиплеер, редактор игр — всё в браузере.</p>
+        <p>5 полноценных 3D-миров: шутеры, лабиринт с Крысой, город, самолёт и гонки.</p>
         <button class="hero-btn" id="btn-play-hero">▶ ИГРАТЬ СЕЙЧАС</button>
       </div>
-      <h2 class="section-title"> Популярные игры</h2>
+      <h2 class="section-title">🔥 Популярные игры</h2>
       <div class="games-grid">
         <div class="game-card" data-game="shooter">
-          <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)"><span class="game-badge badge-hot">🔥 HOT</span></div>
-          <div class="game-info"><h3>Gun Arena 3D</h3><p>Командный шутер 2v2</p><div class="meta"><span>⭐ 9.2 • 👥 2.4K</span><span>PvP</span></div></div>
+          <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)"><span class="game-badge badge-hot">🔥 HOT</span>🔫</div>
+          <div class="game-info"><h3>Gun Arena 3D</h3><p>Командный шутер 2v2</p><div class="meta"><span>⭐ 9.2 •  2.4K</span><span>PvP</span></div></div>
         </div>
         <div class="game-card" data-game="brookhaven">
           <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)"><span class="game-badge badge-rp">RP</span>🏡</div>
@@ -210,7 +205,7 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
         </div>
         <div class="game-card" data-game="airplane">
           <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)"><span class="game-badge badge-sky">SKY</span>✈️</div>
-          <div class="game-info"><h3>Sky Pilot 3D</h3><p>Полёты над городом</p><div class="meta"><span>⭐ 8.6 • 👥 890</span><span>Сим</span></div></div>
+          <div class="game-info"><h3>Sky Pilot 3D</h3><p>Полёты над городом</p><div class="meta"><span>⭐ 8.6 •  890</span><span>Сим</span></div></div>
         </div>
         <div class="game-card" data-game="racing">
           <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)"><span class="game-badge badge-new">✨ NEW</span>🏎️</div>
@@ -230,12 +225,6 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
   <input type="range" id="set-sens" class="set-input" min="1" max="10" value="5">
   <label class="set-label">Громкость:</label>
   <input type="range" id="set-vol" class="set-input" min="0" max="100" value="50">
-  <label class="set-label">Качество графики:</label>
-  <select id="set-qual" class="set-input">
-    <option value="low">Низкое</option>
-    <option value="med" selected>Среднее</option>
-    <option value="high">Высокое</option>
-  </select>
   <button class="set-btn" id="btn-save-all">💾 Сохранить все</button>
   <div id="set-msg" style="margin-top:12px;font-size:13px;color:#2ed573;min-height:20px"></div>
 </div>
@@ -243,10 +232,10 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
 <div id="editor">
   <div class="ed-top">
     <div class="logo">🎮 Roblox Studio</div>
-    <button class="ed-btn success" id="ed-play">▶️ Play (Тест)</button>
+    <button class="ed-btn success" id="ed-play">▶️ Play</button>
     <button class="ed-btn danger" id="ed-stop">⏹ Stop</button>
-    <button class="ed-btn" id="ed-save">💾 Save JSON</button>
-    <button class="ed-btn" id="ed-load-file">📂 Load GLB/GLTF</button>
+    <button class="ed-btn" id="ed-save">💾 Save</button>
+    <button class="ed-btn" id="ed-load-file">📂 Load GLB</button>
     <input type="file" id="ed-file-input" accept=".glb,.gltf" style="display:none">
     <button class="ed-btn danger" id="ed-close">✕ Close</button>
   </div>
@@ -255,13 +244,10 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
       <div class="ed-sec">
         <h3>🧱 Добавить объект</h3>
         <button class="set-btn" id="ed-add-cube">📦 Куб</button>
-        <button class="set-btn" id="ed-add-sphere">🔵 Сфера</button>
-        <button class="set-btn" id="ed-add-cyl">🔷 Цилиндр</button>
-        <button class="set-btn" id="ed-add-cone">🔺 Конус</button>
-        <button class="set-btn" id="ed-add-plane">⬜ Плоскость</button>
+        <button class="set-btn" id="ed-add-sphere"> Сфера</button>
+        <button class="set-btn" id="ed-add-cyl"> Цилиндр</button>
         <button class="set-btn" id="ed-add-house">🏠 Дом</button>
         <button class="set-btn" id="ed-add-tree">🌳 Дерево</button>
-        <button class="set-btn" id="ed-add-ramp">📐 Рампа</button>
       </div>
       <div class="ed-sec">
         <h3>📁 Explorer</h3>
@@ -272,34 +258,20 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
     <div class="ed-view"><canvas id="ed-canvas"></canvas></div>
     <div class="ed-right">
       <div class="ed-sec">
-        <h3>⚙️ Свойства объекта</h3>
+        <h3>⚙️ Свойства</h3>
         <div id="ed-props"><div style="color:#aaa;font-size:13px">Выберите объект</div></div>
       </div>
       <div class="ed-sec">
-        <h3>🎨 Цвет материала</h3>
+        <h3>🎨 Цвет</h3>
         <input type="color" id="ed-color" class="set-input" value="#00d9ff">
       </div>
       <div class="ed-sec">
-        <h3>📐 Размер (Scale)</h3>
+        <h3>📐 Размер</h3>
         <label style="font-size:12px">X: <input type="range" id="ed-sx" min="0.1" max="10" step="0.1" value="1" class="set-input"></label>
         <label style="font-size:12px">Y: <input type="range" id="ed-sy" min="0.1" max="10" step="0.1" value="1" class="set-input"></label>
         <label style="font-size:12px">Z: <input type="range" id="ed-sz" min="0.1" max="10" step="0.1" value="1" class="set-input"></label>
       </div>
       <div class="ed-sec">
-        <h3> Позиция</h3>
-        <label style="font-size:12px">X: <input type="range" id="ed-px" min="-50" max="50" step="0.5" value="0" class="set-input"></label>
-        <label style="font-size:12px">Y: <input type="range" id="ed-py" min="0" max="20" step="0.5" value="1" class="set-input"></label>
-        <label style="font-size:12px">Z: <input type="range" id="ed-pz" min="-50" max="50" step="0.5" value="0" class="set-input"></label>
-      </div>
-      <div class="ed-sec">
-        <h3>🔄 Поворот</h3>
-        <label style="font-size:12px">X: <input type="range" id="ed-rx" min="0" max="6.28" step="0.1" value="0" class="set-input"></label>
-        <label style="font-size:12px">Y: <input type="range" id="ed-ry" min="0" max="6.28" step="0.1" value="0" class="set-input"></label>
-        <label style="font-size:12px">Z: <input type="range" id="ed-rz" min="0" max="6.28" step="0.1" value="0" class="set-input"></label>
-      </div>
-      <div class="ed-sec">
-        <h3>🗑️ Действия</h3>
-        <button class="set-btn" id="ed-duplicate" style="background:linear-gradient(90deg,#ffa502,#ff6348)"> Дублировать</button>
         <button class="set-btn" id="ed-delete" style="background:linear-gradient(90deg,#ff4757,#ff6b81)">🗑️ Удалить</button>
         <button class="set-btn danger" id="ed-clear-all">Очистить всё</button>
       </div>
@@ -312,7 +284,7 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
 <div id="esc-menu">
   <div class="esc-box">
     <div class="esc-tabs">
-      <div class="esc-tab active" data-tab="players">👥 Players</div>
+      <div class="esc-tab active" data-tab="players"> Players</div>
       <div class="esc-tab" data-tab="settings">⚙️ Settings</div>
       <div class="esc-tab" data-tab="report">🚩 Report</div>
       <div class="esc-tab" data-tab="help">❓ Help</div>
@@ -327,15 +299,13 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
       <button class="set-btn" id="esc-save-name">💾 Сохранить</button>
       <label class="set-label">Чувствительность:</label>
       <input type="range" id="esc-sens" class="set-input" min="1" max="10" value="5">
-      <label class="set-label">Громкость:</label>
-      <input type="range" id="esc-vol" class="set-input" min="0" max="100" value="50">
     </div>
     <div class="esc-content" id="tab-report">
       <div style="padding:20px;text-align:center;color:#aaa">
-        <div style="font-size:48px;margin-bottom:10px"></div>
+        <div style="font-size:48px;margin-bottom:10px">🚩</div>
         <div>Report a player or issue</div>
         <textarea class="set-input" style="height:100px;margin-top:10px" placeholder="Опишите проблему..."></textarea>
-        <button class="set-btn" style="margin-top:10px">📤 Отправить жалобу</button>
+        <button class="set-btn" style="margin-top:10px">📤 Отправить</button>
       </div>
     </div>
     <div class="esc-content" id="tab-help">
@@ -344,15 +314,14 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
         <p>W/A/S/D — движение</p>
         <p>Мышь — камера</p>
         <p>Space — прыжок</p>
-        <p>ЛКМ — стрельба (в шутере)</p>
+        <p>ЛКМ — стрельба</p>
         <p>ESC — это меню</p>
-        <p style="margin-top:15px">Чат: Enter для открытия</p>
       </div>
     </div>
     <div class="esc-actions">
-      <button class="btn-reset"><span class="key">R</span> Reset Character</button>
-      <button class="btn-leave" id="esc-leave"><span class="key">L</span> Leave Game</button>
-      <button class="btn-resume" id="esc-resume"><span class="key">ESC</span> Resume Game</button>
+      <button class="btn-reset" id="btn-reset-char"><span class="key">R</span> Reset Character</button>
+      <button class="btn-leave" id="btn-leave-game"><span class="key">L</span> Leave Game</button>
+      <button class="btn-resume" id="btn-resume-game"><span class="key">ESC</span> Resume Game</button>
     </div>
   </div>
 </div>
@@ -370,7 +339,6 @@ body{background:#0a0a1a;color:#fff;overflow:hidden;height:100vh;user-select:none
   <div id="shooter-hud">
     <div id="crosshair"></div>
     <div id="hp-bar"><div id="hp-fill"></div></div>
-    <div id="weapon-display">🔫</div>
   </div>
   <div id="mobile-hud">
     <div id="mobile-joy"><div id="mobile-joy-knob"></div></div>
@@ -396,6 +364,7 @@ var S = {
   edObjs: [], edSel: null, edFolders: [],
   airplaneState: null, racingState: null,
   lastShot: 0, escOpen: false,
+  isFPS: false,
   THREE: THREE, GLTFLoader: GLTFLoader
 };
 
@@ -451,8 +420,6 @@ function initMenu(){
   $('btn-save-all').addEventListener('click', function(){
     S.sens = parseInt($('set-sens').value) * 0.0004;
     localStorage.setItem('r3d_sens', $('set-sens').value);
-    localStorage.setItem('r3d_vol', $('set-vol').value);
-    localStorage.setItem('r3d_qual', $('set-qual').value);
     $('set-msg').textContent = '✅ Сохранено!';
     setTimeout(function(){$('set-msg').textContent='';},2000);
   });
@@ -481,15 +448,14 @@ function initMenu(){
       e.preventDefault();
       toggleEscMenu();
     }
-    if(e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К'){
-      if(S.escOpen && S.player) resetCharacter();
+    if((e.key === 'r' || e.key === 'R') && S.escOpen){
+      resetCharacter();
     }
-    if(e.key === 'l' || e.key === 'L' || e.key === 'д' || e.key === 'Д'){
-      if(S.escOpen) exitGame();
+    if((e.key === 'l' || e.key === 'L') && S.escOpen){
+      exitGame();
     }
   });
 
-  // Табы ESC меню
   document.querySelectorAll('.esc-tab').forEach(function(tab){
     tab.addEventListener('click', function(){
       document.querySelectorAll('.esc-tab').forEach(function(t){ t.classList.remove('active'); });
@@ -500,8 +466,9 @@ function initMenu(){
     });
   });
 
-  $('esc-resume').addEventListener('click', toggleEscMenu);
-  $('esc-leave').addEventListener('click', exitGame);
+  $('btn-resume-game').addEventListener('click', toggleEscMenu);
+  $('btn-leave-game').addEventListener('click', exitGame);
+  $('btn-reset-char').addEventListener('click', resetCharacter);
   $('esc-save-name').addEventListener('click', function(){
     var n = $('esc-name').value.trim();
     if(n.length >= 2 && n.length <= 16){ S.name = n; localStorage.setItem('r3d_name', n); $('avatar').textContent = n.charAt(0).toUpperCase(); showToast('✅ Имя сохранено'); }
@@ -561,7 +528,10 @@ function startGame(gid){
   $('lobby-text').classList.remove('show');
   if(gid === 'shooter'){
     $('lobby-text').classList.add('show');
-    $('lobby-text').textContent = '⏳ Подключение к серверу...';
+    $('lobby-text').textContent = '⏳ Подключение...';
+    S.isFPS = true;
+  } else {
+    S.isFPS = false;
   }
   if(gid === 'airplane') initAirplane();
   else if(gid === 'racing') initRacing();
@@ -638,40 +608,37 @@ function init3D(gid){
   if(gid === 'shooter') createShooterMap();
   if(gid === 'cheese') createCheese();
   if(gid === 'brookhaven') createBrookhaven();
+  
+  // Игрок (капсула)
   S.player = new THREE.Mesh(new THREE.CapsuleGeometry(0.5,1.5,4,8), new THREE.MeshStandardMaterial({color:0x00d9ff, emissive:0x001133}));
   S.player.position.y = 1.25; S.player.castShadow = true;
   S.player.userData.name = S.name;
   S.scene.add(S.player);
-  if(gid === 'shooter'){ createWeapon(); initAudio(); }
+  
+  // FPS камера для шутера
+  if(gid === 'shooter'){
+    S.cam.position.set(0, 1.7, 0);
+    S.player.add(S.cam);
+    createWeapon();
+    initAudio();
+  }
+  
   setupInput();
   gameLoop();
   console.log('✅ 3D мир:', gid);
 }
 
 function createWeapon(){
-  var loader = new S.GLTFLoader();
-  loader.load('rifle.glb.glb', function(gltf){
-    S.weapon = gltf.scene;
-    S.weapon.scale.set(0.5, 0.5, 0.5);
-    S.weapon.position.set(0.4, -0.3, -0.7);
-    S.weapon.rotation.y = Math.PI;
-    S.cam.add(S.weapon);
-    S.scene.add(S.cam);
-    console.log('✅ Оружие из rifle.glb.glb');
-  }, undefined, function(){
-    console.log('️ rifle.glb.glb не найден, fallback');
-    S.weapon = new THREE.Group();
-    var barrel = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.7), new THREE.MeshStandardMaterial({color:0x222222, metalness:0.8, roughness:0.2}));
-    barrel.position.z = -0.35; S.weapon.add(barrel);
-    var handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.25, 0.1), new THREE.MeshStandardMaterial({color:0x444444}));
-    handle.position.set(0, -0.15, 0.1); handle.rotation.x = -0.3; S.weapon.add(handle);
-    var mag = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, 0.08), new THREE.MeshStandardMaterial({color:0x333333}));
-    mag.position.set(0, -0.2, -0.05); S.weapon.add(mag);
-    S.weapon.position.set(0.4, -0.3, -0.7);
-    S.weapon.rotation.y = Math.PI;
-    S.cam.add(S.weapon);
-    S.scene.add(S.cam);
-  });
+  S.weapon = new THREE.Group();
+  var barrel = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.6), new THREE.MeshStandardMaterial({color:0x222222, metalness:0.8, roughness:0.2}));
+  barrel.position.set(0.3, -0.2, -0.5);
+  S.weapon.add(barrel);
+  var handle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.2, 0.08), new THREE.MeshStandardMaterial({color:0x444444}));
+  handle.position.set(0.3, -0.35, -0.2);
+  handle.rotation.x = -0.3;
+  S.weapon.add(handle);
+  S.cam.add(S.weapon);
+  console.log('✅ Оружие создано (FPS)');
 }
 
 function createShooterMap(){
@@ -715,7 +682,7 @@ function createCheese(){
     console.log('✅ Текстура сыра загружена');
     createCheesesWithTexture(tex);
   }, undefined, function(){
-    console.log('️ cheese_texture.png не найден');
+    console.log('⚠️ cheese_texture.png не найден');
     var procTex = createProceduralCheeseTexture();
     createCheesesWithTexture(procTex);
   });
@@ -723,10 +690,10 @@ function createCheese(){
   var loader = new S.GLTFLoader();
   loader.load('rat.glb', function(gltf){
     S.rat = gltf.scene;
-    S.rat.scale.set(3, 3, 3);
+    S.rat.scale.set(4, 4, 4);
     S.rat.position.set(0, 0, 0);
     S.scene.add(S.rat);
-    console.log('✅ Крыса загружена из rat.glb (scale 3)');
+    console.log('✅ Крыса загружена из rat.glb (scale 4)');
   }, undefined, function(){
     console.log('⚠️ rat.glb не найден, fallback');
     createRatFromPrimitives();
@@ -800,10 +767,10 @@ function createRatFromPrimitives(){
     var leg = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.8,0.3), legMat);
     leg.position.set(pos[0],pos[1],pos[2]); S.rat.add(leg);
   });
-  S.rat.scale.set(3, 3, 3);
+  S.rat.scale.set(4, 4, 4);
   S.rat.position.set(0,0,0);
   S.scene.add(S.rat);
-  console.log('✅ Крыса из примитивов (scale 3)');
+  console.log('✅ Крыса из примитивов (scale 4)');
 }
 
 function createBrookhaven(){
@@ -879,9 +846,8 @@ function shoot(){
   S.lastShot = now;
   playShootSound();
   if(S.weapon){
-    S.weapon.position.z += 0.15;
-    S.weapon.rotation.x -= 0.1;
-    setTimeout(function(){ if(S.weapon){ S.weapon.position.z -= 0.15; S.weapon.rotation.x += 0.1; } }, 100);
+    S.weapon.position.z += 0.1;
+    setTimeout(function(){ if(S.weapon) S.weapon.position.z -= 0.1; }, 100);
   }
   if(S.ws && S.ws.readyState === 1) S.ws.send(JSON.stringify({type:'action'}));
   var flash = new THREE.PointLight(0xffaa00, 2, 5);
@@ -926,15 +892,32 @@ function gameLoop(t){
   if(S.player.position.y < 1.25) S.player.position.y = 1.25;
   S.player.rotation.y = S.yaw;
 
-  S.cam.position.set(S.player.position.x + Math.sin(S.yaw)*7, S.player.position.y + 4 + Math.sin(S.pitch)*1.5, S.player.position.z + Math.cos(S.yaw)*7);
-  S.cam.lookAt(S.player.position.x, S.player.position.y + 1.5, S.player.position.z);
+  // FPS камера
+  if(S.isFPS){
+    S.cam.position.set(0, 1.7, 0);
+    S.cam.rotation.set(S.pitch, S.yaw, 0, 'YXZ');
+  } else {
+    S.cam.position.set(S.player.position.x + Math.sin(S.yaw)*7, S.player.position.y + 4 + Math.sin(S.pitch)*1.5, S.player.position.z + Math.cos(S.yaw)*7);
+    S.cam.lookAt(S.player.position.x, S.player.position.y + 1.5, S.player.position.z);
+  }
+
+  // Интерполяция других игроков (плавное движение)
+  Object.keys(S.others).forEach(function(id){
+    var m = S.others[id];
+    if(m && m.userData && m.userData.targetPos){
+      m.position.lerp(m.userData.targetPos, 0.1);
+      if(m.userData.targetYaw !== undefined){
+        m.rotation.y += (m.userData.targetYaw - m.rotation.y) * 0.1;
+      }
+    }
+  });
 
   // ИИ Крысы С КОЛЛИЗИЯМИ
   if(S.game === 'cheese' && S.rat){
     var dx = S.player.position.x - S.rat.position.x;
     var dz = S.player.position.z - S.rat.position.z;
     var dist = Math.hypot(dx, dz);
-    if(dist > 2){
+    if(dist > 2.5){
       var moveX = (dx/dist) * 0.08;
       var moveZ = (dz/dist) * 0.08;
       var newRX = S.rat.position.x + moveX;
@@ -942,7 +925,7 @@ function gameLoop(t){
       var ratCanMove = true;
       for(var i = 0; i < S.cheeseWalls.length; i++){
         var w = S.cheeseWalls[i];
-        if(Math.abs(newRX - w.x) < w.w/2 + 1 && Math.abs(newRZ - w.z) < w.d/2 + 1){
+        if(Math.abs(newRX - w.x) < w.w/2 + 1.5 && Math.abs(newRZ - w.z) < w.d/2 + 1.5){
           ratCanMove = false; break;
         }
       }
@@ -950,12 +933,12 @@ function gameLoop(t){
         S.rat.position.x = newRX;
         S.rat.position.z = newRZ;
       } else {
-        S.rat.position.x += moveZ;
-        S.rat.position.z -= moveX;
+        S.rat.position.x += moveZ * 0.5;
+        S.rat.position.z -= moveX * 0.5;
       }
       S.rat.rotation.y = Math.atan2(dx, dz);
     }
-    if(dist < 2.5){
+    if(dist < 3){
       S.hp -= 0.5;
       $('hp-fill').style.width = Math.max(0, S.hp) + '%';
       if(S.hp <= 0){
@@ -1106,8 +1089,8 @@ function connect(){
       }
       if(d.type === 'shooter_state'){
         if(d.state === 'lobby'){ $('lobby-text').textContent = ' Ожидание игроков: '+d.playerCount+'/4'; }
-        if(d.state === 'map_select'){ $('lobby-text').textContent = '️ Выберите карту (первый игрок)'; }
-        if(d.state === 'team_select'){ $('lobby-text').textContent = ' Выберите команду'; }
+        if(d.state === 'map_select'){ $('lobby-text').textContent = '️ Выберите карту'; }
+        if(d.state === 'team_select'){ $('lobby-text').textContent = '👥 Выберите команду'; }
         if(d.state === 'playing'){
           $('lobby-text').classList.remove('show');
           $('score-board').style.display = 'block';
@@ -1115,22 +1098,18 @@ function connect(){
           $('red-score').textContent = d.redScore;
           $('blue-score').textContent = d.blueScore;
         }
-        if(d.state === 'round_end'){
-          $('lobby-text').textContent = '🏁 '+(d.winner==='red'?'Красные победили!':d.winner==='blue'?'Синие победили!':'Ничья!')+' Счёт: '+d.redScore+':'+d.blueScore;
-          $('lobby-text').classList.add('show');
-          setTimeout(function(){ $('lobby-text').classList.remove('show'); }, 5000);
-        }
       }
       if(d.type === 'round_start'){
         S.team = d.team;
         $('lobby-text').classList.remove('show');
         $('score-board').style.display = 'block';
         $('timer-display').style.display = 'block';
-        addChat('sys', 'Раунд начался! Вы в команде '+(d.team==='red'?'🔴':'🔵'));
+        addChat('sys', 'Раунд начался! Вы в команде '+(d.team==='red'?'🔴':''));
       }
       if(d.type === 'round_end'){
-        $('lobby-text').textContent = ' Раунд окончен! Счёт: '+d.redScore+' : '+d.blueScore;
+        $('lobby-text').textContent = '🏁 '+(d.winner==='red'?'Красные победили!':d.winner==='blue'?'Синие победили!':'Ничья!')+' Счёт: '+d.redScore+':'+d.blueScore;
         $('lobby-text').classList.add('show');
+        setTimeout(function(){ $('lobby-text').classList.remove('show'); }, 5000);
       }
       if(d.type === 'timer'){
         var m = Math.floor(d.time/60), s = d.time%60;
@@ -1144,8 +1123,13 @@ function connect(){
             var m = new THREE.Mesh(new THREE.CapsuleGeometry(0.5,1.5,4,8), new THREE.MeshStandardMaterial({color:p.team==='red'?0xff4757:0x3742fa}));
             m.position.set(p.x,1.25,p.z); m.castShadow = true;
             m.userData.name = p.name;
+            m.userData.targetPos = new THREE.Vector3(p.x, p.y, p.z);
+            m.userData.targetYaw = -p.yaw;
             S.scene.add(m); S.others[p.id] = m;
-          } else { S.others[p.id].position.set(p.x,p.y,p.z); S.others[p.id].rotation.y = -p.yaw; }
+          } else {
+            S.others[p.id].userData.targetPos = new THREE.Vector3(p.x, p.y, p.z);
+            S.others[p.id].userData.targetYaw = -p.yaw;
+          }
         });
       }
       if(d.type === 'chat') addChat(d.name, d.msg);
@@ -1168,10 +1152,7 @@ function addChat(name, msg){
   $('chat-messages').scrollTop = $('chat-messages').scrollHeight;
 }
 
-// ============================================================
-// РЕДАКТОР С EXPLORER, ПАПКАМИ, ЗАГРУЗКОЙ GLB
-// ============================================================
-var edScene, edCam, edRen, edAnim, edRaycaster, edMouse;
+var edScene, edCam, edRen, edAnim;
 
 function initEditor(){
   if(edRen) return;
@@ -1188,50 +1169,25 @@ function initEditor(){
   var sun = new THREE.DirectionalLight(0xffffff,0.8);
   sun.position.set(10,20,10); edScene.add(sun);
   edScene.add(new THREE.GridHelper(40,40,0x00d9ff,0x333366));
-  edRaycaster = new THREE.Raycaster();
-  edMouse = new THREE.Vector2();
 
   $('ed-add-cube').onclick = function(){ addEdObj('cube'); };
   $('ed-add-sphere').onclick = function(){ addEdObj('sphere'); };
   $('ed-add-cyl').onclick = function(){ addEdObj('cylinder'); };
-  $('ed-add-cone').onclick = function(){ addEdObj('cone'); };
-  $('ed-add-plane').onclick = function(){ addEdObj('plane'); };
   $('ed-add-house').onclick = function(){ addEdObj('house'); };
   $('ed-add-tree').onclick = function(){ addEdObj('tree'); };
-  $('ed-add-ramp').onclick = function(){ addEdObj('ramp'); };
-
   $('ed-color').oninput = function(e){ if(S.edSel && S.edSel.material) S.edSel.material.color.set(e.target.value); };
   ['ed-sx','ed-sy','ed-sz'].forEach(function(id){
-    $(id).oninput = function(){ if(S.edSel) S.edSel.scale.set(parseFloat($('ed-sx').value), parseFloat($('ed-sy').value), parseFloat($('ed-sz').value)); updateEdProps(); };
+    $(id).oninput = function(){ if(S.edSel) S.edSel.scale.set(parseFloat($('ed-sx').value), parseFloat($('ed-sy').value), parseFloat($('ed-sz').value)); };
   });
-  ['ed-px','ed-py','ed-pz'].forEach(function(id){
-    $(id).oninput = function(){ if(S.edSel) S.edSel.position.set(parseFloat($('ed-px').value), parseFloat($('ed-py').value), parseFloat($('ed-pz').value)); updateEdProps(); };
-  });
-  ['ed-rx','ed-ry','ed-rz'].forEach(function(id){
-    $(id).oninput = function(){ if(S.edSel) S.edSel.rotation.set(parseFloat($('ed-rx').value), parseFloat($('ed-ry').value), parseFloat($('ed-rz').value)); updateEdProps(); };
-  });
-
   $('ed-delete').onclick = function(){
-    if(S.edSel){ edScene.remove(S.edSel); removeFromExplorer(S.edSel); S.edSel = null; updateEdExplorer(); showToast('🗑️ Удалено'); }
-  };
-  $('ed-duplicate').onclick = function(){
-    if(S.edSel){
-      var clone = S.edSel.clone();
-      clone.position.x += 2;
-      clone.userData.name = S.edSel.userData.name + '_copy';
-      edScene.add(clone);
-      S.edObjs.push(clone);
-      S.edSel = clone;
-      updateEdExplorer();
-      showToast('📋 Дублировано');
-    }
+    if(S.edSel){ edScene.remove(S.edSel); S.edObjs = S.edObjs.filter(function(o){ return o !== S.edSel; }); S.edSel = null; updateEdExplorer(); showToast('🗑️ Удалено'); }
   };
   $('ed-clear-all').onclick = function(){ S.edObjs.forEach(function(o){ edScene.remove(o); }); S.edObjs = []; S.edFolders = []; S.edSel = null; updateEdExplorer(); showToast('🗑️ Очищено'); };
   $('ed-save').onclick = function(){
-    var data = {objects: S.edObjs.map(function(o){ return {type:o.geometry.type, pos:o.position.toArray(), rot:o.rotation.toArray(), scale:o.scale.toArray(), color:o.material?o.material.color.getHex():0xffffff}; }), folders: S.edFolders};
+    var data = {objects: S.edObjs.map(function(o){ return {type:o.geometry?.type, pos:o.position.toArray(), color:o.material?.color?.getHex()}; }), folders: S.edFolders};
     var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'scene.json'; a.click();
-    showToast('💾 Сохранено!');
+    showToast(' Сохранено!');
   };
   $('ed-load-file').onclick = function(){ $('ed-file-input').click(); };
   $('ed-file-input').onchange = function(e){
@@ -1249,72 +1205,34 @@ function initEditor(){
       updateEdExplorer();
       showToast('✅ Загружено: ' + file.name);
       URL.revokeObjectURL(url);
-    }, undefined, function(err){
-      showToast('❌ Ошибка загрузки GLB');
-      URL.revokeObjectURL(url);
-    });
+    }, undefined, function(){ showToast('❌ Ошибка загрузки'); URL.revokeObjectURL(url); });
   };
-
   $('ed-new-folder').onclick = function(){
     var name = prompt('Название папки:', 'Новая папка');
-    if(name){
-      S.edFolders.push({name: name, open: true, children: []});
-      updateEdExplorer();
-      showToast('📁 Папка создана');
-    }
+    if(name){ S.edFolders.push({name: name, open: true, children: []}); updateEdExplorer(); showToast('📁 Папка создана'); }
   };
-
   $('ed-play').onclick = function(){
     if(S.edObjs.length === 0){ showToast('❌ Добавьте объекты'); return; }
     $('editor').classList.remove('show');
     $('game').classList.add('show');
     S.game = 'editor_play';
-    S.player = S.edObjs[0] || new THREE.Mesh(new THREE.CapsuleGeometry(0.5,1.5,4,8), new THREE.MeshStandardMaterial({color:0x00d9ff}));
-    if(!S.edObjs.includes(S.player)){
-      S.player.position.set(0,1.25,0);
-      S.scene = edScene;
-      S.cam = edCam;
-      S.ren = edRen;
-      S.scene.add(S.player);
-    } else {
-      S.scene = edScene;
-      S.cam = edCam;
-      S.ren = edRen;
-    }
+    S.player = new THREE.Mesh(new THREE.CapsuleGeometry(0.5,1.5,4,8), new THREE.MeshStandardMaterial({color:0x00d9ff}));
+    S.player.position.set(0,1.25,0);
+    S.scene = edScene;
+    S.cam = edCam;
+    S.ren = edRen;
+    S.scene.add(S.player);
     setupInput();
     S.escOpen = false;
-    showToast('▶️ Play режим! ESC для выхода');
-    console.log('✅ Editor Play запущен');
+    showToast('▶️ Play режим!');
   };
-
   $('ed-stop').onclick = function(){
     S.game = null;
     $('game').classList.remove('show');
     $('editor').classList.add('show');
     showToast('⏹ Stop');
   };
-
   $('ed-close').onclick = function(){ $('editor').classList.remove('show'); };
-
-  // Клик по объектам в редакторе
-  cv.addEventListener('click', function(e){
-    if(!edRen) return;
-    var rect = cv.getBoundingClientRect();
-    edMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    edMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    edRaycaster.setFromCamera(edMouse, edCam);
-    var intersects = edRaycaster.intersectObjects(S.edObjs, true);
-    if(intersects.length > 0){
-      var obj = intersects[0].object;
-      while(obj.parent && !S.edObjs.includes(obj)) obj = obj.parent;
-      if(S.edObjs.includes(obj)){
-        S.edSel = obj;
-        updateEdExplorer();
-        updateEdProps();
-      }
-    }
-  });
-
   editorLoop();
   console.log('✅ Редактор инициализирован');
 }
@@ -1326,12 +1244,6 @@ function addEdObj(type){
   if(type === 'cube') mesh = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color:color}));
   else if(type === 'sphere') mesh = new THREE.Mesh(new THREE.SphereGeometry(1.5,32,32), new THREE.MeshStandardMaterial({color:color}));
   else if(type === 'cylinder') mesh = new THREE.Mesh(new THREE.CylinderGeometry(1,1,2,16), new THREE.MeshStandardMaterial({color:color}));
-  else if(type === 'cone') mesh = new THREE.Mesh(new THREE.ConeGeometry(1,2,16), new THREE.MeshStandardMaterial({color:color}));
-  else if(type === 'plane') mesh = new THREE.Mesh(new THREE.PlaneGeometry(4,4), new THREE.MeshStandardMaterial({color:color, side:THREE.DoubleSide}));
-  else if(type === 'ramp'){
-    mesh = new THREE.Mesh(new THREE.BoxGeometry(3,0.3,3), new THREE.MeshStandardMaterial({color:color}));
-    mesh.rotation.z = 0.3;
-  }
   else if(type === 'house'){
     mesh = new THREE.Group();
     var w = new THREE.Mesh(new THREE.BoxGeometry(3,2,3), new THREE.MeshStandardMaterial({color:0xf8f9fa}));
@@ -1358,17 +1270,12 @@ function addEdObj(type){
   }
 }
 
-function removeFromExplorer(obj){
-  S.edObjs = S.edObjs.filter(function(o){ return o !== obj; });
-  S.edFolders.forEach(function(f){ f.children = f.children.filter(function(c){ return c !== obj; }); });
-}
-
 function updateEdExplorer(){
   var ex = $('ed-explorer'); ex.innerHTML = '';
-  S.edFolders.forEach(function(folder, fi){
+  S.edFolders.forEach(function(folder){
     var fd = document.createElement('div');
     fd.className = 'ed-folder' + (folder.open ? ' open' : '');
-    fd.textContent = (folder.open ? '📂 ' : '📁 ') + folder.name;
+    fd.textContent = (folder.open ? '📂 ' : ' ') + folder.name;
     fd.onclick = function(){ folder.open = !folder.open; updateEdExplorer(); };
     ex.appendChild(fd);
     if(folder.open){
@@ -1390,7 +1297,7 @@ function updateEdExplorer(){
     if(!inFolder){
       var d = document.createElement('div');
       d.className = 'ed-obj'+(S.edSel===obj?' sel':'');
-      d.textContent = (obj.userData.type === 'glb' ? ' ' : '🧱 ') + (obj.userData.name || ('obj_'+i));
+      d.textContent = (obj.userData.type === 'glb' ? '📦 ' : '🧱 ') + (obj.userData.name || ('obj_'+i));
       d.onclick = function(){ S.edSel = obj; updateEdExplorer(); updateEdProps(); };
       ex.appendChild(d);
     }
@@ -1401,11 +1308,9 @@ function updateEdProps(){
   var p = $('ed-props');
   if(!S.edSel){ p.innerHTML = '<div style="color:#aaa;font-size:13px">Выберите объект</div>'; return; }
   var o = S.edSel;
-  p.innerHTML = '<div style="font-size:13px;margin:4px 0">Имя: '+(o.userData.name||'obj')+'</div><div style="font-size:13px;margin:4px 0">Тип: '+(o.userData.type||o.geometry?.type||'group')+'</div><div style="font-size:13px;margin:4px 0">X: '+o.position.x.toFixed(2)+'</div><div style="font-size:13px;margin:4px 0">Y: '+o.position.y.toFixed(2)+'</div><div style="font-size:13px;margin:4px 0">Z: '+o.position.z.toFixed(2)+'</div>';
+  p.innerHTML = '<div style="font-size:13px;margin:4px 0">Имя: '+(o.userData.name||'obj')+'</div><div style="font-size:13px;margin:4px 0">Тип: '+(o.userData.type||'obj')+'</div>';
   if(o.material && o.material.color) $('ed-color').value = '#'+o.material.color.getHexString();
   $('ed-sx').value = o.scale.x; $('ed-sy').value = o.scale.y; $('ed-sz').value = o.scale.z;
-  $('ed-px').value = o.position.x; $('ed-py').value = o.position.y; $('ed-pz').value = o.position.z;
-  $('ed-rx').value = o.rotation.x; $('ed-ry').value = o.rotation.y; $('ed-rz').value = o.rotation.z;
 }
 
 function editorLoop(){
