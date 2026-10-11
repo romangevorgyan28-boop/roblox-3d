@@ -11,13 +11,25 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
+// ===== СОСТОЯНИЕ ИГРЫ =====
+const GameState = {
+  LOBBY: 'lobby',
+  MAP_SELECT: 'map_select',
+  TEAM_SELECT: 'team_select',
+  PLAYING: 'playing',
+  ROUND_END: 'round_end'
+};
+
 const players = new Map();
-const games = {
-  shooter: { players: new Map(), red: 0, blue: 0 },
-  brookhaven: { players: new Map() },
-  cheese: { players: new Map() },
-  airplane: { players: new Map() },
-  racing: { players: new Map() }
+const shooterState = {
+  state: GameState.LOBBY,
+  map: null,
+  red: [],
+  blue: [],
+  redScore: 0,
+  blueScore: 0,
+  roundTimer: 180,
+  roundInterval: null
 };
 
 wss.on('connection', (ws) => {
@@ -29,17 +41,14 @@ wss.on('connection', (ws) => {
 
       if (d.type === 'register') {
         const name = (d.name || 'Guest').trim().slice(0, 16);
-        if (name.length < 2) {
-          ws.send(JSON.stringify({ type: 'error', msg: 'Короткий ник' }));
-          return;
-        }
         pid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
         players.set(pid, {
           ws, name, game: 'menu', x: 0, y: 1, z: 0, yaw: 0,
           health: 100, team: null, input: { f: 0, r: 0, jump: false }
         });
         ws.send(JSON.stringify({ type: 'registered', id: pid, name }));
-        console.log(`[+] ${name} connected (${pid})`);
+        console.log(`[+] ${name} connected`);
+        broadcastShooterState();
         return;
       }
 
@@ -55,55 +64,90 @@ wss.on('connection', (ws) => {
         if (typeof d.yaw === 'number') p.yaw = d.yaw;
       }
 
-      if (d.type === 'join' && games[d.gameId]) {
-        if (p.game !== 'menu' && games[p.game]?.players) {
-          games[p.game].players.delete(pid);
-        }
-        p.game = d.gameId;
+      if (d.type === 'join' && d.gameId === 'shooter') {
+        p.game = 'shooter';
         p.health = 100;
         p.x = (Math.random() - 0.5) * 10;
         p.z = (Math.random() - 0.5) * 10;
         p.y = 1;
-        if (d.gameId === 'shooter') p.team = Math.random() > 0.5 ? 'red' : 'blue';
-        games[d.gameId].players.set(pid, p);
-        ws.send(JSON.stringify({ type: 'gameReady', gameId: d.gameId, team: p.team }));
-        console.log(`[*] ${p.name} joined ${d.gameId}`);
+        p.team = null;
+        
+        if (shooterState.state === GameState.PLAYING) {
+          ws.send(JSON.stringify({ type: 'waiting_lobby', msg: 'Раунд идёт. Ждите окончания...' }));
+        } else {
+          ws.send(JSON.stringify({ type: 'gameReady', state: shooterState.state }));
+        }
+        broadcastShooterState();
       }
 
-      if (d.type === 'chat' && d.msg) {
-        const msg = d.msg.substring(0, 120).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        broadcastToGame(p.game, { type: 'chat', name: p.name, msg });
+      if (d.type === 'select_map') {
+        if (shooterState.state === GameState.MAP_SELECT) {
+          shooterState.map = d.map;
+          shooterState.state = GameState.TEAM_SELECT;
+          broadcastShooterState();
+        }
       }
 
-      if (d.type === 'action' && p.game === 'shooter' && p.team) {
-        games.shooter.players.forEach((other, oid) => {
-          if (oid === pid || other.team === p.team) return;
-          const dist = Math.hypot(other.x - p.x, other.z - p.z);
-          if (dist < 8) {
-            other.health -= 25;
-            if (other.health <= 0) {
-              other.health = 100;
-              other.x = (Math.random() - 0.5) * 10;
-              other.z = (Math.random() - 0.5) * 10;
-              games.shooter[p.team]++;
-              broadcastToGame('shooter', {
-                type: 'kill', killer: p.name, victim: other.name,
-                scores: { red: games.shooter.red, blue: games.shooter.blue }
-              });
+      if (d.type === 'select_team') {
+        if (shooterState.state === GameState.TEAM_SELECT) {
+          const team = d.team;
+          const teamList = team === 'red' ? shooterState.red : shooterState.blue;
+          if (teamList.length < 2 && !shooterState.red.includes(pid) && !shooterState.blue.includes(pid)) {
+            teamList.push(pid);
+            p.team = team;
+            broadcastShooterState();
+            
+            if (shooterState.red.length === 2 && shooterState.blue.length === 2) {
+              startRound();
+            }
+          }
+        }
+      }
+
+      if (d.type === 'action' && p.game === 'shooter' && shooterState.state === GameState.PLAYING && p.team) {
+        const enemyTeam = p.team === 'red' ? shooterState.blue : shooterState.red;
+        enemyTeam.forEach(oid => {
+          const other = players.get(oid);
+          if (other) {
+            const dist = Math.hypot(other.x - p.x, other.z - p.z);
+            if (dist < 8) {
+              other.health -= 25;
+              if (other.health <= 0) {
+                other.health = 100;
+                other.x = (Math.random() - 0.5) * 10;
+                other.z = (Math.random() - 0.5) * 10;
+                if (p.team === 'red') shooterState.redScore++;
+                else shooterState.blueScore++;
+                broadcastShooterState();
+              }
             }
           }
         });
-        broadcastToGame('shooter', { type: 'shoot', shooter: pid });
+        broadcastToShooter({ type: 'shoot', shooter: pid });
       }
+
+      if (d.type === 'chat' && d.msg) {
+        const msg = d.msg.substring(0, 120);
+        broadcastToShooter({ type: 'chat', name: p.name, msg });
+      }
+
     } catch (e) { console.error('WS Error:', e); }
   });
 
   ws.on('close', () => {
     if (pid && players.has(pid)) {
       const p = players.get(pid);
-      if (p.game !== 'menu' && games[p.game]?.players) games[p.game].players.delete(pid);
+      if (p.game === 'shooter') {
+        shooterState.red = shooterState.red.filter(id => id !== pid);
+        shooterState.blue = shooterState.blue.filter(id => id !== pid);
+        if (shooterState.state === GameState.PLAYING) {
+          if (shooterState.red.length < 2 || shooterState.blue.length < 2) {
+            endRound();
+          }
+        }
+      }
       players.delete(pid);
-      console.log(`[-] ${p.name} disconnected`);
+      broadcastShooterState();
     }
   });
 
@@ -111,10 +155,99 @@ wss.on('connection', (ws) => {
   ws.on('pong', () => ws.isAlive = true);
 });
 
-function broadcastToGame(gameId, data) {
+function startRound() {
+  shooterState.state = GameState.PLAYING;
+  shooterState.roundTimer = 180;
+  shooterState.redScore = 0;
+  shooterState.blueScore = 0;
+  
+  shooterState.red.forEach(pid => {
+    const p = players.get(pid);
+    if (p) {
+      p.health = 100;
+      p.x = -20 + Math.random() * 10;
+      p.z = (Math.random() - 0.5) * 20;
+      p.y = 1;
+      p.ws.send(JSON.stringify({ type: 'round_start', team: 'red', time: 180 }));
+    }
+  });
+  
+  shooterState.blue.forEach(pid => {
+    const p = players.get(pid);
+    if (p) {
+      p.health = 100;
+      p.x = 20 + Math.random() * 10;
+      p.z = (Math.random() - 0.5) * 20;
+      p.y = 1;
+      p.ws.send(JSON.stringify({ type: 'round_start', team: 'blue', time: 180 }));
+    }
+  });
+  
+  broadcastShooterState();
+  
+  shooterState.roundInterval = setInterval(() => {
+    shooterState.roundTimer--;
+    if (shooterState.roundTimer <= 0) {
+      endRound();
+    } else {
+      broadcastToShooter({ type: 'timer', time: shooterState.roundTimer });
+    }
+  }, 1000);
+}
+
+function endRound() {
+  if (shooterState.roundInterval) {
+    clearInterval(shooterState.roundInterval);
+    shooterState.roundInterval = null;
+  }
+  
+  const winner = shooterState.redScore > shooterState.blueScore ? 'red' : 
+                 shooterState.blueScore > shooterState.redScore ? 'blue' : 'draw';
+  
+  broadcastToShooter({ 
+    type: 'round_end', 
+    winner, 
+    redScore: shooterState.redScore, 
+    blueScore: shooterState.blueScore 
+  });
+  
+  setTimeout(() => {
+    shooterState.state = GameState.LOBBY;
+    shooterState.red = [];
+    shooterState.blue = [];
+    shooterState.map = null;
+    players.forEach(p => {
+      if (p.game === 'shooter') {
+        p.team = null;
+        p.ws.send(JSON.stringify({ type: 'back_to_lobby' }));
+      }
+    });
+    broadcastShooterState();
+  }, 5000);
+}
+
+function broadcastShooterState() {
+  const shooterPlayers = Array.from(players.values()).filter(p => p.game === 'shooter');
+  const data = {
+    type: 'shooter_state',
+    state: shooterState.state,
+    playerCount: shooterPlayers.length,
+    map: shooterState.map,
+    red: shooterState.red.map(id => players.get(id)?.name).filter(Boolean),
+    blue: shooterState.blue.map(id => players.get(id)?.name).filter(Boolean),
+    redScore: shooterState.redScore,
+    blueScore: shooterState.blueScore,
+    time: shooterState.roundTimer
+  };
+  shooterPlayers.forEach(p => {
+    try { p.ws.send(JSON.stringify(data)); } catch(e) {}
+  });
+}
+
+function broadcastToShooter(data) {
   const msg = JSON.stringify(data);
   players.forEach(p => {
-    if (p.ws.readyState === 1 && p.game === gameId) {
+    if (p.ws.readyState === 1 && p.game === 'shooter') {
       try { p.ws.send(msg); } catch(e) {}
     }
   });
@@ -122,7 +255,8 @@ function broadcastToGame(gameId, data) {
 
 setInterval(() => {
   players.forEach(p => {
-    if (p.ws.readyState !== 1 || p.game === 'menu') return;
+    if (p.ws.readyState !== 1 || p.game !== 'shooter' || shooterState.state !== GameState.PLAYING) return;
+    
     const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
     const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
     p.x += (p.input.f * fx + p.input.r * rx) * 0.15;
@@ -134,14 +268,16 @@ setInterval(() => {
     if (p.y < 1) p.y = 1;
 
     const nearby = [];
-    if (games[p.game]?.players) {
-      games[p.game].players.forEach((other, oid) => {
-        if (oid !== p.id && Math.hypot(other.x - p.x, other.z - p.z) < 60) {
-          nearby.push({ id: oid, name: other.name, x: other.x, y: other.y, z: other.z, yaw: other.yaw, team: other.team, health: other.health });
-        }
-      });
-    }
-    p.ws.send(JSON.stringify({ type: 'snapshot', players: nearby, health: p.health, team: p.team, scores: p.game === 'shooter' ? { red: games.shooter.red, blue: games.shooter.blue } : null }));
+    const teamPlayers = p.team === 'red' ? shooterState.red : shooterState.blue;
+    const enemyPlayers = p.team === 'red' ? shooterState.blue : shooterState.red;
+    [...teamPlayers, ...enemyPlayers].forEach(oid => {
+      const other = players.get(oid);
+      if (other && oid !== p.id && Math.hypot(other.x - p.x, other.z - p.z) < 60) {
+        nearby.push({ id: oid, name: other.name, x: other.x, y: other.y, z: other.z, yaw: other.yaw, team: other.team, health: other.health });
+      }
+    });
+    
+    p.ws.send(JSON.stringify({ type: 'snapshot', players: nearby, health: p.health, team: p.team }));
   });
 }, 1000 / 24);
 
