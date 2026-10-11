@@ -1,215 +1,369 @@
-const express = require('express');
+ъconst express = require('express');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 });
+const wss = new WebSocketServer({ server, maxPayload: 128 * 1024 });
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-const players = new Map();
-const shooter = {
-  state: 'lobby', map: 'arena',
-  red: [], blue: [],
-  redScore: 0, blueScore: 0,
-  roundTimer: 180, roundInterval: null,
-  waiting: []
+const WORLD_CONFIG = { 
+    TICK_RATE: 24, 
+    GRAVITY: 18, 
+    MOVE_SPEED: 6.0, 
+    JUMP_FORCE: 8.5 
 };
 
-wss.on('connection', (ws) => {
-  let pid = null;
+// КОМПАКТНЫЙ 3D ЛАБИРИНТ ПО ФОРМЕ КАК НА КАРТИНКЕ
+// 0 = пол (проход), 1 = стена, 2 = спавн, 3 = сыр, 4 = выход
+const MAZE_MAP = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,2,0,0,1,0,0,0,1,3,0,4,1],
+  [1,0,1,0,1,0,1,0,1,0,1,0,1],
+  [1,0,1,0,0,0,1,0,0,0,1,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,0,0,1,3,0,0,1],
+  [1,1,1,0,1,1,1,1,1,0,1,1,1],
+  [1,3,0,0,1,3,0,0,0,0,1,3,1],
+  [1,0,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,1,3,0,0,0,0,1,0,0,0,1],
+  [1,0,1,1,1,1,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,1,0,0,0,1,0,1],
+  [1,1,1,1,1,0,1,1,1,0,1,0,1],
+  [1,3,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,1,1,1,1,1,1,1,0,1],
+  [1,0,1,3,0,0,0,0,0,0,1,0,1],
+  [1,0,1,1,1,0,1,1,1,0,1,0,1],
+  [1,0,0,0,1,0,1,3,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
 
+class MazeGenerator {
+  constructor(map) {
+    this.map = map;
+    this.rows = map.length;
+    this.cols = map[0].length;
+    this.cellSize = 3.0;
+    this.wallHeight = 4.0;
+  }
+  
+  getWalls() {
+    const walls = [];
+    const cheeseSpots = [];
+    const greenZones = [];
+    let exitPos = null;
+    let spawnPos = { x: 0, z: 0 };
+    
+    for (let y = 0; y < this.rows; y++) {
+      for (let x = 0; x < this.cols; x++) {
+        const cell = this.map[y][x];
+        const worldX = (x - this.cols / 2) * this.cellSize;
+        const worldZ = (y - this.rows / 2) * this.cellSize;
+        
+        if (cell === 1) {
+          walls.push({ 
+            x: worldX, 
+            z: worldZ, 
+            w: this.cellSize, 
+            d: this.cellSize, 
+            h: this.wallHeight 
+          });
+        }
+        if (cell === 2) { 
+          greenZones.push({ x: worldX, z: worldZ }); 
+          if (spawnPos.x === 0) spawnPos = { x: worldX, z: worldZ }; 
+        }
+        if (cell === 3) {
+          cheeseSpots.push({ x: worldX, z: worldZ });
+        }
+        if (cell === 4) {
+          exitPos = { x: worldX, z: worldZ };
+        }
+      }
+    }
+    return { walls, spawn: spawnPos, greenZones, cheeseSpots, exit: exitPos };
+  }
+}
+
+const players = new Map();
+const gameInstances = {};
+let nextId = 1;
+
+const maze = new MazeGenerator(MAZE_MAP);
+const mapData = maze.getWalls();
+
+gameInstances.cheese = {
+  walls: mapData.walls,
+  cheeses: mapData.cheeseSpots.map((c, i) => ({ 
+    id: `c_${i}`, 
+    x: c.x, 
+    z: c.z, 
+    collected: false 
+  })),
+  greenZones: mapData.greenZones,
+  rat: { x: 0, z: 0, speed: 3.5, yaw: 0 },
+  exit: { x: mapData.exit?.x || 0, z: mapData.exit?.z || 0, open: false },
+  spawn: mapData.spawn,
+  time: 0
+};
+
+class Player {
+  constructor(id, ws, name) {
+    this.id = id; 
+    this.ws = ws; 
+    this.name = name.substring(0, 16);
+    this.gameId = 'menu'; 
+    this.x = 0; 
+    this.y = 1; 
+    this.z = 0;
+    this.vx = 0; 
+    this.vy = 0; 
+    this.vz = 0; 
+    this.yaw = 0; 
+    this.onGround = false;
+    this.input = { f: 0, r: 0, jump: false, action: false };
+    this.health = 100; 
+    this.inventory = { cheese: 0 };
+    this.lastSent = { x: 0, y: 0, z: 0, yaw: 0, anim: 0 };
+  }
+  
+  reset(gameId) {
+    this.gameId = gameId;
+    const spawn = gameInstances.cheese?.spawn || { x: 0, z: 0 };
+    this.x = spawn.x; 
+    this.z = spawn.z; 
+    this.y = 1;
+    this.vx = 0; 
+    this.vy = 0; 
+    this.vz = 0; 
+    this.health = 100;
+    this.inventory.cheese = 0;
+  }
+  
+  getPublic() {
+    return { 
+      id: this.id, 
+      name: this.name, 
+      x: this.x, 
+      y: this.y, 
+      z: this.z, 
+      yaw: this.yaw, 
+      health: this.health, 
+      gameId: this.gameId, 
+      anim: Math.abs(this.input.f) > 0.1 || Math.abs(this.input.r) > 0.1 ? 1 : 0 
+    };
+  }
+}
+
+wss.on('connection', (ws) => {
+  ws.isAlive = true;
+  ws.on('pong', () => ws.isAlive = true);
+  
   ws.on('message', (raw) => {
     try {
       const d = JSON.parse(raw);
-
-      if (d.type === 'register') {
-        const name = String(d.name || 'Guest').replace(/[<>\"&]/g, '').trim().substring(0, 16);
-        if (name.length < 2) { ws.send(JSON.stringify({ type: 'error', msg: 'Короткий ник' })); return; }
-        pid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        players.set(pid, { ws, name, game: 'menu', x: 0, y: 1, z: 0, yaw: 0, health: 100, team: null, input: { f: 0, r: 0, jump: false }, lastAction: 0 });
-        ws.send(JSON.stringify({ type: 'registered', id: pid, name }));
-        console.log(`[+] ${name} connected`);
-        broadcastState();
+      
+      if (!d.playerId && d.type === 'register') {
+        const id = nextId++;
+        const p = new Player(id, ws, d.name || `Player_${id}`);
+        players.set(id, p);
+        ws.send(JSON.stringify({ 
+          type: 'registered', 
+          id, 
+          name: p.name, 
+          players: Array.from(players.values()).filter(x => x.id !== id).map(x => x.getPublic()) 
+        }));
+        broadcast({ type: 'playerJoined', player: p.getPublic() }, id);
         return;
       }
-
-      if (!pid || !players.has(pid)) return;
-      const p = players.get(pid);
-
+      
+      const p = players.get(d.playerId); 
+      if (!p) return;
+      
       if (d.type === 'input') {
-        p.input = {
-          f: typeof d.f === 'number' ? Math.max(-1, Math.min(1, d.f)) : 0,
-          r: typeof d.r === 'number' ? Math.max(-1, Math.min(1, d.r)) : 0,
-          jump: !!d.jump
+        p.input = { 
+          f: typeof d.f === 'number' ? Math.max(-1, Math.min(1, d.f)) : 0, 
+          r: typeof d.r === 'number' ? Math.max(-1, Math.min(1, d.r)) : 0, 
+          jump: !!d.jump, 
+          action: !!d.action 
         };
         if (typeof d.yaw === 'number') p.yaw = d.yaw;
       }
-
-      if (d.type === 'join' && d.gameId === 'shooter') {
-        p.game = 'shooter'; p.health = 100; p.team = null;
-        if (shooter.state === 'playing') {
-          shooter.waiting.push(pid);
-          ws.send(JSON.stringify({ type: 'waiting_lobby', msg: 'Раунд идёт. Ждите...' }));
-        } else {
-          ws.send(JSON.stringify({ type: 'gameReady', state: shooter.state }));
+      
+      if (d.type === 'joinGame' && ['brookhaven','shooter','brainrot','cheese'].includes(d.gameId)) {
+        p.reset(d.gameId);
+        if (d.gameId === 'cheese') {
+          ws.send(JSON.stringify({ 
+            type: 'mapData', 
+            walls: gameInstances.cheese.walls, 
+            cheeses: gameInstances.cheese.cheeses, 
+            spawn: gameInstances.cheese.spawn, 
+            greenZones: gameInstances.cheese.greenZones, 
+            exit: gameInstances.cheese.exit 
+          }));
         }
-        broadcastState();
-        return;
+        broadcast({ type: 'playerMoved', player: p.getPublic() });
       }
-
-      if (d.type === 'select_map' && shooter.state === 'map_select') {
-        shooter.map = d.map || 'arena';
-        shooter.state = 'team_select';
-        broadcastState();
-        return;
-      }
-
-      if (d.type === 'select_team' && shooter.state === 'team_select') {
-        const team = d.team;
-        if (team !== 'red' && team !== 'blue') return;
-        const list = team === 'red' ? shooter.red : shooter.blue;
-        if (list.length < 2 && !shooter.red.includes(pid) && !shooter.blue.includes(pid)) {
-          list.push(pid); p.team = team;
-          broadcastState();
-          if (shooter.red.length === 2 && shooter.blue.length === 2) setTimeout(startRound, 1000);
-        }
-        return;
-      }
-
-      if (d.type === 'action' && p.game === 'shooter' && shooter.state === 'playing' && p.team) {
-        const now = Date.now();
-        if (now - p.lastAction < 500) return;
-        p.lastAction = now;
-        const enemy = p.team === 'red' ? shooter.blue : shooter.red;
-        enemy.forEach(oid => {
-          const o = players.get(oid);
-          if (!o) return;
-          const dist = Math.hypot(o.x - p.x, o.z - p.z);
-          if (dist < 10) {
-            o.health -= 25;
-            if (o.health <= 0) {
-              o.health = 100;
-              o.x = p.team === 'red' ? -20 + Math.random() * 5 : 20 + Math.random() * 5;
-              o.z = (Math.random() - 0.5) * 20;
-              if (p.team === 'red') shooter.redScore++; else shooter.blueScore++;
-              broadcastState();
-              broadcastShooter({ type: 'kill', killer: p.name, victim: o.name });
-            }
-          }
-        });
-        ws.send(JSON.stringify({ type: 'shoot', hit: true }));
-        return;
-      }
-
+      
       if (d.type === 'chat' && d.msg) {
-        const msg = String(d.msg).replace(/[<>]/g, '').trim().substring(0, 200);
-        if (msg) broadcastShooter({ type: 'chat', name: p.name, msg });
+        broadcast({ type: 'chat', name: p.name, msg: d.msg.substring(0, 120) });
       }
-    } catch (e) { console.error('WS:', e); }
-  });
-
-  ws.on('close', () => {
-    if (pid && players.has(pid)) {
-      const p = players.get(pid);
-      if (p.game === 'shooter') {
-        shooter.red = shooter.red.filter(id => id !== pid);
-        shooter.blue = shooter.blue.filter(id => id !== pid);
-        shooter.waiting = shooter.waiting.filter(id => id !== pid);
-        if (shooter.state === 'playing' && (shooter.red.length < 1 || shooter.blue.length < 1)) endRound();
-      }
-      players.delete(pid);
-      broadcastState();
+    } catch(e) {
+      console.error('Message error:', e);
     }
   });
-
-  ws.isAlive = true;
-  ws.on('pong', () => ws.isAlive = true);
+  
+  ws.on('close', () => {
+    for (const [id, pl] of players) { 
+      if (pl.ws === ws) { 
+        players.delete(id); 
+        broadcast({ type: 'playerLeft', playerId: id }); 
+        break; 
+      } 
+    }
+  });
 });
 
-function startRound() {
-  shooter.state = 'playing';
-  shooter.roundTimer = 180;
-  shooter.redScore = 0; shooter.blueScore = 0;
-  shooter.red.forEach(pid => {
-    const p = players.get(pid);
-    if (p) { p.health = 100; p.x = -20 + Math.random() * 5; p.z = (Math.random() - 0.5) * 20; p.y = 1; p.ws.send(JSON.stringify({ type: 'round_start', team: 'red', time: 180 })); }
-  });
-  shooter.blue.forEach(pid => {
-    const p = players.get(pid);
-    if (p) { p.health = 100; p.x = 20 + Math.random() * 5; p.z = (Math.random() - 0.5) * 20; p.y = 1; p.ws.send(JSON.stringify({ type: 'round_start', team: 'blue', time: 180 })); }
-  });
-  shooter.waiting.forEach(pid => {
-    const p = players.get(pid);
-    if (p) {
-      p.health = 100; p.team = Math.random() > 0.5 ? 'red' : 'blue';
-      p.x = p.team === 'red' ? -20 : 20; p.z = (Math.random() - 0.5) * 20; p.y = 1;
-      if (p.team === 'red') shooter.red.push(pid); else shooter.blue.push(pid);
-      p.ws.send(JSON.stringify({ type: 'round_start', team: p.team, time: 180 }));
-    }
-  });
-  shooter.waiting = [];
-  broadcastState();
-  shooter.roundInterval = setInterval(() => {
-    shooter.roundTimer--;
-    if (shooter.roundTimer <= 0) endRound();
-    else broadcastShooter({ type: 'timer', time: shooter.roundTimer });
-  }, 1000);
-}
-
-function endRound() {
-  if (shooter.roundInterval) { clearInterval(shooter.roundInterval); shooter.roundInterval = null; }
-  const winner = shooter.redScore > shooter.blueScore ? 'red' : shooter.blueScore > shooter.redScore ? 'blue' : 'draw';
-  broadcastShooter({ type: 'round_end', winner, redScore: shooter.redScore, blueScore: shooter.blueScore });
-  setTimeout(() => {
-    shooter.state = 'lobby'; shooter.red = []; shooter.blue = []; shooter.waiting = [];
-    players.forEach(p => { if (p.game === 'shooter') { p.team = null; p.ws.send(JSON.stringify({ type: 'back_to_lobby' })); } });
-    broadcastState();
-  }, 5000);
-}
-
-function broadcastState() {
-  const sp = Array.from(players.values()).filter(p => p.game === 'shooter');
-  const data = { type: 'shooter_state', state: shooter.state, playerCount: sp.length, map: shooter.map, red: shooter.red.map(id => players.get(id)?.name).filter(Boolean), blue: shooter.blue.map(id => players.get(id)?.name).filter(Boolean), redScore: shooter.redScore, blueScore: shooter.blueScore, time: shooter.roundTimer };
-  sp.forEach(p => { try { p.ws.send(JSON.stringify(data)); } catch(e) {} });
-}
-
-function broadcastShooter(data) {
-  const msg = JSON.stringify(data);
-  players.forEach(p => { if (p.ws.readyState === 1 && p.game === 'shooter') { try { p.ws.send(msg); } catch(e) {} } });
-}
-
 setInterval(() => {
+  const dt = 1 / WORLD_CONFIG.TICK_RATE;
+  
   players.forEach(p => {
-    if (p.ws.readyState !== 1) return;
-    if (p.game === 'shooter' && shooter.state === 'playing') {
-      const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
-      const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
-      const nx = p.x + (p.input.f * fx + p.input.r * rx) * 0.15;
-      const nz = p.z + (p.input.f * fz + p.input.r * rz) * 0.15;
-      const dist = Math.hypot(nx - p.x, nz - p.z);
-      if (dist <= 0.5) { p.x = Math.max(-50, Math.min(50, nx)); p.z = Math.max(-50, Math.min(50, nz)); }
-      if (p.input.jump && p.y <= 1.1) { p.y = 3.2; p.input.jump = false; }
-      if (p.y > 1) p.y -= 0.22;
-      if (p.y < 1) p.y = 1;
-      const nearby = [];
-      [...shooter.red, ...shooter.blue].forEach(oid => {
-        const o = players.get(oid);
-        if (o && oid !== p.id && Math.hypot(o.x - p.x, o.z - p.z) < 60) {
-          nearby.push({ id: oid, name: o.name, x: o.x, y: o.y, z: o.z, yaw: o.yaw, team: o.team, health: o.health });
+    if (p.ws.readyState !== 1 || p.gameId === 'menu') return;
+    
+    const speed = WORLD_CONFIG.MOVE_SPEED;
+    const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
+    const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
+    
+    p.vx = (p.input.f * fx + p.input.r * rx) * speed;
+    p.vz = (p.input.f * fz + p.input.r * rz) * speed;
+    
+    if (p.input.jump && p.onGround) { 
+      p.vy = WORLD_CONFIG.JUMP_FORCE; 
+      p.onGround = false; 
+    }
+    p.vy -= WORLD_CONFIG.GRAVITY * dt;
+    
+    let nx = p.x + p.vx * dt, nz = p.z + p.vz * dt, ny = p.y + p.vy * dt;
+    
+    if (ny <= 1) { 
+      ny = 1; 
+      p.vy = 0; 
+      p.onGround = true; 
+    }
+    
+    if (p.gameId === 'cheese') {
+      const cs = 3.0, halfX = 6.5, halfZ = 9.5;
+      const gx = Math.floor((nx / cs) + halfX), gz = Math.floor((nz / cs) + halfZ);
+      if (gx >= 0 && gx < 13 && gz >= 0 && gz < 19 && MAZE_MAP[gz][gx] === 1) { 
+        nx = p.x; 
+        nz = p.z; 
+      }
+    }
+    
+    p.x = nx; 
+    p.z = nz; 
+    p.y = ny;
+
+    if (p.gameId === 'cheese') {
+      const rat = gameInstances.cheese.rat;
+      const greenZones = gameInstances.cheese.greenZones;
+      let ratInGreen = false;
+      
+      for (const gz of greenZones) { 
+        if (Math.hypot(rat.x - gz.x, rat.z - gz.z) < 5) { 
+          ratInGreen = true; 
+          break; 
+        } 
+      }
+      
+      if (p.health > 0 && !ratInGreen) {
+        const dx = p.x - rat.x, dz = p.z - rat.z;
+        if (Math.hypot(dx, dz) < 2.0) {
+          p.health -= 8;
+          if (p.health <= 0) { 
+            p.health = 100; 
+            p.x = gameInstances.cheese.spawn.x; 
+            p.z = gameInstances.cheese.spawn.z; 
+            p.ws.send(JSON.stringify({ type: 'died' })); 
+          }
+        }
+      }
+      
+      let target = null, minD = 999;
+      players.forEach(o => { 
+        if(o.gameId === 'cheese' && o.health > 0) { 
+          const d = Math.hypot(o.x - rat.x, o.z - rat.z); 
+          if(d < minD){
+            minD = d; 
+            target = o;
+          }
         }
       });
-      p.ws.send(JSON.stringify({ type: 'snapshot', players: nearby, health: p.health, team: p.team }));
+      
+      if(target) { 
+        const tx = target.x - rat.x, tz = target.z - rat.z; 
+        rat.x += (tx/minD) * rat.speed * dt; 
+        rat.z += (tz/minD) * rat.speed * dt; 
+        rat.yaw = Math.atan2(tx, tz); 
+      }
+      
+      gameInstances.cheese.cheeses.forEach(c => {
+        if(!c.collected && p.input.action && Math.hypot(p.x - c.x, p.z - c.z) < 2.5) {
+          c.collected = true; 
+          p.inventory.cheese++;
+          p.ws.send(JSON.stringify({ type: 'collectCheese', total: p.inventory.cheese }));
+          if(p.inventory.cheese >= 9) gameInstances.cheese.exit.open = true;
+        }
+      });
+      
+      if(gameInstances.cheese.exit.open && Math.hypot(p.x - gameInstances.cheese.exit.x, p.z - gameInstances.cheese.exit.z) < 3.0) {
+        p.ws.send(JSON.stringify({ type: 'win', score: Math.floor(1000 - gameInstances.cheese.time) })); 
+        p.health = 0;
+      }
+    }
+    
+    const curAnim = Math.abs(p.input.f) > 0.1 || Math.abs(p.input.r) > 0.1 ? 1 : 0;
+    
+    if(Math.abs(p.x - p.lastSent.x) > 0.2 || Math.abs(p.z - p.lastSent.z) > 0.2 || Math.abs(p.yaw - p.lastSent.yaw) > 0.1 || curAnim !== p.lastSent.anim) {
+      try {
+        p.ws.send(JSON.stringify({ 
+          type: 'snapshot', 
+          players: Array.from(players.values()).filter(o => o.id !== p.id && o.gameId === p.gameId).map(o => o.getPublic()), 
+          rat: p.gameId === 'cheese' ? gameInstances.cheese.rat : null, 
+          exit: p.gameId === 'cheese' ? gameInstances.cheese.exit : null 
+        }));
+        p.lastSent = { x: p.x, y: p.y, z: p.z, yaw: p.yaw, anim: curAnim };
+      } catch(e) {
+        console.error('Send error:', e);
+      }
     }
   });
-}, 1000 / 24);
+  
+  if(gameInstances.cheese) gameInstances.cheese.time += dt;
+}, 1000 / WORLD_CONFIG.TICK_RATE);
 
-setInterval(() => {
-  wss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); });
+function broadcast(data, excludeId = null) {
+  const msg = JSON.stringify(data);
+  players.forEach(p => { 
+    if(p.id !== excludeId && p.ws.readyState === 1) {
+      try {
+        p.ws.send(msg);
+      } catch(e) {}
+    }
+  });
+}
+
+setInterval(() => { 
+  wss.clients.forEach(ws => { 
+    if(!ws.isAlive) return ws.terminate(); 
+    ws.isAlive = false; 
+    ws.ping(); 
+  }); 
 }, 15000);
 
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ Server on ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ SERVER RUNNING :${PORT}`));
+process.on('SIGINT', () => process.exit(0));
