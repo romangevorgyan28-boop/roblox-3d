@@ -11,34 +11,15 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(__dirname));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// ===== АНТИЧИТ =====
-const RATE_LIMIT_MS = 50;
-const MAX_SPEED = 0.5;
-const rateLimits = new Map();
-
-// ===== СОСТОЯНИЕ ШУТЕРА =====
-const ShooterState = {
-  LOBBY: 'lobby',
-  MAP_SELECT: 'map_select',
-  TEAM_SELECT: 'team_select',
-  PLAYING: 'playing',
-  ROUND_END: 'round_end'
-};
-
 const players = new Map();
 const shooter = {
-  state: ShooterState.LOBBY,
-  map: 'arena',
-  red: [],
-  blue: [],
-  redScore: 0,
-  blueScore: 0,
-  roundTimer: 180,
-  roundInterval: null,
-  waitingPlayers: []
+  state: 'lobby', map: 'arena',
+  red: [], blue: [],
+  redScore: 0, blueScore: 0,
+  roundTimer: 180, roundInterval: null,
+  waiting: []
 };
 
-// ===== ПОДКЛЮЧЕНИЕ =====
 wss.on('connection', (ws) => {
   let pid = null;
 
@@ -46,37 +27,20 @@ wss.on('connection', (ws) => {
     try {
       const d = JSON.parse(raw);
 
-      // Rate limit
-      const now = Date.now();
-      const lastMsg = rateLimits.get(pid) || 0;
-      if (pid && now - lastMsg < RATE_LIMIT_MS) return;
-      if (pid) rateLimits.set(pid, now);
-
-      // РЕГИСТРАЦИЯ
       if (d.type === 'register') {
         const name = String(d.name || 'Guest').replace(/[<>\"&]/g, '').trim().substring(0, 16);
-        if (name.length < 2) {
-          ws.send(JSON.stringify({ type: 'error', msg: 'Короткий ник' }));
-          return;
-        }
+        if (name.length < 2) { ws.send(JSON.stringify({ type: 'error', msg: 'Короткий ник' })); return; }
         pid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-        players.set(pid, {
-          ws, name, game: 'menu',
-          x: 0, y: 1, z: 0, yaw: 0, pitch: 0,
-          health: 100, team: null,
-          input: { f: 0, r: 0, jump: false },
-          lastAction: 0
-        });
+        players.set(pid, { ws, name, game: 'menu', x: 0, y: 1, z: 0, yaw: 0, health: 100, team: null, input: { f: 0, r: 0, jump: false }, lastAction: 0 });
         ws.send(JSON.stringify({ type: 'registered', id: pid, name }));
-        console.log(`[+] ${name} connected (${pid})`);
-        broadcastShooterState();
+        console.log(`[+] ${name} connected`);
+        broadcastState();
         return;
       }
 
       if (!pid || !players.has(pid)) return;
       const p = players.get(pid);
 
-      // ВВОД
       if (d.type === 'input') {
         p.input = {
           f: typeof d.f === 'number' ? Math.max(-1, Math.min(1, d.f)) : 0,
@@ -84,95 +48,69 @@ wss.on('connection', (ws) => {
           jump: !!d.jump
         };
         if (typeof d.yaw === 'number') p.yaw = d.yaw;
-        if (typeof d.pitch === 'number') p.pitch = d.pitch;
       }
 
-      // ВХОД В ИГРУ
       if (d.type === 'join' && d.gameId === 'shooter') {
-        p.game = 'shooter';
-        p.health = 100;
-        p.team = null;
-        
-        if (shooter.state === ShooterState.PLAYING) {
-          shooter.waitingPlayers.push(pid);
-          ws.send(JSON.stringify({ 
-            type: 'waiting_lobby', 
-            msg: 'Раунд идёт. Ждите окончания...',
-            time: shooter.roundTimer
-          }));
+        p.game = 'shooter'; p.health = 100; p.team = null;
+        if (shooter.state === 'playing') {
+          shooter.waiting.push(pid);
+          ws.send(JSON.stringify({ type: 'waiting_lobby', msg: 'Раунд идёт. Ждите...' }));
         } else {
           ws.send(JSON.stringify({ type: 'gameReady', state: shooter.state }));
         }
-        broadcastShooterState();
+        broadcastState();
         return;
       }
 
-      // ВЫБОР КАРТЫ
-      if (d.type === 'select_map' && shooter.state === ShooterState.MAP_SELECT) {
+      if (d.type === 'select_map' && shooter.state === 'map_select') {
         shooter.map = d.map || 'arena';
-        shooter.state = ShooterState.TEAM_SELECT;
-        broadcastShooterState();
+        shooter.state = 'team_select';
+        broadcastState();
         return;
       }
 
-      // ВЫБОР КОМАНДЫ
-      if (d.type === 'select_team' && shooter.state === ShooterState.TEAM_SELECT) {
+      if (d.type === 'select_team' && shooter.state === 'team_select') {
         const team = d.team;
         if (team !== 'red' && team !== 'blue') return;
-        const teamList = team === 'red' ? shooter.red : shooter.blue;
-        
-        if (teamList.length < 2 && !shooter.red.includes(pid) && !shooter.blue.includes(pid)) {
-          teamList.push(pid);
-          p.team = team;
-          broadcastShooterState();
-          
-          if (shooter.red.length === 2 && shooter.blue.length === 2) {
-            setTimeout(() => startRound(), 1000);
-          }
+        const list = team === 'red' ? shooter.red : shooter.blue;
+        if (list.length < 2 && !shooter.red.includes(pid) && !shooter.blue.includes(pid)) {
+          list.push(pid); p.team = team;
+          broadcastState();
+          if (shooter.red.length === 2 && shooter.blue.length === 2) setTimeout(startRound, 1000);
         }
         return;
       }
 
-      // ДЕЙСТВИЕ (СТРЕЛЬБА)
-      if (d.type === 'action' && p.game === 'shooter' && shooter.state === ShooterState.PLAYING && p.team) {
-        const now2 = Date.now();
-        if (now2 - p.lastAction < 500) return; // Античит: не чаще 2 выстрелов в секунду
-        p.lastAction = now2;
-
-        const enemyTeam = p.team === 'red' ? shooter.blue : shooter.red;
-        let hit = false;
-        enemyTeam.forEach(oid => {
-          const other = players.get(oid);
-          if (!other) return;
-          const dist = Math.hypot(other.x - p.x, other.z - p.z);
+      if (d.type === 'action' && p.game === 'shooter' && shooter.state === 'playing' && p.team) {
+        const now = Date.now();
+        if (now - p.lastAction < 500) return;
+        p.lastAction = now;
+        const enemy = p.team === 'red' ? shooter.blue : shooter.red;
+        enemy.forEach(oid => {
+          const o = players.get(oid);
+          if (!o) return;
+          const dist = Math.hypot(o.x - p.x, o.z - p.z);
           if (dist < 10) {
-            other.health -= 25;
-            hit = true;
-            if (other.health <= 0) {
-              other.health = 100;
-              other.x = p.team === 'red' ? -20 + Math.random() * 5 : 20 + Math.random() * 5;
-              other.z = (Math.random() - 0.5) * 20;
-              if (p.team === 'red') shooter.redScore++;
-              else shooter.blueScore++;
-              broadcastShooterState();
-              broadcastToShooter({ type: 'kill', killer: p.name, victim: other.name });
+            o.health -= 25;
+            if (o.health <= 0) {
+              o.health = 100;
+              o.x = p.team === 'red' ? -20 + Math.random() * 5 : 20 + Math.random() * 5;
+              o.z = (Math.random() - 0.5) * 20;
+              if (p.team === 'red') shooter.redScore++; else shooter.blueScore++;
+              broadcastState();
+              broadcastShooter({ type: 'kill', killer: p.name, victim: o.name });
             }
           }
         });
-        ws.send(JSON.stringify({ type: 'shoot', hit }));
-        broadcastToShooter({ type: 'shoot_effect', shooter: pid, hit });
+        ws.send(JSON.stringify({ type: 'shoot', hit: true }));
         return;
       }
 
-      // ЧАТ
       if (d.type === 'chat' && d.msg) {
         const msg = String(d.msg).replace(/[<>]/g, '').trim().substring(0, 200);
-        if (msg) broadcastToShooter({ type: 'chat', name: p.name, msg });
+        if (msg) broadcastShooter({ type: 'chat', name: p.name, msg });
       }
-
-    } catch (e) {
-      console.error('WS Error:', e);
-    }
+    } catch (e) { console.error('WS:', e); }
   });
 
   ws.on('close', () => {
@@ -181,16 +119,11 @@ wss.on('connection', (ws) => {
       if (p.game === 'shooter') {
         shooter.red = shooter.red.filter(id => id !== pid);
         shooter.blue = shooter.blue.filter(id => id !== pid);
-        shooter.waitingPlayers = shooter.waitingPlayers.filter(id => id !== pid);
-        if (shooter.state === ShooterState.PLAYING) {
-          if (shooter.red.length < 1 || shooter.blue.length < 1) {
-            endRound();
-          }
-        }
+        shooter.waiting = shooter.waiting.filter(id => id !== pid);
+        if (shooter.state === 'playing' && (shooter.red.length < 1 || shooter.blue.length < 1)) endRound();
       }
       players.delete(pid);
-      rateLimits.delete(pid);
-      broadcastShooterState();
+      broadcastState();
     }
   });
 
@@ -198,177 +131,85 @@ wss.on('connection', (ws) => {
   ws.on('pong', () => ws.isAlive = true);
 });
 
-// ===== НАЧАЛО РАУНДА =====
 function startRound() {
-  shooter.state = ShooterState.PLAYING;
+  shooter.state = 'playing';
   shooter.roundTimer = 180;
-  shooter.redScore = 0;
-  shooter.blueScore = 0;
-  
+  shooter.redScore = 0; shooter.blueScore = 0;
   shooter.red.forEach(pid => {
     const p = players.get(pid);
-    if (p) {
-      p.health = 100;
-      p.x = -20 + Math.random() * 5;
-      p.z = (Math.random() - 0.5) * 20;
-      p.y = 1;
-      p.ws.send(JSON.stringify({ type: 'round_start', team: 'red', time: 180, map: shooter.map }));
-    }
+    if (p) { p.health = 100; p.x = -20 + Math.random() * 5; p.z = (Math.random() - 0.5) * 20; p.y = 1; p.ws.send(JSON.stringify({ type: 'round_start', team: 'red', time: 180 })); }
   });
-  
   shooter.blue.forEach(pid => {
     const p = players.get(pid);
-    if (p) {
-      p.health = 100;
-      p.x = 20 + Math.random() * 5;
-      p.z = (Math.random() - 0.5) * 20;
-      p.y = 1;
-      p.ws.send(JSON.stringify({ type: 'round_start', team: 'blue', time: 180, map: shooter.map }));
-    }
+    if (p) { p.health = 100; p.x = 20 + Math.random() * 5; p.z = (Math.random() - 0.5) * 20; p.y = 1; p.ws.send(JSON.stringify({ type: 'round_start', team: 'blue', time: 180 })); }
   });
-  
-  // Ждущие игроки тоже начинают
-  shooter.waitingPlayers.forEach(pid => {
+  shooter.waiting.forEach(pid => {
     const p = players.get(pid);
     if (p) {
-      p.health = 100;
-      p.team = Math.random() > 0.5 ? 'red' : 'blue';
-      p.x = p.team === 'red' ? -20 : 20;
-      p.z = (Math.random() - 0.5) * 20;
-      p.y = 1;
-      if (p.team === 'red') shooter.red.push(pid);
-      else shooter.blue.push(pid);
-      p.ws.send(JSON.stringify({ type: 'round_start', team: p.team, time: 180, map: shooter.map }));
+      p.health = 100; p.team = Math.random() > 0.5 ? 'red' : 'blue';
+      p.x = p.team === 'red' ? -20 : 20; p.z = (Math.random() - 0.5) * 20; p.y = 1;
+      if (p.team === 'red') shooter.red.push(pid); else shooter.blue.push(pid);
+      p.ws.send(JSON.stringify({ type: 'round_start', team: p.team, time: 180 }));
     }
   });
-  shooter.waitingPlayers = [];
-  
-  broadcastShooterState();
-  
+  shooter.waiting = [];
+  broadcastState();
   shooter.roundInterval = setInterval(() => {
     shooter.roundTimer--;
-    if (shooter.roundTimer <= 0) {
-      endRound();
-    } else {
-      broadcastToShooter({ type: 'timer', time: shooter.roundTimer });
-    }
+    if (shooter.roundTimer <= 0) endRound();
+    else broadcastShooter({ type: 'timer', time: shooter.roundTimer });
   }, 1000);
 }
 
-// ===== КОНЕЦ РАУНДА =====
 function endRound() {
-  if (shooter.roundInterval) {
-    clearInterval(shooter.roundInterval);
-    shooter.roundInterval = null;
-  }
-  
-  const winner = shooter.redScore > shooter.blueScore ? 'red' : 
-                 shooter.blueScore > shooter.redScore ? 'blue' : 'draw';
-  
-  broadcastToShooter({ 
-    type: 'round_end', 
-    winner, 
-    redScore: shooter.redScore, 
-    blueScore: shooter.blueScore 
-  });
-  
+  if (shooter.roundInterval) { clearInterval(shooter.roundInterval); shooter.roundInterval = null; }
+  const winner = shooter.redScore > shooter.blueScore ? 'red' : shooter.blueScore > shooter.redScore ? 'blue' : 'draw';
+  broadcastShooter({ type: 'round_end', winner, redScore: shooter.redScore, blueScore: shooter.blueScore });
   setTimeout(() => {
-    shooter.state = ShooterState.LOBBY;
-    shooter.red = [];
-    shooter.blue = [];
-    shooter.waitingPlayers = [];
-    players.forEach(p => {
-      if (p.game === 'shooter') {
-        p.team = null;
-        p.ws.send(JSON.stringify({ type: 'back_to_lobby' }));
-      }
-    });
-    broadcastShooterState();
+    shooter.state = 'lobby'; shooter.red = []; shooter.blue = []; shooter.waiting = [];
+    players.forEach(p => { if (p.game === 'shooter') { p.team = null; p.ws.send(JSON.stringify({ type: 'back_to_lobby' })); } });
+    broadcastState();
   }, 5000);
 }
 
-// ===== РАССЫЛКА СОСТОЯНИЯ ШУТЕРА =====
-function broadcastShooterState() {
-  const shooterPlayers = Array.from(players.values()).filter(p => p.game === 'shooter');
-  const data = {
-    type: 'shooter_state',
-    state: shooter.state,
-    playerCount: shooterPlayers.length,
-    map: shooter.map,
-    red: shooter.red.map(id => players.get(id)?.name).filter(Boolean),
-    blue: shooter.blue.map(id => players.get(id)?.name).filter(Boolean),
-    redScore: shooter.redScore,
-    blueScore: shooter.blueScore,
-    time: shooter.roundTimer
-  };
-  shooterPlayers.forEach(p => {
-    try { p.ws.send(JSON.stringify(data)); } catch(e) {}
-  });
+function broadcastState() {
+  const sp = Array.from(players.values()).filter(p => p.game === 'shooter');
+  const data = { type: 'shooter_state', state: shooter.state, playerCount: sp.length, map: shooter.map, red: shooter.red.map(id => players.get(id)?.name).filter(Boolean), blue: shooter.blue.map(id => players.get(id)?.name).filter(Boolean), redScore: shooter.redScore, blueScore: shooter.blueScore, time: shooter.roundTimer };
+  sp.forEach(p => { try { p.ws.send(JSON.stringify(data)); } catch(e) {} });
 }
 
-function broadcastToShooter(data) {
+function broadcastShooter(data) {
   const msg = JSON.stringify(data);
-  players.forEach(p => {
-    if (p.ws.readyState === 1 && p.game === 'shooter') {
-      try { p.ws.send(msg); } catch(e) {}
-    }
-  });
+  players.forEach(p => { if (p.ws.readyState === 1 && p.game === 'shooter') { try { p.ws.send(msg); } catch(e) {} } });
 }
 
-// ===== ИГРОВОЙ ЦИКЛ =====
 setInterval(() => {
   players.forEach(p => {
     if (p.ws.readyState !== 1) return;
-    
-    // Физика только для шутера во время раунда
-    if (p.game === 'shooter' && shooter.state === ShooterState.PLAYING) {
+    if (p.game === 'shooter' && shooter.state === 'playing') {
       const fx = -Math.sin(p.yaw), fz = -Math.cos(p.yaw);
       const rx = Math.cos(p.yaw), rz = -Math.sin(p.yaw);
-      const newX = p.x + (p.input.f * fx + p.input.r * rx) * 0.15;
-      const newZ = p.z + (p.input.f * fz + p.input.r * rz) * 0.15;
-      
-      // Античит: проверка скорости
-      const dist = Math.hypot(newX - p.x, newZ - p.z);
-      if (dist <= MAX_SPEED) {
-        p.x = Math.max(-50, Math.min(50, newX));
-        p.z = Math.max(-50, Math.min(50, newZ));
-      }
-      
+      const nx = p.x + (p.input.f * fx + p.input.r * rx) * 0.15;
+      const nz = p.z + (p.input.f * fz + p.input.r * rz) * 0.15;
+      const dist = Math.hypot(nx - p.x, nz - p.z);
+      if (dist <= 0.5) { p.x = Math.max(-50, Math.min(50, nx)); p.z = Math.max(-50, Math.min(50, nz)); }
       if (p.input.jump && p.y <= 1.1) { p.y = 3.2; p.input.jump = false; }
       if (p.y > 1) p.y -= 0.22;
       if (p.y < 1) p.y = 1;
-
       const nearby = [];
-      const allTeam = [...shooter.red, ...shooter.blue];
-      allTeam.forEach(oid => {
-        const other = players.get(oid);
-        if (other && oid !== p.id && Math.hypot(other.x - p.x, other.z - p.z) < 60) {
-          nearby.push({ 
-            id: oid, name: other.name, 
-            x: other.x, y: other.y, z: other.z, 
-            yaw: other.yaw, team: other.team, health: other.health 
-          });
+      [...shooter.red, ...shooter.blue].forEach(oid => {
+        const o = players.get(oid);
+        if (o && oid !== p.id && Math.hypot(o.x - p.x, o.z - p.z) < 60) {
+          nearby.push({ id: oid, name: o.name, x: o.x, y: o.y, z: o.z, yaw: o.yaw, team: o.team, health: o.health });
         }
       });
-      
-      p.ws.send(JSON.stringify({ 
-        type: 'snapshot', 
-        players: nearby, 
-        health: p.health, 
-        team: p.team,
-        scores: { red: shooter.redScore, blue: shooter.blueScore }
-      }));
+      p.ws.send(JSON.stringify({ type: 'snapshot', players: nearby, health: p.health, team: p.team }));
     }
   });
 }, 1000 / 24);
 
-// Heartbeat
 setInterval(() => {
-  wss.clients.forEach(ws => {
-    if (!ws.isAlive) return ws.terminate();
-    ws.isAlive = false;
-    ws.ping();
-  });
+  wss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); });
 }, 15000);
 
-server.listen(PORT, '0.0.0.0', () => console.log(`✅ Server running on port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`✅ Server on ${PORT}`));
