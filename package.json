@@ -1,10 +1,11 @@
 {
   "name": "roblox-3d-ultimate",
-  "version": "2.0.0",
-  "description": "Roblox 3D Ultimate - Multiplayer Game",
+  "version": "3.0.0",
+  "description": "Roblox 3D Ultimate - Multiplayer Game with Editor",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
