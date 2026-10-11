@@ -2,569 +2,296 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Roblox 3D Ultimate</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
-body{background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;min-height:100vh;overflow-x:hidden}
-.navbar{display:flex;align-items:center;padding:12px 24px;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border-bottom:2px solid #00d9ff;position:sticky;top:0;z-index:100}
-.logo{font-size:28px;font-weight:800;margin-right:30px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.nav-right{display:flex;align-items:center;gap:12px;margin-left:auto}
-.nav-btn{padding:8px 16px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;transition:.3s;pointer-events:auto}
-.nav-btn:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(0,217,255,0.4)}
-.online-count{background:rgba(46,213,115,0.2);border:1px solid #2ed573;padding:6px 14px;border-radius:20px;font-size:13px;color:#2ed573}
-.container{display:flex;min-height:calc(100vh - 65px)}
-.sidebar{width:240px;padding:24px 0;background:rgba(0,0,0,0.3);border-right:2px solid #00d9ff}
-.sidebar-title{font-size:11px;color:#00d9ff;letter-spacing:2px;padding:0 20px;margin-bottom:10px;text-transform:uppercase}
-.sidebar-item{padding:12px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.3s;color:#fff;margin:4px 12px;border-radius:10px;pointer-events:auto}
-.sidebar-item:hover{background:rgba(0,217,255,0.2);transform:translateX(5px)}
-.sidebar-item.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);font-weight:700}
-.main-content{flex:1;padding:28px;overflow-y:auto}
+body{background:#0a0a1a;color:#fff;min-height:100vh}
+
+/* РЕГИСТРАЦИЯ */
+#reg-screen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:9999}
+#reg-screen.hidden{display:none}
+.reg-box{background:linear-gradient(135deg,#1a1a3e,#2a2a5e);border:2px solid #00d9ff;border-radius:20px;padding:40px;max-width:400px;width:90%;text-align:center}
+.reg-box h1{color:#00d9ff;margin-bottom:20px;font-size:28px}
+.reg-box p{color:#aaa;margin-bottom:20px}
+.reg-input{width:100%;padding:14px;margin:10px 0;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;border-radius:10px;color:#fff;font-size:16px;outline:none}
+.reg-btn{width:100%;padding:14px;margin-top:10px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:700;cursor:pointer;transition:.3s}
+.reg-btn:hover{transform:scale(1.05);box-shadow:0 5px 20px rgba(0,217,255,0.5)}
+.reg-btn:disabled{background:#555;cursor:not-allowed;transform:none;box-shadow:none}
+.reg-error{color:#ff4757;font-size:13px;min-height:20px;margin-top:8px}
+
+/* ГЛАВНОЕ МЕНЮ */
+#main-menu{display:none;min-height:100vh}
+#main-menu.active{display:block}
+.navbar{display:flex;align-items:center;padding:14px 24px;background:rgba(0,0,0,0.6);border-bottom:2px solid #00d9ff;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.logo{font-size:26px;font-weight:800;background:linear-gradient(90deg,#00d9ff,#7b2cbf);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-right{margin-left:auto;display:flex;gap:12px;align-items:center}
+.nav-user{background:linear-gradient(135deg,#00d9ff,#7b2cbf);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;cursor:pointer}
+.nav-btn{padding:8px 16px;background:rgba(0,217,255,0.2);border:1px solid #00d9ff;border-radius:8px;color:#fff;cursor:pointer;font-size:14px;transition:.3s}
+.nav-btn:hover{background:rgba(0,217,255,0.4);transform:scale(1.05)}
+
+.menu-body{display:flex;min-height:calc(100vh - 70px)}
+.sidebar{width:220px;background:rgba(0,0,0,0.3);border-right:2px solid #00d9ff;padding:20px 0}
+.side-item{padding:12px 20px;cursor:pointer;margin:4px 12px;border-radius:10px;transition:.3s;display:flex;align-items:center;gap:10px}
+.side-item:hover{background:rgba(0,217,255,0.2)}
+.side-item.active{background:linear-gradient(90deg,#00d9ff,#7b2cbf);font-weight:700}
+
+.content{flex:1;padding:30px}
 .hero{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:40px;margin-bottom:30px;position:relative;overflow:hidden}
-.hero::before{content:'🎮';position:absolute;right:40px;top:50%;transform:translateY(-50%);font-size:120px;opacity:0.3}
-.hero h1{font-size:36px;margin-bottom:12px}
-.hero p{font-size:15px;opacity:0.9;margin-bottom:20px;max-width:600px}
-.play-btn{padding:14px 32px;background:linear-gradient(90deg,#2ed573,#7bed9f);border:none;border-radius:30px;color:#000;font-weight:700;font-size:16px;cursor:pointer;transition:.3s;box-shadow:0 6px 20px rgba(46,213,115,0.4);pointer-events:auto}
-.play-btn:hover{transform:scale(1.05)}
-.section-title{font-size:24px;font-weight:700;margin:24px 0 18px;color:#00d9ff}
-.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
-.game-card{cursor:pointer;transition:transform .3s,box-shadow .3s;background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3);pointer-events:auto}
-.game-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 10px 30px rgba(0,217,255,0.5);border-color:#00d9ff}
-.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:64px;position:relative}
-.game-badge{position:absolute;top:10px;left:10px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700}
-.badge-hot{background:#ff4757;color:#fff}
-.badge-rp{background:#2ed573;color:#000}
-.badge-horror{background:#8B4513;color:#fff}
-.badge-sky{background:#3742fa;color:#fff}
-.badge-new{background:#ffa502;color:#000}
-.game-info{padding:14px}
-.game-title{font-size:16px;font-weight:700;margin-bottom:6px}
-.game-desc{font-size:11px;color:#aaa;margin-bottom:8px}
-.game-meta{display:flex;justify-content:space-between;font-size:12px;color:#00d9ff}
+.hero::after{content:'';position:absolute;right:30px;top:50%;transform:translateY(-50%);font-size:100px;opacity:0.3}
+.hero h1{font-size:32px;margin-bottom:10px}
+.hero p{font-size:15px;opacity:0.9;margin-bottom:20px}
+.hero-btn{padding:14px 32px;background:linear-gradient(90deg,#2ed573,#7bed9f);border:none;border-radius:30px;color:#000;font-weight:700;font-size:16px;cursor:pointer;transition:.3s}
+.hero-btn:hover{transform:scale(1.05)}
 
-#settings-panel,#studio-panel,#editor-panel{position:fixed;right:20px;top:80px;width:340px;background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:12px;padding:20px;z-index:150;display:none;max-height:80vh;overflow-y:auto;pointer-events:auto;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
-#settings-panel.active,#studio-panel.active,#editor-panel.active{display:block}
-.panel-title{font-size:20px;font-weight:700;color:#00d9ff;margin-bottom:16px;border-bottom:2px solid #00d9ff;padding-bottom:8px}
-.settings-input{width:100%;padding:10px;margin:8px 0;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;border-radius:8px;color:#fff;font-size:14px;outline:none;pointer-events:auto}
-.panel-btn{width:100%;padding:10px;margin:6px 0;background:linear-gradient(90deg,#00d9ff,#7b2cbf);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;pointer-events:auto;transition:.3s}
-.panel-btn:hover{transform:scale(1.02)}
-.panel-btn.danger{background:linear-gradient(90deg,#ff4757,#ff6b81)}
+.section-title{font-size:22px;font-weight:700;margin:24px 0 16px;color:#00d9ff}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+.game-card{background:linear-gradient(135deg,#16213e,#1a1a2e);border-radius:15px;overflow:hidden;border:2px solid rgba(0,217,255,0.3);cursor:pointer;transition:.3s}
+.game-card:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(0,217,255,0.4);border-color:#00d9ff}
+.game-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:56px;position:relative}
+.game-badge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#ff4757;color:#fff}
+.game-info{padding:12px}
+.game-info h3{font-size:15px;margin-bottom:4px}
+.game-info p{font-size:11px;color:#aaa}
+.game-info .meta{font-size:11px;color:#00d9ff;margin-top:6px}
 
-#game-ui{position:fixed;inset:0;display:none;background:#000;z-index:2000}
+/* ИГРА */
+#game-screen{position:fixed;inset:0;display:none;background:#000;z-index:2000}
+#game-screen.active{display:block}
 #game-canvas{width:100%;height:100%;display:block}
-#exit-game{position:fixed;top:20px;left:20px;padding:12px 22px;background:linear-gradient(90deg,#ff4757,#ff6b81);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:15px;z-index:10;font-weight:700;pointer-events:auto}
-#hud-info{position:fixed;top:20px;right:20px;background:rgba(0,0,0,0.7);color:#00d9ff;padding:10px 18px;border-radius:10px;font-size:15px;z-index:10;border:2px solid #00d9ff;pointer-events:none}
-#chat-box{position:fixed;top:80px;left:20px;width:300px;max-height:180px;overflow-y:auto;background:rgba(22,33,62,0.9);border-radius:12px;padding:12px;font-size:13px;color:#fff;z-index:10;border:2px solid #00d9ff;pointer-events:auto}
-#chat-input{width:100%;padding:8px;background:rgba(0,217,255,0.1);border:2px solid #00d9ff;color:#fff;border-radius:6px;margin-top:8px;outline:none;pointer-events:auto}
-.msg{margin:4px 0;padding:4px 8px;background:rgba(0,0,0,0.3);border-radius:6px}
-.msg .n{font-weight:bold;color:#00d9ff}
-.msg.sys{color:#2ed573;font-style:italic}
-
-#shooter-hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:15}
-#crosshair{position:fixed;top:50%;left:50%;width:20px;height:20px;border:2px solid rgba(255,255,255,0.8);border-radius:50%;transform:translate(-50%,-50%)}
-#health-bar-container{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);width:200px;height:20px;background:rgba(0,0,0,0.5);border-radius:10px;overflow:hidden;border:2px solid #00d9ff}
-#health-bar{width:100%;height:100%;background:linear-gradient(90deg,#ff4757,#2ed573);transition:width .3s}
-#score-board{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:10px 20px;border-radius:10px;font-size:18px;font-weight:700;z-index:10;pointer-events:none}
-#timer-display{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);padding:8px 16px;border-radius:10px;font-size:16px;z-index:10;pointer-events:none}
-
-#mobile-hud{display:none;position:fixed;inset:0;pointer-events:none;z-index:25}
-#mobile-joy{position:absolute;bottom:30px;left:30px;width:120px;height:120px;background:rgba(0,217,255,0.2);border-radius:50%;border:3px solid #00d9ff;pointer-events:auto}
-#mobile-joy-knob{position:absolute;top:50%;left:50%;width:50px;height:50px;background:linear-gradient(135deg,#00d9ff,#7b2cbf);border-radius:50%;transform:translate(-50%,-50%);border:3px solid #fff}
-#mobile-jump{position:absolute;bottom:40px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#2ed573,#7bed9f);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto;font-weight:700}
-#mobile-fire{position:absolute;bottom:130px;right:40px;width:70px;height:70px;background:linear-gradient(135deg,#ff4757,#ff6b81);border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;pointer-events:auto;font-weight:700}
-
-#lobby-screen{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;align-items:center;justify-content:center;z-index:3000;flex-direction:column;pointer-events:auto}
-#lobby-screen.active{display:flex}
-.lobby-box{background:linear-gradient(135deg,#16213e,#1a1a2e);border:2px solid #00d9ff;border-radius:20px;padding:40px;max-width:600px;width:90%;text-align:center}
-.lobby-title{font-size:28px;color:#00d9ff;margin-bottom:20px}
-.lobby-info{font-size:18px;margin:12px 0}
-.lobby-btn{padding:12px 24px;margin:8px;background:linear-gradient(90deg,#00d9ff,#7b2cbf);border:none;border-radius:10px;color:#fff;font-size:16px;cursor:pointer;pointer-events:auto}
-.lobby-btn:hover{transform:scale(1.05)}
-.lobby-btn.red{background:linear-gradient(90deg,#ff4757,#ff6b81)}
-.lobby-btn.blue{background:linear-gradient(90deg,#3742fa,#5352ed)}
-.team-list{display:flex;justify-content:space-around;margin:20px 0;gap:20px}
-.team-box{padding:20px;border-radius:10px;min-width:200px;flex:1}
-.team-box.red{background:rgba(255,71,87,0.2);border:2px solid #ff4757}
-.team-box.blue{background:rgba(55,66,250,0.2);border:2px solid #3742fa}
-
-/* РЕДАКТОР */
-#editor-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);display:none;z-index:4000;flex-direction:column}
-#editor-overlay.active{display:flex}
-#editor-topbar{height:50px;background:#1e1e2e;display:flex;align-items:center;padding:0 20px;border-bottom:2px solid #00d9ff;gap:10px}
-#editor-topbar .logo{font-size:20px}
-.editor-btn{padding:8px 16px;background:#00d9ff;border:none;border-radius:6px;color:#000;font-weight:600;cursor:pointer;pointer-events:auto}
-.editor-btn.danger{background:#ff4757;color:#fff}
-#editor-body{display:flex;flex:1;overflow:hidden}
-#editor-left{width:220px;background:#16213e;border-right:2px solid #00d9ff;overflow-y:auto;padding:10px}
-#editor-viewport{flex:1;position:relative;background:#000}
-#editor-canvas{width:100%;height:100%;display:block}
-#editor-right{width:280px;background:#16213e;border-left:2px solid #00d9ff;overflow-y:auto;padding:10px}
-.editor-section{margin-bottom:16px;padding:12px;background:rgba(0,0,0,0.3);border-radius:8px}
-.editor-section h3{color:#00d9ff;margin-bottom:8px;font-size:14px}
-.editor-input{width:100%;padding:8px;margin:4px 0;background:rgba(0,217,255,0.1);border:1px solid #00d9ff;border-radius:6px;color:#fff;font-size:13px;pointer-events:auto}
-.editor-obj-item{padding:8px;margin:4px 0;background:rgba(0,217,255,0.1);border-radius:6px;cursor:pointer;font-size:13px;pointer-events:auto}
-.editor-obj-item:hover{background:rgba(0,217,255,0.3)}
-.editor-obj-item.selected{background:#00d9ff;color:#000}
-
-@media(max-width:768px){
-  .sidebar{display:none}
-  .main-content{padding:16px}
-  .hero{padding:20px}
-  .hero h1{font-size:24px}
-  .games-grid{grid-template-columns:1fr}
-  #mobile-hud{display:block}
-  #chat-box{width:200px;font-size:11px}
-  #editor-overlay{display:none !important}
-}
+#exit-btn{position:fixed;top:16px;left:16px;padding:10px 18px;background:#ff4757;color:#fff;border:none;border-radius:8px;cursor:pointer;z-index:10;font-weight:700}
+#hud{position:fixed;top:16px;right:16px;background:rgba(0,0,0,0.7);color:#00d9ff;padding:10px 16px;border-radius:8px;z-index:10;font-size:14px;border:1px solid #00d9ff}
+#chat{position:fixed;bottom:16px;left:16px;width:280px;max-height:160px;overflow-y:auto;background:rgba(0,0,0,0.7);border-radius:10px;padding:10px;z-index:10;border:1px solid #00d9ff}
+#chat-input{width:100%;padding:6px;background:rgba(0,217,255,0.1);border:1px solid #00d9ff;color:#fff;border-radius:4px;margin-top:6px;font-size:12px}
+.chat-msg{font-size:12px;margin:3px 0;padding:3px 6px;background:rgba(0,0,0,0.3);border-radius:4px}
+.chat-msg .name{font-weight:bold;color:#00d9ff}
+.chat-msg.sys{color:#2ed573;font-style:italic}
 </style>
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="logo">🧱 ROBLOX 3D</div>
-  <div class="nav-right">
-    <div class="online-count">🟢 <span id="online-count">0</span> онлайн</div>
-    <button class="nav-btn" id="btn-editor">🎮 Редактор</button>
-    <button class="nav-btn" id="btn-studio">️ Студия</button>
-    <button class="nav-btn" id="btn-settings">⚙️ Настройки</button>
+<!-- РЕГИСТРАЦИЯ -->
+<div id="reg-screen">
+  <div class="reg-box">
+    <h1>🎮 Roblox 3D</h1>
+    <p>Введите никнейм для входа</p>
+    <input type="text" id="reg-input" class="reg-input" placeholder="Ваш никнейм" maxlength="16" autocomplete="off">
+    <div id="reg-error" class="reg-error"></div>
+    <button id="reg-btn" class="reg-btn" disabled>ИГРАТЬ</button>
   </div>
-</nav>
+</div>
 
-<div class="container">
-  <aside class="sidebar">
-    <div class="sidebar-title">Категории</div>
-    <div class="sidebar-item active"> Главная</div>
-    <div class="sidebar-item">🎮 Все игры</div>
-    <div class="sidebar-item">⚔️ Экшен</div>
-    <div class="sidebar-item">👻 Хорроры</div>
-    <div class="sidebar-item">🏎️ Гонки</div>
-  </aside>
-
-  <main class="main-content">
-    <div class="hero">
-      <h1>Добро пожаловать в ROBLOX 3D ULTIMATE 🚀</h1>
-      <p>Пять полноценных 3D-миров: шутеры, лабиринт с Крысой, город, самолёт и гонки. Мультиплеер, звук, FXAA — всё в браузере.</p>
-      <button class="play-btn" id="btn-play-hero">▶ ИГРАТЬ СЕЙЧАС</button>
+<!-- ГЛАВНОЕ МЕНЮ -->
+<div id="main-menu">
+  <nav class="navbar">
+    <div class="logo">🧱 ROBLOX 3D</div>
+    <div class="nav-right">
+      <div class="nav-user" id="user-avatar">?</div>
+      <button class="nav-btn" id="btn-settings">⚙️ Настройки</button>
     </div>
-
-    <h2 class="section-title">🔥 Популярные игры</h2>
-    <div class="games-grid">
-      <div class="game-card" data-game="shooter">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">
-          <span class="game-badge badge-hot">🔥 HOT</span>🔫
+  </nav>
+  <div class="menu-body">
+    <aside class="sidebar">
+      <div class="side-item active">🏠 Главная</div>
+      <div class="side-item"> Все игры</div>
+      <div class="side-item">⚔️ Экшен</div>
+      <div class="side-item"> Хорроры</div>
+      <div class="side-item">🏎️ Гонки</div>
+    </aside>
+    <main class="content">
+      <div class="hero">
+        <h1>Добро пожаловать в Roblox 3D! 🚀</h1>
+        <p>Мультиплеерные 3D-игры прямо в браузере. Шутеры, гонки, хорроры и многое другое.</p>
+        <button class="hero-btn" id="btn-play-now">▶ ИГРАТЬ СЕЙЧАС</button>
+      </div>
+      <h2 class="section-title">🔥 Популярные игры</h2>
+      <div class="games-grid">
+        <div class="game-card" data-game="shooter">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#ff4757,#ff6b81)">
+            <span class="game-badge">🔥 HOT</span>🔫
+          </div>
+          <div class="game-info">
+            <h3>Gun Arena 3D</h3>
+            <p>Командный шутер 2v2</p>
+            <div class="meta">⭐ 9.2 • 👥 2.4K</div>
+          </div>
         </div>
-        <div class="game-info">
-          <div class="game-title">Gun Arena 3D</div>
-          <div class="game-desc">Командный шутер 2v2. Раунды по 3 минуты.</div>
-          <div class="game-meta"><span>⭐ 9.2 •  2.4K</span><span>PvP</span></div>
+        <div class="game-card" data-game="brookhaven">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)">
+            <span class="game-badge" style="background:#2ed573;color:#000">RP</span>🏡
+          </div>
+          <div class="game-info">
+            <h3>Brookhaven City</h3>
+            <p>Город: дома, бассейн</p>
+            <div class="meta">⭐ 8.8 • 👥 1.1K</div>
+          </div>
+        </div>
+        <div class="game-card" data-game="cheese">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)">
+            <span class="game-badge" style="background:#8B4513">HORROR</span>🧀
+          </div>
+          <div class="game-info">
+            <h3>Cheese Maze</h3>
+            <p>Лабиринт с Крысой</p>
+            <div class="meta">⭐ 9.5 • 👥 3.7K</div>
+          </div>
+        </div>
+        <div class="game-card" data-game="airplane">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)">
+            <span class="game-badge" style="background:#3742fa">SKY</span>✈️
+          </div>
+          <div class="game-info">
+            <h3>Sky Pilot 3D</h3>
+            <p>Полёты над городом</p>
+            <div class="meta">⭐ 8.6 • 👥 890</div>
+          </div>
+        </div>
+        <div class="game-card" data-game="racing">
+          <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)">
+            <span class="game-badge" style="background:#ffa502;color:#000">NEW</span>🏎️
+          </div>
+          <div class="game-info">
+            <h3>Turbo Kart Racing</h3>
+            <p>Гонки с нитро</p>
+            <div class="meta">⭐ 9.0 • 👥 1.9K</div>
+          </div>
         </div>
       </div>
-      <div class="game-card" data-game="brookhaven">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#2ed573,#7bed9f)">
-          <span class="game-badge badge-rp">RP</span>🏡
-        </div>
-        <div class="game-info">
-          <div class="game-title">Brookhaven City</div>
-          <div class="game-desc">Город: дома, бассейн, машина.</div>
-          <div class="game-meta"><span>⭐ 8.8 • 👥 1.1K</span><span>Ролевая</span></div>
-        </div>
-      </div>
-      <div class="game-card" data-game="cheese">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#8B4513,#D2691E)">
-          <span class="game-badge badge-horror">HORROR</span>
-        </div>
-        <div class="game-info">
-          <div class="game-title">Cheese Maze</div>
-          <div class="game-desc">Соберите сыр в тёмном лабиринте.</div>
-          <div class="game-meta"><span>⭐ 9.5 • 👥 3.7K</span><span>Хоррор</span></div>
-        </div>
-      </div>
-      <div class="game-card" data-game="airplane">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#3742fa,#5352ed)">
-          <span class="game-badge badge-sky">SKY</span>✈️
-        </div>
-        <div class="game-info">
-          <div class="game-title">Sky Pilot 3D</div>
-          <div class="game-desc">Пролетите курс из 12 колец.</div>
-          <div class="game-meta"><span>⭐ 8.6 • 👥 890</span><span>Сим</span></div>
-        </div>
-      </div>
-      <div class="game-card" data-game="racing">
-        <div class="game-thumb" style="background:linear-gradient(135deg,#ffa502,#ff6348)">
-          <span class="game-badge badge-new">NEW</span>🏎️
-        </div>
-        <div class="game-info">
-          <div class="game-title">Turbo Kart Racing</div>
-          <div class="game-desc">Круговая трасса, нитро, ИИ-карты.</div>
-          <div class="game-meta"><span>⭐ 9.0 • 👥 1.9K</span><span>Гонки</span></div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<div id="settings-panel">
-  <div class="panel-title">⚙️ Настройки</div>
-  <label style="font-size:13px;color:#aaa">Никнейм:</label>
-  <input type="text" id="settings-name" class="settings-input" placeholder="Введите никнейм" maxlength="16">
-  <button class="panel-btn" id="btn-save-name">💾 Сохранить</button>
-  <div id="settings-msg" style="margin-top:12px;font-size:13px;color:#2ed573"></div>
-</div>
-
-<div id="studio-panel">
-  <div class="panel-title">🛠️ Studio</div>
-  <button class="panel-btn" id="btn-spawn-cube">📦 Спавн куба</button>
-  <button class="panel-btn" id="btn-spawn-sphere">🔵 Спавн сферы</button>
-  <button class="panel-btn" id="btn-change-color">🎨 Случайный цвет</button>
-  <button class="panel-btn danger" id="btn-clear-objects">🗑️ Очистить</button>
-  <div style="margin:12px 0;font-size:12px;color:#aaa">Объекты: <span id="obj-count">0</span></div>
-</div>
-
-<div id="editor-panel">
-  <div class="panel-title">🎮 Редактор игр</div>
-  <div class="editor-section">
-    <h3>📝 Название</h3>
-    <input type="text" id="editor-game-name" class="settings-input" placeholder="Моя игра">
-  </div>
-  <div class="editor-section">
-    <h3>🌍 Размер карты</h3>
-    <input type="range" id="editor-map-size" class="settings-input" min="50" max="200" value="100">
-    <div style="font-size:12px;color:#aaa">Размер: <span id="map-size-value">100</span></div>
-  </div>
-  <div class="editor-section">
-    <h3>️ Объекты</h3>
-    <button class="panel-btn" id="editor-add-wall">🧱 Стена</button>
-    <button class="panel-btn" id="editor-add-tree">🌳 Дерево</button>
-    <button class="panel-btn" id="editor-add-house">🏠 Дом</button>
-  </div>
-  <div class="editor-section">
-    <h3>💾 Сохранить</h3>
-    <button class="panel-btn" id="editor-save">💾 Сохранить JSON</button>
-    <button class="panel-btn" id="editor-load">📂 Загрузить JSON</button>
-    <input type="file" id="editor-file-input" accept=".json" style="display:none">
-  </div>
-  <div class="editor-section">
-    <h3>▶️ Тест</h3>
-    <button class="panel-btn" id="editor-test">▶️ Тестировать игру</button>
+    </main>
   </div>
 </div>
 
-<div id="lobby-screen">
-  <div class="lobby-box">
-    <div class="lobby-title" id="lobby-title">Ожидание игроков...</div>
-    <div class="lobby-info" id="lobby-info">Игроков: 0/4</div>
-    <div id="lobby-content"></div>
-  </div>
-</div>
-
-<div id="editor-overlay">
-  <div id="editor-topbar">
-    <div class="logo" style="font-size:18px"> Editor</div>
-    <button class="editor-btn" id="editor-play">▶️ Play</button>
-    <button class="editor-btn danger" id="editor-stop">⏹ Stop</button>
-    <button class="editor-btn" id="editor-save-scene">💾 Save</button>
-    <button class="editor-btn danger" id="editor-close">✕ Close</button>
-  </div>
-  <div id="editor-body">
-    <div id="editor-left">
-      <div class="editor-section">
-        <h3> Добавить</h3>
-        <button class="panel-btn" id="ed-add-cube">Куб</button>
-        <button class="panel-btn" id="ed-add-sphere">Сфера</button>
-        <button class="panel-btn" id="ed-add-cylinder">Цилиндр</button>
-        <button class="panel-btn" id="ed-add-plane">Плоскость</button>
-      </div>
-      <div class="editor-section">
-        <h3>🌍 Explorer</h3>
-        <div id="editor-explorer"></div>
-      </div>
-    </div>
-    <div id="editor-viewport">
-      <canvas id="editor-canvas"></canvas>
-    </div>
-    <div id="editor-right">
-      <div class="editor-section">
-        <h3>⚙️ Свойства</h3>
-        <div id="editor-properties">
-          <div style="color:#aaa;font-size:13px">Выберите объект</div>
-        </div>
-      </div>
-      <div class="editor-section">
-        <h3> Цвет</h3>
-        <input type="color" id="editor-color" class="settings-input" value="#00d9ff">
-      </div>
-      <div class="editor-section">
-        <h3>📐 Размер</h3>
-        <label style="font-size:12px">X: <input type="range" id="prop-x" min="0.1" max="10" step="0.1" value="1" class="settings-input"></label>
-        <label style="font-size:12px">Y: <input type="range" id="prop-y" min="0.1" max="10" step="0.1" value="1" class="settings-input"></label>
-        <label style="font-size:12px">Z: <input type="range" id="prop-z" min="0.1" max="10" step="0.1" value="1" class="settings-input"></label>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="game-ui">
+<!-- ИГРА -->
+<div id="game-screen">
   <canvas id="game-canvas"></canvas>
-  <button id="exit-game">🏠 В меню</button>
-  <div id="hud-info">Игроков: <span id="player-count">1</span></div>
-  <div id="score-board" style="display:none"><span id="red-score" style="color:#ff4757">0</span> : <span id="blue-score" style="color:#3742fa">0</span></div>
-  <div id="timer-display" style="display:none">⏱️ <span id="timer-value">3:00</span></div>
-  <div id="chat-box">
+  <button id="exit-btn">🏠 Выйти</button>
+  <div id="hud">Игроков: <span id="player-count">1</span></div>
+  <div id="chat">
     <div id="chat-messages"></div>
     <input type="text" id="chat-input" placeholder="Сообщение...">
-  </div>
-  <div id="shooter-hud">
-    <div id="crosshair"></div>
-    <div id="health-bar-container"><div id="health-bar"></div></div>
-  </div>
-  <div id="mobile-hud">
-    <div id="mobile-joy"><div id="mobile-joy-knob"></div></div>
-    <div id="mobile-jump">⬆️</div>
-    <div id="mobile-fire">🔥</div>
   </div>
 </div>
 
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { EffectComposer } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
-import { ShaderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/ShaderPass.js';
-import { FXAAShader } from 'https://unpkg.com/three@0.160.0/examples/jsm/shaders/FXAAShader.js';
 
-const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768;
+// ===== СОСТОЯНИЕ =====
 const State = {
-  ws: null, playerId: null, playerName: 'Guest', currentGame: null,
-  scene: null, camera: null, renderer: null, composer: null, playerMesh: null,
-  otherPlayers: new Map(), keys: {}, yaw: 0, pitch: 0,
-  studioObjects: [], cheeseWalls: [],
-  audioCtx: null, shootSound: null, weaponMesh: null, health: 100,
-  joystick: { x: 0, y: 0, active: false },
-  shooterState: 'lobby', myTeam: null,
-  editorObjects: [], selectedEditorObj: null, editorPlaying: false
+  playerName: 'Guest',
+  currentGame: null,
+  scene: null, camera: null, renderer: null, player: null,
+  keys: {}, yaw: 0, pitch: 0,
+  ws: null, playerId: null,
+  otherPlayers: new Map()
 };
 
-const DOM = {
-  gameUI: document.getElementById('game-ui'),
-  canvas: document.getElementById('game-canvas'),
-  chatMessages: document.getElementById('chat-messages'),
-  chatInput: document.getElementById('chat-input'),
-  playerCount: document.getElementById('player-count'),
-  onlineCount: document.getElementById('online-count'),
-  studioPanel: document.getElementById('studio-panel'),
-  settingsPanel: document.getElementById('settings-panel'),
-  editorPanel: document.getElementById('editor-panel'),
-  settingsName: document.getElementById('settings-name'),
-  settingsMsg: document.getElementById('settings-msg'),
-  objCount: document.getElementById('obj-count'),
-  shooterHud: document.getElementById('shooter-hud'),
-  healthBar: document.getElementById('health-bar'),
-  lobbyScreen: document.getElementById('lobby-screen'),
-  lobbyTitle: document.getElementById('lobby-title'),
-  lobbyInfo: document.getElementById('lobby-info'),
-  lobbyContent: document.getElementById('lobby-content'),
-  scoreBoard: document.getElementById('score-board'),
-  timerDisplay: document.getElementById('timer-display'),
-  timerValue: document.getElementById('timer-value'),
-  redScore: document.getElementById('red-score'),
-  blueScore: document.getElementById('blue-score'),
-  editorOverlay: document.getElementById('editor-overlay')
-};
+// ===== DOM =====
+const $ = id => document.getElementById(id);
 
-// ===== ИНИЦИАЛИЗАЦИЯ =====
-function init() {
+// ===== РЕГИСТРАЦИЯ =====
+function initRegistration() {
   const saved = localStorage.getItem('r3d_name');
-  if (saved) { State.playerName = saved; DOM.settingsName.value = saved; }
-  bindAllEvents();
-  console.log('✅ App initialized, playerName:', State.playerName);
-  if (isMobile) console.log('📱 Mobile device detected');
+  if (saved && saved.length >= 2) {
+    State.playerName = saved;
+    showMenu();
+    return;
+  }
+
+  const input = $('reg-input');
+  const btn = $('reg-btn');
+  const error = $('reg-error');
+
+  input.addEventListener('input', () => {
+    const v = input.value.trim();
+    if (v.length >= 2 && v.length <= 16) {
+      error.textContent = '';
+      btn.disabled = false;
+    } else {
+      error.textContent = v.length === 0 ? '' : (v.length < 2 ? 'Минимум 2 символа' : 'Максимум 16');
+      btn.disabled = true;
+    }
+  });
+
+  btn.addEventListener('click', () => {
+    const name = input.value.trim();
+    if (name.length >= 2 && name.length <= 16) {
+      State.playerName = name;
+      localStorage.setItem('r3d_name', name);
+      showMenu();
+    }
+  });
+
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !btn.disabled) btn.click();
+  });
+
+  setTimeout(() => input.focus(), 100);
 }
 
-// ===== ВСЕ ОБРАБОТЧИКИ КНОПОК =====
-function bindAllEvents() {
-  // Навигация
-  document.getElementById('btn-settings').addEventListener('click', () => {
-    DOM.settingsPanel.classList.toggle('active');
-    DOM.studioPanel.classList.remove('active');
-    DOM.editorPanel.classList.remove('active');
-  });
-  document.getElementById('btn-studio').addEventListener('click', () => {
-    DOM.studioPanel.classList.toggle('active');
-    DOM.settingsPanel.classList.remove('active');
-    DOM.editorPanel.classList.remove('active');
-  });
-  document.getElementById('btn-editor').addEventListener('click', () => {
-    if (isMobile) {
-      alert('🖥️ Редактор доступен только на ПК!');
-      return;
-    }
-    DOM.editorPanel.classList.toggle('active');
-    DOM.settingsPanel.classList.remove('active');
-    DOM.studioPanel.classList.remove('active');
-  });
+// ===== ПОКАЗАТЬ МЕНЮ =====
+function showMenu() {
+  $('reg-screen').classList.add('hidden');
+  $('main-menu').classList.add('active');
+  $('user-avatar').textContent = State.playerName.charAt(0).toUpperCase();
+  console.log('✅ Меню показано, игрок:', State.playerName);
+}
 
-  // Настройки
-  document.getElementById('btn-save-name').addEventListener('click', saveName);
-
-  // Студия
-  document.getElementById('btn-spawn-cube').addEventListener('click', spawnCube);
-  document.getElementById('btn-spawn-sphere').addEventListener('click', spawnSphere);
-  document.getElementById('btn-change-color').addEventListener('click', changeColor);
-  document.getElementById('btn-clear-objects').addEventListener('click', clearObjects);
-
-  // Выход из игры
-  document.getElementById('exit-game').addEventListener('click', exitGame);
-
-  // Кнопка Play Hero
-  document.getElementById('btn-play-hero').addEventListener('click', () => {
-    console.log('🎮 Play Hero clicked');
+// ===== ОБРАБОТЧИКИ КНОПОК МЕНЮ =====
+function initMenuButtons() {
+  // Кнопка "Играть сейчас"
+  $('btn-play-now').addEventListener('click', () => {
+    console.log('🎮 Play Now clicked');
     startGame('shooter');
+  });
+
+  // Кнопка настроек
+  $('btn-settings').addEventListener('click', () => {
+    const newName = prompt('Введите новый никнейм:', State.playerName);
+    if (newName && newName.trim().length >= 2 && newName.trim().length <= 16) {
+      State.playerName = newName.trim();
+      localStorage.setItem('r3d_name', State.playerName);
+      $('user-avatar').textContent = State.playerName.charAt(0).toUpperCase();
+      alert('✅ Имя изменено на: ' + State.playerName);
+    }
   });
 
   // Карточки игр
   document.querySelectorAll('.game-card').forEach(card => {
     card.addEventListener('click', () => {
-      const gameId = card.dataset.game;
-      if (gameId) {
-        console.log('🎮 Starting game:', gameId);
-        startGame(gameId);
-      }
+      const game = card.dataset.game;
+      console.log('🎮 Card clicked:', game);
+      if (game) startGame(game);
     });
   });
 
-  // Редактор - размер карты
-  const mapSizeInput = document.getElementById('editor-map-size');
-  if (mapSizeInput) {
-    mapSizeInput.addEventListener('input', (e) => {
-      document.getElementById('map-size-value').textContent = e.target.value;
-    });
-  }
+  // Кнопка выхода из игры
+  $('exit-btn').addEventListener('click', exitGame);
 
-  // Редактор - добавление объектов
-  document.getElementById('editor-add-wall').addEventListener('click', () => showToast('🧱 Стена добавлена!'));
-  document.getElementById('editor-add-tree').addEventListener('click', () => showToast('🌳 Дерево добавлено!'));
-  document.getElementById('editor-add-house').addEventListener('click', () => showToast(' Дом добавлен!'));
-
-  // Редактор - сохранение
-  document.getElementById('editor-save').addEventListener('click', saveEditorGame);
-  document.getElementById('editor-load').addEventListener('click', () => {
-    document.getElementById('editor-file-input').click();
-  });
-  document.getElementById('editor-file-input').addEventListener('change', loadEditorGame);
-  document.getElementById('editor-test').addEventListener('click', () => {
-    showToast('▶️ Тестирование...');
-    startGame('shooter');
-  });
-
-  // Редактор оверлей
-  document.getElementById('editor-close').addEventListener('click', () => {
-    DOM.editorOverlay.classList.remove('active');
-  });
-  document.getElementById('editor-play').addEventListener('click', () => {
-    State.editorPlaying = true;
-    showToast('▶️ Play режим');
-  });
-  document.getElementById('editor-stop').addEventListener('click', () => {
-    State.editorPlaying = false;
-    showToast('⏹ Stop режим');
-  });
-  document.getElementById('editor-save-scene').addEventListener('click', saveEditorScene);
-
-  // Объекты редактора
-  document.getElementById('ed-add-cube').addEventListener('click', () => addEditorObject('cube'));
-  document.getElementById('ed-add-sphere').addEventListener('click', () => addEditorObject('sphere'));
-  document.getElementById('ed-add-cylinder').addEventListener('click', () => addEditorObject('cylinder'));
-  document.getElementById('ed-add-plane').addEventListener('click', () => addEditorObject('plane'));
-
-  // Свойства редактора
-  document.getElementById('editor-color').addEventListener('input', (e) => {
-    if (State.selectedEditorObj) {
-      State.selectedEditorObj.material.color.set(e.target.value);
+  // Чат
+  $('chat-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() && State.ws?.readyState === 1) {
+      State.ws.send(JSON.stringify({ type: 'chat', msg: e.target.value.trim() }));
+      e.target.value = '';
     }
   });
-  ['prop-x', 'prop-y', 'prop-z'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updateEditorObjectScale);
-  });
 
-  // Мобильное управление
-  if (isMobile) setupMobileControls();
-
-  console.log('✅ All buttons bound successfully');
+  console.log('✅ Все кнопки меню привязаны');
 }
 
-function setupMobileControls() {
-  const joy = document.getElementById('mobile-joy');
-  const knob = document.getElementById('mobile-joy-knob');
-  let startX = 0, startY = 0;
-  
-  joy.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const t = e.changedTouches[0];
-    startX = t.clientX; startY = t.clientY;
-    State.joystick.active = true;
-  }, { passive: false });
-
-  joy.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    if (!State.joystick.active) return;
-    const t = e.changedTouches[0];
-    let dx = t.clientX - startX, dy = t.clientY - startY;
-    const dist = Math.min(35, Math.hypot(dx, dy));
-    const angle = Math.atan2(dy, dx);
-    knob.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
-    State.joystick.x = Math.cos(angle) * (dist/35);
-    State.joystick.y = Math.sin(angle) * (dist/35);
-  }, { passive: false });
-
-  const resetJoy = () => {
-    State.joystick.active = false;
-    State.joystick.x = 0; State.joystick.y = 0;
-    knob.style.transform = 'translate(-50%, -50%)';
-  };
-  joy.addEventListener('touchend', resetJoy);
-  joy.addEventListener('touchcancel', resetJoy);
-
-  document.getElementById('mobile-jump').addEventListener('touchstart', (e) => { e.preventDefault(); State.keys['Space'] = true; }, { passive: false });
-  document.getElementById('mobile-jump').addEventListener('touchend', () => State.keys['Space'] = false);
-  document.getElementById('mobile-fire').addEventListener('touchstart', (e) => { e.preventDefault(); if (State.currentGame === 'shooter') shoot(); }, { passive: false });
-}
-
-function saveName() {
-  const name = DOM.settingsName.value.trim();
-  if (name.length >= 2 && name.length <= 16) {
-    State.playerName = name;
-    localStorage.setItem('r3d_name', name);
-    DOM.settingsMsg.textContent = '✅ Сохранено!';
-    setTimeout(() => DOM.settingsMsg.textContent = '', 2000);
-  } else {
-    DOM.settingsMsg.textContent = ' 2-16 символов';
-    setTimeout(() => DOM.settingsMsg.textContent = '', 2000);
-  }
-}
-
+// ===== ЗАПУСК ИГРЫ =====
 function startGame(gameId) {
-  console.log('startGame called:', gameId);
+  console.log('🚀 Starting game:', gameId);
   State.currentGame = gameId;
-  State.health = 100;
-  DOM.gameUI.style.display = 'block';
-  DOM.shooterHud.style.display = gameId === 'shooter' ? 'block' : 'none';
-  DOM.scoreBoard.style.display = 'none';
-  DOM.timerDisplay.style.display = 'none';
+  $('main-menu').classList.remove('active');
+  $('game-screen').classList.add('active');
   
-  if (gameId === 'shooter') {
-    DOM.lobbyScreen.classList.add('active');
-    DOM.lobbyTitle.textContent = 'Подключение...';
-    DOM.lobbyInfo.textContent = '';
-    DOM.lobbyContent.innerHTML = '';
-  }
-  
-  if (gameId === 'airplane') initAirplaneGame();
-  else if (gameId === 'racing') initRacingGame();
-  else init3D(gameId);
-  
+  init3D(gameId);
   connectToServer();
 }
 
+// ===== ВЫХОД ИЗ ИГРЫ =====
 function exitGame() {
+  console.log(' Exiting game');
   if (State.ws) { State.ws.close(); State.ws = null; }
   if (State.renderer) { State.renderer.dispose(); State.renderer = null; }
   if (State.scene) {
@@ -578,171 +305,27 @@ function exitGame() {
     State.scene = null;
   }
   State.otherPlayers.clear();
-  State.playerMesh = null;
-  State.weaponMesh = null;
-  State.studioObjects = [];
-  State.cheeseWalls = [];
-  DOM.gameUI.style.display = 'none';
-  DOM.shooterHud.style.display = 'none';
-  DOM.lobbyScreen.classList.remove('active');
-  DOM.scoreBoard.style.display = 'none';
-  DOM.timerDisplay.style.display = 'none';
-  DOM.chatMessages.innerHTML = '';
-  DOM.studioPanel.classList.remove('active');
-  DOM.settingsPanel.classList.remove('active');
-  DOM.editorPanel.classList.remove('active');
+  State.player = null;
+  $('game-screen').classList.remove('active');
+  $('chat-messages').innerHTML = '';
   State.currentGame = null;
+  showMenu();
 }
 
-function initAudio() {
-  State.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  State.shootSound = new Audio('shoot.mp3');
-  State.shootSound.volume = 0.4;
-}
-
-function playShootSound() {
-  if (!State.shootSound) initAudio();
-  const clone = State.shootSound.cloneNode();
-  clone.play().catch(() => {
-    if (!State.audioCtx) initAudio();
-    const osc = State.audioCtx.createOscillator();
-    const gain = State.audioCtx.createGain();
-    osc.connect(gain); gain.connect(State.audioCtx.destination);
-    osc.frequency.value = 800; gain.gain.value = 0.1;
-    osc.start(); osc.stop(State.audioCtx.currentTime + 0.1);
-  });
-}
-
-function connectToServer() {
-  if (State.ws && State.ws.readyState === 1) return;
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  State.ws = new WebSocket(`${proto}//${location.host}`);
-  State.ws.onopen = () => State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
-  State.ws.onmessage = (e) => {
-    try {
-      const d = JSON.parse(e.data);
-      if (d.type === 'registered') {
-        State.playerId = d.id;
-        State.ws.send(JSON.stringify({ type: 'join', gameId: State.currentGame }));
-        addChat('sys', `Добро пожаловать, ${d.name}!`);
-      }
-      if (d.type === 'waiting_lobby') {
-        DOM.lobbyTitle.textContent = 'Раунд идёт';
-        DOM.lobbyInfo.textContent = d.msg;
-        DOM.lobbyContent.innerHTML = '<div style="font-size:48px">⏳</div>';
-      }
-      if (d.type === 'shooter_state') {
-        State.shooterState = d.state;
-        DOM.onlineCount.textContent = d.playerCount;
-        DOM.lobbyInfo.textContent = `Игроков: ${d.playerCount}/4`;
-        
-        if (d.state === 'lobby') {
-          DOM.lobbyTitle.textContent = 'Ожидание игроков...';
-          DOM.lobbyContent.innerHTML = '<div style="font-size:48px;margin:20px">⏳</div>';
-        }
-        if (d.state === 'map_select') {
-          DOM.lobbyTitle.textContent = 'Выберите карту';
-          DOM.lobbyContent.innerHTML = `
-            <button class="lobby-btn" onclick="window.selectMap('arena')">⚔️ Арена</button>
-            <button class="lobby-btn" onclick="window.selectMap('city')">️ Город</button>
-          `;
-        }
-        if (d.state === 'team_select') {
-          DOM.lobbyTitle.textContent = 'Выберите команду';
-          DOM.lobbyContent.innerHTML = `
-            <div class="team-list">
-              <div class="team-box red">
-                <div style="font-size:20px;color:#ff4757">🔴 Красные</div>
-                <div style="margin:10px 0">${d.red.join('<br>') || 'Пусто'}</div>
-                <button class="lobby-btn red" onclick="window.selectTeam('red')" ${d.red.length >= 2 ? 'disabled style="opacity:0.5"' : ''}>Вступить</button>
-              </div>
-              <div class="team-box blue">
-                <div style="font-size:20px;color:#3742fa">🔵 Синие</div>
-                <div style="margin:10px 0">${d.blue.join('<br>') || 'Пусто'}</div>
-                <button class="lobby-btn blue" onclick="window.selectTeam('blue')" ${d.blue.length >= 2 ? 'disabled style="opacity:0.5"' : ''}>Вступить</button>
-              </div>
-            </div>
-          `;
-        }
-        if (d.state === 'playing') {
-          DOM.lobbyScreen.classList.remove('active');
-          DOM.scoreBoard.style.display = 'block';
-          DOM.timerDisplay.style.display = 'block';
-          DOM.redScore.textContent = d.redScore;
-          DOM.blueScore.textContent = d.blueScore;
-        }
-      }
-      if (d.type === 'round_start') {
-        State.myTeam = d.team;
-        DOM.lobbyScreen.classList.remove('active');
-        DOM.scoreBoard.style.display = 'block';
-        DOM.timerDisplay.style.display = 'block';
-        addChat('sys', `Раунд начался! Вы в команде ${d.team === 'red' ? '🔴' : '🔵'}`);
-      }
-      if (d.type === 'round_end') {
-        DOM.lobbyTitle.textContent = 'Раунд окончен!';
-        DOM.lobbyInfo.textContent = `Счёт: ${d.redScore} : ${d.blueScore}`;
-        DOM.lobbyContent.innerHTML = `<div style="font-size:24px;margin:20px">${d.winner === 'red' ? '🔴 Красные победили!' : d.winner === 'blue' ? '🔵 Синие победили!' : ' Ничья!'}</div>`;
-        DOM.lobbyScreen.classList.add('active');
-      }
-      if (d.type === 'timer') {
-        const min = Math.floor(d.time / 60);
-        const sec = d.time % 60;
-        DOM.timerValue.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
-      }
-      if (d.type === 'snapshot') {
-        DOM.playerCount.textContent = d.players.length + 1;
-        if (d.health !== undefined) {
-          State.health = d.health;
-          DOM.healthBar.style.width = `${Math.max(0, d.health)}%`;
-        }
-        d.players.forEach(p => {
-          if (!State.otherPlayers.has(p.id)) {
-            const m = new THREE.Mesh(
-              new THREE.CapsuleGeometry(0.5, 1.5, 4, 8),
-              new THREE.MeshStandardMaterial({ color: p.team === 'red' ? 0xff4757 : 0x3742fa })
-            );
-            m.position.set(p.x, 1.25, p.z);
-            m.rotation.y = -p.yaw;
-            m.castShadow = true;
-            State.scene.add(m);
-            State.otherPlayers.set(p.id, m);
-          } else {
-            const m = State.otherPlayers.get(p.id);
-            m.position.set(p.x, p.y, p.z);
-            m.rotation.y = -p.yaw;
-          }
-        });
-      }
-      if (d.type === 'chat') addChat(d.name, d.msg);
-      if (d.type === 'shoot') playShootSound();
-      if (d.type === 'kill') addChat('sys', `💀 ${d.killer} убил ${d.victim}`);
-    } catch (err) { console.error('WS:', err); }
-  };
-  State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
-}
-
-window.selectMap = function(map) {
-  if (State.ws) State.ws.send(JSON.stringify({ type: 'select_map', map }));
-};
-
-window.selectTeam = function(team) {
-  if (State.ws) State.ws.send(JSON.stringify({ type: 'select_team', team }));
-};
-
+// ===== 3D ИНИЦИАЛИЗАЦИЯ =====
 function init3D(gameId) {
-  const cv = DOM.canvas;
-  cv.width = window.innerWidth;
-  cv.height = window.innerHeight;
+  const canvas = $('game-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 
   State.scene = new THREE.Scene();
   const skyColor = gameId === 'shooter' ? 0x2d3436 : (gameId === 'cheese' ? 0x1a1a2e : 0x74b9ff);
   State.scene.background = new THREE.Color(skyColor);
   State.scene.fog = new THREE.Fog(skyColor, 15, 70);
 
-  State.camera = new THREE.PerspectiveCamera(70, cv.width / cv.height, 0.1, 200);
-  State.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
-  State.renderer.setSize(cv.width, cv.height);
+  State.camera = new THREE.PerspectiveCamera(70, canvas.width / canvas.height, 0.1, 200);
+  State.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  State.renderer.setSize(canvas.width, canvas.height);
   State.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   State.renderer.shadowMap.enabled = true;
 
@@ -760,417 +343,148 @@ function init3D(gameId) {
   floor.receiveShadow = true;
   State.scene.add(floor);
 
-  if (gameId === 'shooter') createShooterMap();
-  if (gameId === 'cheese') createCheeseMaze();
-  if (gameId === 'brookhaven') createBrookhaven();
+  State.scene.add(new THREE.GridHelper(100, 20, 0x00d9ff));
 
-  State.playerMesh = new THREE.Mesh(
+  // Игрок
+  State.player = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.5, 1.5, 4, 8),
     new THREE.MeshStandardMaterial({ color: 0x00d9ff })
   );
-  State.playerMesh.position.y = 1.25;
-  State.playerMesh.castShadow = true;
-  State.scene.add(State.playerMesh);
+  State.player.position.y = 1.25;
+  State.player.castShadow = true;
+  State.scene.add(State.player);
 
-  if (gameId === 'shooter') loadWeapon();
+  // Управление
   setupInput();
-
-  State.composer = new EffectComposer(State.renderer);
-  State.composer.addPass(new RenderPass(State.scene, State.camera));
-  const fxaaPass = new ShaderPass(FXAAShader);
-  fxaaPass.material.uniforms['resolution'].value.set(
-    1 / (cv.width * State.renderer.getPixelRatio()),
-    1 / (cv.height * State.renderer.getPixelRatio())
-  );
-  State.composer.addPass(fxaaPass);
-
   gameLoop();
 }
 
-function loadWeapon() {
-  const gun = new THREE.Group();
-  gun.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x333 })));
-  gun.children[0].position.z = -0.3;
-  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.08), new THREE.MeshStandardMaterial({ color: 0x555 }));
-  handle.position.set(0, -0.15, 0);
-  gun.add(handle);
-  State.weaponMesh = gun;
-  State.weaponMesh.position.set(0.3, -0.3, -0.6);
-  State.weaponMesh.rotation.y = Math.PI;
-  State.camera.add(State.weaponMesh);
-  State.scene.add(State.camera);
-}
-
-function createShooterMap() {
-  const mat = new THREE.MeshStandardMaterial({ color: 0x636e72 });
-  [[-45,0,2,92],[45,0,2,92],[0,-45,92,2],[0,45,92,2]].forEach(([x,z,w,d]) => {
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(w,6,d), mat);
-    wall.position.set(x,3,z);
-    wall.castShadow = true;
-    State.scene.add(wall);
-  });
-  for(let i=0;i<8;i++) {
-    const cover = new THREE.Mesh(new THREE.BoxGeometry(4,2,4), mat);
-    cover.position.set((Math.random()-0.5)*70, 1, (Math.random()-0.5)*70);
-    cover.castShadow = true;
-    State.scene.add(cover);
-  }
-}
-
-function createCheeseMaze() {
-  const mat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-  State.cheeseWalls = [];
-  const maze = [[1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0,0,0,0,1],[1,0,1,0,1,0,1,1,1,1,0,1],[1,0,1,0,0,0,0,0,0,1,0,1],[1,0,1,1,1,1,0,1,0,1,0,1],[1,0,0,0,0,1,0,1,0,0,0,1],[1,1,1,1,0,1,0,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1]];
-  const cell = 7;
-  for(let r=0;r<maze.length;r++) for(let c=0;c<maze[r].length;c++) if(maze[r][c]===1) {
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(cell,5,cell), mat);
-    wall.position.set((c-6)*cell, 2.5, (r-4.5)*cell);
-    wall.castShadow = true;
-    State.scene.add(wall);
-    State.cheeseWalls.push({x:wall.position.x, z:wall.position.z, w:cell, d:cell});
-  }
-}
-
-function createBrookhaven() {
-  for(let i=0;i<12;i++) {
-    const house = new THREE.Group();
-    const walls = new THREE.Mesh(new THREE.BoxGeometry(12,6,10), new THREE.MeshStandardMaterial({color:0xf8f9fa}));
-    walls.position.y=3; house.add(walls);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(9,4,4), new THREE.MeshStandardMaterial({color:0xe74c3c}));
-    roof.position.y=8; roof.rotation.y=Math.PI/4; house.add(roof);
-    house.position.set((Math.random()-0.5)*80, 0, (Math.random()-0.5)*80);
-    State.scene.add(house);
-  }
-}
-
+// ===== УПРАВЛЕНИЕ =====
 function setupInput() {
-  document.addEventListener('keydown', e => { 
-    State.keys[e.code] = true; 
-    if(e.code==='Enter'&&e.target===DOM.chatInput) e.preventDefault(); 
-  });
+  document.addEventListener('keydown', e => { State.keys[e.code] = true; });
   document.addEventListener('keyup', e => { State.keys[e.code] = false; });
   document.addEventListener('mousemove', e => {
-    if(document.pointerLockElement) { 
-      State.yaw -= e.movementX*0.002; 
-      State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY*0.002)); 
+    if (document.pointerLockElement) {
+      State.yaw -= e.movementX * 0.002;
+      State.pitch = Math.max(-1.2, Math.min(1.2, State.pitch - e.movementY * 0.002));
     }
   });
-  document.addEventListener('click', (e) => { 
-    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-    if(!document.pointerLockElement && State.renderer?.domElement) State.renderer.domElement.requestPointerLock();
-    if(State.currentGame === 'shooter' && document.pointerLockElement) shoot();
-  });
-  DOM.chatInput.addEventListener('keypress', e => {
-    if(e.key==='Enter' && e.target.value.trim() && State.ws?.readyState===1) {
-      State.ws.send(JSON.stringify({type:'chat',msg:e.target.value.trim()}));
-      e.target.value='';
+  document.addEventListener('click', () => {
+    if (!document.pointerLockElement && State.renderer?.domElement) {
+      State.renderer.domElement.requestPointerLock();
     }
   });
 }
 
-function shoot() {
-  if (State.ws && State.ws.readyState === 1) State.ws.send(JSON.stringify({ type: 'action' }));
-  playShootSound();
-  if (State.weaponMesh) {
-    State.weaponMesh.position.z += 0.1;
-    setTimeout(() => { if (State.weaponMesh) State.weaponMesh.position.z -= 0.1; }, 100);
-  }
-}
-
+// ===== ИГРОВОЙ ЦИКЛ =====
 let lastTime = 0;
 function gameLoop(t) {
-  if(!State.playerMesh) { requestAnimationFrame(gameLoop); return; }
-  const dt = Math.min((t-lastTime)/1000, 0.1);
+  if (!State.player) { requestAnimationFrame(gameLoop); return; }
+  const dt = Math.min((t - lastTime) / 1000, 0.1);
   lastTime = t;
 
-  const f = isMobile ? -State.joystick.y : ((State.keys['KeyW']?1:0) - (State.keys['KeyS']?1:0));
-  const r = isMobile ? State.joystick.x : ((State.keys['KeyD']?1:0) - (State.keys['KeyA']?1:0));
+  const f = (State.keys['KeyW'] ? 1 : 0) - (State.keys['KeyS'] ? 1 : 0);
+  const r = (State.keys['KeyD'] ? 1 : 0) - (State.keys['KeyA'] ? 1 : 0);
   const speed = 0.2;
 
-  const newX = State.playerMesh.position.x + (f*Math.sin(State.yaw) + r*Math.cos(State.yaw)) * speed;
-  const newZ = State.playerMesh.position.z + (f*Math.cos(State.yaw) - r*Math.sin(State.yaw)) * speed;
-  
-  if(State.currentGame==='cheese' && State.cheeseWalls) {
-    let col=false;
-    for(const w of State.cheeseWalls) if(Math.abs(newX-w.x)<w.w/2+0.5 && Math.abs(newZ-w.z)<w.d/2+0.5) {col=true;break;}
-    if(!col) { State.playerMesh.position.x=newX; State.playerMesh.position.z=newZ; }
-  } else {
-    State.playerMesh.position.x = Math.max(-48, Math.min(48, newX));
-    State.playerMesh.position.z = Math.max(-48, Math.min(48, newZ));
+  State.player.position.x += (f * Math.sin(State.yaw) + r * Math.cos(State.yaw)) * speed;
+  State.player.position.z += (f * Math.cos(State.yaw) - r * Math.sin(State.yaw)) * speed;
+  State.player.position.x = Math.max(-48, Math.min(48, State.player.position.x));
+  State.player.position.z = Math.max(-48, Math.min(48, State.player.position.z));
+
+  if (State.keys['Space'] && State.player.position.y <= 1.3) {
+    State.player.position.y = 3.5;
+    State.keys['Space'] = false;
   }
+  if (State.player.position.y > 1.25) State.player.position.y -= 0.25;
+  if (State.player.position.y < 1.25) State.player.position.y = 1.25;
 
-  if(State.keys['Space'] && State.playerMesh.position.y<=1.3) { State.playerMesh.position.y=3.5; State.keys['Space']=false; }
-  if(State.playerMesh.position.y>1.25) State.playerMesh.position.y-=0.25;
-  if(State.playerMesh.position.y<1.25) State.playerMesh.position.y=1.25;
-
-  State.playerMesh.rotation.y = State.yaw;
+  State.player.rotation.y = State.yaw;
 
   State.camera.position.set(
-    State.playerMesh.position.x+Math.sin(State.yaw)*7,
-    State.playerMesh.position.y+4+Math.sin(State.pitch)*1.5,
-    State.playerMesh.position.z+Math.cos(State.yaw)*7
+    State.player.position.x + Math.sin(State.yaw) * 7,
+    State.player.position.y + 4,
+    State.player.position.z + Math.cos(State.yaw) * 7
   );
-  State.camera.lookAt(State.playerMesh.position.x, State.playerMesh.position.y+1.5, State.playerMesh.position.z);
+  State.camera.lookAt(State.player.position.x, State.player.position.y + 1.5, State.player.position.z);
 
-  if(State.ws && State.ws.readyState===1) {
-    State.ws.send(JSON.stringify({type:'input',f:f,r:r,jump:State.keys['Space'],yaw:State.yaw}));
-    State.keys['Space']=false;
+  if (State.ws && State.ws.readyState === 1) {
+    State.ws.send(JSON.stringify({ type: 'input', f, r, jump: State.keys['Space'], yaw: State.yaw }));
+    State.keys['Space'] = false;
   }
 
-  if (State.composer) State.composer.render();
-  else if (State.renderer) State.renderer.render(State.scene, State.camera);
+  State.renderer.render(State.scene, State.camera);
   requestAnimationFrame(gameLoop);
 }
 
-function initAirplaneGame() {
-  const cv = DOM.canvas;
-  cv.width = window.innerWidth; cv.height = window.innerHeight;
-  State.scene = new THREE.Scene();
-  State.scene.background = new THREE.Color(0x87CEEB);
-  State.camera = new THREE.PerspectiveCamera(60, cv.width/cv.height, 0.1, 3000);
-  State.renderer = new THREE.WebGLRenderer({canvas:cv,antialias:true});
-  State.renderer.setSize(cv.width, cv.height);
-  State.scene.add(new THREE.HemisphereLight(0xcfe8ff,0x6f9a54,0.9));
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2400,2400), new THREE.MeshStandardMaterial({color:0x5f9c4a}));
-  floor.rotation.x=-Math.PI/2; State.scene.add(floor);
-  State.playerMesh = new THREE.Mesh(new THREE.BoxGeometry(2,1,4), new THREE.MeshStandardMaterial({color:0xd84332}));
-  State.playerMesh.position.set(0,12,140); State.scene.add(State.playerMesh);
-  State.airplaneState = {speed:24,pitch:0,yaw:0,roll:0};
-  document.addEventListener('keydown', e => { State.keys[e.code]=true; });
-  document.addEventListener('keyup', e => { State.keys[e.code]=false; });
-  airplaneLoop();
-}
-
-function airplaneLoop() {
-  if(!State.playerMesh || State.currentGame!=='airplane') { requestAnimationFrame(airplaneLoop); return; }
-  const dt=0.016;
-  const plane = State.playerMesh;
-  const s = State.airplaneState;
-  s.yaw += ((State.keys['KeyA']?1:0)-(State.keys['KeyD']?1:0))*1.35*dt;
-  s.pitch = THREE.MathUtils.clamp(s.pitch+((State.keys['KeyW']?1:0)-(State.keys['KeyS']?1:0))*1.05*dt, -1.15, 1.15);
-  s.speed = THREE.MathUtils.clamp(s.speed+(State.keys['Space']?1:0)*26*dt, 10, 62);
-  plane.rotation.set(s.pitch, s.yaw, 0);
-  const fwd = new THREE.Vector3(0,0,-1).applyQuaternion(plane.quaternion);
-  plane.position.addScaledVector(fwd, s.speed*dt);
-  State.camera.position.set(plane.position.x, plane.position.y+5, plane.position.z+15);
-  State.camera.lookAt(plane.position);
-  State.renderer.render(State.scene, State.camera);
-  requestAnimationFrame(airplaneLoop);
-}
-
-function initRacingGame() {
-  const cv = DOM.canvas;
-  cv.width = window.innerWidth; cv.height = window.innerHeight;
-  State.scene = new THREE.Scene();
-  State.scene.background = new THREE.Color(0x8fd3ff);
-  State.camera = new THREE.PerspectiveCamera(62, cv.width/cv.height, 0.1, 700);
-  State.renderer = new THREE.WebGLRenderer({canvas:cv,antialias:true});
-  State.renderer.setSize(cv.width, cv.height);
-  const track = new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshStandardMaterial({color:0x484e59}));
-  track.rotation.x=-Math.PI/2; State.scene.add(track);
-  State.playerMesh = new THREE.Mesh(new THREE.BoxGeometry(1.5,0.5,2.5), new THREE.MeshStandardMaterial({color:0xe53935}));
-  State.playerMesh.position.y=0.5; State.scene.add(State.playerMesh);
-  document.addEventListener('keydown', e => { State.keys[e.code]=true; });
-  document.addEventListener('keyup', e => { State.keys[e.code]=false; });
-  racingLoop();
-}
-
-function racingLoop() {
-  if(!State.playerMesh || State.currentGame!=='racing') { requestAnimationFrame(racingLoop); return; }
-  const kart = State.playerMesh;
-  if(State.keys['KeyW']) kart.position.z -= 0.3;
-  if(State.keys['KeyS']) kart.position.z += 0.3;
-  if(State.keys['KeyA']) { kart.position.x -= 0.3; kart.rotation.y = 0.05; }
-  if(State.keys['KeyD']) { kart.position.x += 0.3; kart.rotation.y = -0.05; }
-  kart.position.x = Math.max(-95, Math.min(95, kart.position.x));
-  kart.position.z = Math.max(-95, Math.min(95, kart.position.z));
-  State.camera.position.set(kart.position.x, 8, kart.position.z+15);
-  State.camera.lookAt(kart.position);
-  State.renderer.render(State.scene, State.camera);
-  requestAnimationFrame(racingLoop);
-}
-
-// ===== СТУДИЯ =====
-function spawnCube() {
-  if (!State.scene) return;
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color:Math.random()*0xffffff}));
-  mesh.position.set(0, 1, 0);
-  State.scene.add(mesh);
-  State.studioObjects.push(mesh);
-  DOM.objCount.textContent = State.studioObjects.length;
-}
-
-function spawnSphere() {
-  if (!State.scene) return;
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.5,32,32), new THREE.MeshStandardMaterial({color:Math.random()*0xffffff}));
-  mesh.position.set(0, 1.5, 0);
-  State.scene.add(mesh);
-  State.studioObjects.push(mesh);
-  DOM.objCount.textContent = State.studioObjects.length;
-}
-
-function changeColor() {
-  State.studioObjects.forEach(obj => obj.material.color.setHex(Math.random()*0xffffff));
-}
-
-function clearObjects() {
-  State.studioObjects.forEach(obj => State.scene.remove(obj));
-  State.studioObjects = [];
-  DOM.objCount.textContent = '0';
-}
-
-// ===== РЕДАКТОР =====
-function addEditorObject(type) {
-  if (!State.scene) {
-    showToast('❌ Сначала откройте игру');
-    return;
-  }
-  let mesh;
-  const color = Math.random() * 0xffffff;
-  if (type === 'cube') mesh = new THREE.Mesh(new THREE.BoxGeometry(2,2,2), new THREE.MeshStandardMaterial({color}));
-  else if (type === 'sphere') mesh = new THREE.Mesh(new THREE.SphereGeometry(1.5,32,32), new THREE.MeshStandardMaterial({color}));
-  else if (type === 'cylinder') mesh = new THREE.Mesh(new THREE.CylinderGeometry(1,1,2,16), new THREE.MeshStandardMaterial({color}));
-  else if (type === 'plane') mesh = new THREE.Mesh(new THREE.PlaneGeometry(4,4), new THREE.MeshStandardMaterial({color, side: THREE.DoubleSide}));
+// ===== СЕТЬ =====
+function connectToServer() {
+  if (State.ws && State.ws.readyState === 1) return;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  State.ws = new WebSocket(`${proto}//${location.host}`);
   
-  mesh.position.set((Math.random()-0.5)*10, 1, (Math.random()-0.5)*10);
-  mesh.castShadow = true;
-  mesh.userData.name = `${type}_${State.editorObjects.length + 1}`;
-  State.scene.add(mesh);
-  State.editorObjects.push(mesh);
-  updateEditorExplorer();
-  showToast(`✅ ${type} добавлен`);
-}
-
-function updateEditorExplorer() {
-  const explorer = document.getElementById('editor-explorer');
-  if (!explorer) return;
-  explorer.innerHTML = State.editorObjects.map((obj, i) => `
-    <div class="editor-obj-item ${State.selectedEditorObj === obj ? 'selected' : ''}" data-index="${i}">
-      ${obj.userData.name || `obj_${i}`}
-    </div>
-  `).join('');
-  
-  explorer.querySelectorAll('.editor-obj-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const idx = parseInt(item.dataset.index);
-      State.selectedEditorObj = State.editorObjects[idx];
-      updateEditorExplorer();
-      updateEditorProperties();
-    });
-  });
-}
-
-function updateEditorProperties() {
-  const props = document.getElementById('editor-properties');
-  if (!props || !State.selectedEditorObj) {
-    if (props) props.innerHTML = '<div style="color:#aaa;font-size:13px">Выберите объект</div>';
-    return;
-  }
-  const obj = State.selectedEditorObj;
-  props.innerHTML = `
-    <div style="font-size:13px;margin:4px 0">Имя: ${obj.userData.name || 'obj'}</div>
-    <div style="font-size:13px;margin:4px 0">X: ${obj.position.x.toFixed(2)}</div>
-    <div style="font-size:13px;margin:4px 0">Y: ${obj.position.y.toFixed(2)}</div>
-    <div style="font-size:13px;margin:4px 0">Z: ${obj.position.z.toFixed(2)}</div>
-  `;
-}
-
-function updateEditorObjectScale() {
-  if (!State.selectedEditorObj) return;
-  const x = parseFloat(document.getElementById('prop-x').value);
-  const y = parseFloat(document.getElementById('prop-y').value);
-  const z = parseFloat(document.getElementById('prop-z').value);
-  State.selectedEditorObj.scale.set(x, y, z);
-}
-
-function saveEditorGame() {
-  const gameData = {
-    name: document.getElementById('editor-game-name').value || 'My Game',
-    mapSize: document.getElementById('editor-map-size').value,
-    objects: State.editorObjects.map(obj => ({
-      type: obj.geometry.type,
-      position: obj.position.toArray(),
-      rotation: obj.rotation.toArray(),
-      scale: obj.scale.toArray(),
-      color: obj.material.color.getHex()
-    }))
+  State.ws.onopen = () => {
+    State.ws.send(JSON.stringify({ type: 'register', name: State.playerName }));
   };
-  const blob = new Blob([JSON.stringify(gameData, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${gameData.name}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('💾 Игра сохранена!');
-}
-
-function loadEditorGame(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (event) => {
+  
+  State.ws.onmessage = (e) => {
     try {
-      const data = JSON.parse(event.target.result);
-      document.getElementById('editor-game-name').value = data.name || '';
-      document.getElementById('editor-map-size').value = data.mapSize || 100;
-      showToast('📂 Игра загружена!');
-    } catch (err) {
-      showToast('❌ Ошибка загрузки');
-    }
+      const d = JSON.parse(e.data);
+      if (d.type === 'registered') {
+        State.playerId = d.id;
+        State.ws.send(JSON.stringify({ type: 'join', gameId: State.currentGame }));
+        addChat('sys', `Добро пожаловать, ${d.name}!`);
+      }
+      if (d.type === 'snapshot') {
+        $('player-count').textContent = d.players.length + 1;
+        d.players.forEach(p => {
+          if (!State.otherPlayers.has(p.id)) {
+            const m = new THREE.Mesh(
+              new THREE.CapsuleGeometry(0.5, 1.5, 4, 8),
+              new THREE.MeshStandardMaterial({ color: p.team === 'red' ? 0xff4757 : 0x3742fa })
+            );
+            m.position.set(p.x, 1.25, p.z);
+            m.castShadow = true;
+            State.scene.add(m);
+            State.otherPlayers.set(p.id, m);
+          } else {
+            const m = State.otherPlayers.get(p.id);
+            m.position.set(p.x, p.y, p.z);
+          }
+        });
+      }
+      if (d.type === 'chat') addChat(d.name, d.msg);
+    } catch (err) { console.error('WS:', err); }
   };
-  reader.readAsText(file);
-}
-
-function saveEditorScene() {
-  const sceneData = State.editorObjects.map(obj => ({
-    type: obj.geometry.type,
-    position: obj.position.toArray(),
-    color: obj.material.color.getHex()
-  }));
-  const blob = new Blob([JSON.stringify(sceneData)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'scene.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('💾 Сцена сохранена!');
-}
-
-function showToast(msg) {
-  const toast = document.createElement('div');
-  toast.textContent = msg;
-  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:#fff;padding:16px 28px;border-radius:12px;z-index:9999;font-size:16px;border:2px solid #00d9ff;pointer-events:none';
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2000);
+  
+  State.ws.onclose = () => setTimeout(() => { if (State.currentGame) connectToServer(); }, 3000);
 }
 
 function addChat(name, msg) {
   const d = document.createElement('div');
-  d.className = 'msg';
-  if(name==='sys') { d.classList.add('sys'); d.textContent=msg; }
-  else d.innerHTML = `<span class="n">${name}:</span> ${msg}`;
-  DOM.chatMessages.appendChild(d);
-  DOM.chatMessages.scrollTop = DOM.chatMessages.scrollHeight;
-  if(DOM.chatMessages.children.length>50) DOM.chatMessages.removeChild(DOM.chatMessages.firstChild);
+  d.className = 'chat-msg' + (name === 'sys' ? ' sys' : '');
+  if (name === 'sys') d.textContent = msg;
+  else d.innerHTML = `<span class="name">${name}:</span> ${msg}`;
+  $('chat-messages').appendChild(d);
+  $('chat-messages').scrollTop = $('chat-messages').scrollHeight;
 }
 
+// ===== RESIZE =====
 window.addEventListener('resize', () => {
-  if(State.camera && State.renderer) {
-    const cv = DOM.canvas;
-    cv.width = window.innerWidth; cv.height = window.innerHeight;
-    State.camera.aspect = window.innerWidth/window.innerHeight;
+  if (State.camera && State.renderer) {
+    const canvas = $('game-canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    State.camera.aspect = window.innerWidth / window.innerHeight;
     State.camera.updateProjectionMatrix();
     State.renderer.setSize(window.innerWidth, window.innerHeight);
-    if(State.composer) {
-      State.composer.setSize(window.innerWidth, window.innerHeight);
-    }
   }
 });
 
 // ===== ЗАПУСК =====
-init();
+initRegistration();
+initMenuButtons();
+console.log('✅ Приложение запущено');
 </script>
 </body>
 </html>
